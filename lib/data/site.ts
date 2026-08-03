@@ -1,7 +1,8 @@
 export const siteContact = {
   phone: "+201019979315",
   whatsapp: "201019979315",
-  email: "sa676185@gami.com",
+  email: "shabanaly1997@gmail.com",
+  facebook: "https://www.facebook.com/sanay.suze/",
 };
 
 // ثوابت السيو

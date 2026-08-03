@@ -4,6 +4,7 @@ import { siteContact } from "@/lib/data/site";
 import { toArabicDigits } from "@/lib/utils/format";
 import { ActionButtons } from "@/components/shared/ui/ActionButtons";
 import { ContactForm } from "@/components/home/ContactForm";
+import { IconFacebook } from "@/components/shared/icons";
 import { Reveal } from "@/components/shared/ui/Reveal";
 import { SectionHeader } from "@/components/shared/ui/SectionHeader";
 
@@ -55,10 +56,21 @@ export function ContactSection() {
             <h3 className="mb-4 text-center font-heading text-xl font-bold">
               تواصل معنا مباشرة
             </h3>
-            <ActionButtons
-              phone={siteContact.phone}
-              whatsapp={siteContact.whatsapp}
-            />
+            <div className="flex flex-col gap-2">
+              <ActionButtons
+                phone={siteContact.phone}
+                whatsapp={siteContact.whatsapp}
+              />
+              <a
+                href={siteContact.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 text-base font-bold text-foreground transition-colors hover:border-accent hover:text-accent"
+              >
+                <IconFacebook className="h-5 w-5" />
+                صفحتنا على فيسبوك
+              </a>
+            </div>
             <div className="my-5 flex items-center gap-3 text-sm text-muted">
               <span className="h-px flex-1 bg-border" />
               أو ابعت رسالة
