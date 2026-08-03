@@ -106,18 +106,31 @@ export function allCategoriesSchema(categories: Category[]): SchemaItem {
   };
 }
 
+const LOCAL_BUSINESS_TYPES: Record<string, string> = {
+  plumbing: "Plumber",
+  electrical: "Electrician",
+  hvac: "HVACBusiness",
+  painting: "HousePainter",
+  tiling: "FlooringContractor",
+};
+
 export function craftsmanSchema(
   craftsman: Craftsman,
   categoryName: string,
 ): SchemaItem {
+  const sameAs = (craftsman.socialLinks ?? [])
+    .map((link) => link.url)
+    .filter((url) => /^https?:\/\//.test(url));
+
   return {
     "@context": "https://schema.org",
-    "@type": "ProfessionalService",
-    "@id": `${siteUrl}/craftsman/${craftsman.slug}#service`,
+    "@type": LOCAL_BUSINESS_TYPES[craftsman.category] ?? "LocalBusiness",
+    "@id": `${siteUrl}/craftsman/${craftsman.slug}#local-business`,
     name: craftsman.name,
     url: `${siteUrl}/craftsman/${craftsman.slug}`,
     image: craftsman.image || `${siteUrl}/web-app-manifest-512x512.png`,
-    description: craftsman.description || `${craftsman.name} — ${categoryName} في السويس`,
+    description:
+      craftsman.description || `${craftsman.name} — ${categoryName} في السويس`,
     telephone: craftsman.phone,
     address: {
       "@type": "PostalAddress",
@@ -127,6 +140,8 @@ export function craftsmanSchema(
     },
     areaServed: { "@type": "City", name: "السويس" },
     priceRange: "$$",
+    ...(sameAs.length > 0 ? { sameAs } : {}),
+    founder: { "@type": "Person", name: craftsman.name },
     ...(craftsman.verified ? { award: "موثّق في دليل الصنايعية" } : {}),
     makesOffer: {
       "@type": "Offer",
