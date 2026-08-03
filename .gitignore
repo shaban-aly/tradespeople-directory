@@ -35,10 +35,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-#docs
-/docs/
+# docs
+/docs
 
-#Agents
+# Agents
 AGENTS.md
 
 #supabase
