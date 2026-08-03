@@ -1,6 +1,5 @@
 import { faqItems } from "@/lib/data/faq";
 import type { Category, Craftsman } from "@/lib/data/craftsmen";
-import { areaGeo } from "@/lib/data/areas";
 import { siteDescription, siteName, siteUrl } from "@/lib/data/site";
 
 type SchemaItem = {
@@ -123,8 +122,6 @@ export function craftsmanSchema(
     .map((link) => link.url)
     .filter((url) => /^https?:\/\//.test(url));
 
-  const geo = areaGeo[craftsman.area];
-
   return {
     "@context": "https://schema.org",
     "@type": LOCAL_BUSINESS_TYPES[craftsman.category] ?? "LocalBusiness",
@@ -141,15 +138,6 @@ export function craftsmanSchema(
       addressRegion: "السويس",
       addressCountry: "EG",
     },
-    ...(geo
-      ? {
-          geo: {
-            "@type": "GeoCoordinates",
-            latitude: geo.latitude,
-            longitude: geo.longitude,
-          },
-        }
-      : {}),
     areaServed: { "@type": "City", name: "السويس" },
     priceRange: "$$",
     contactPoint: {

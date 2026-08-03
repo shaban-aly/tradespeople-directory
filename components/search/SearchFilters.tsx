@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import type { Category, CraftsmanSort } from "@/lib/data/craftsmen";
 import { searchHref } from "@/lib/utils/url";
 
