@@ -123,7 +123,7 @@ export async function Footer() {
 
         <div className="mt-8 border-t border-border pt-4">
           <p className="text-center text-sm text-muted">
-            دليل الصنايعية — كل الأرقام تُراجع قبل النشر. © {year}
+            دليل الصنايعية — كل الأرقام تُراجع قبل النشر. © {year} تم التطوير بواسطة <a className="text-action font-semibold " target="_blank" href="#">Shaban Aly</a>
           </p>
         </div>
       </div>

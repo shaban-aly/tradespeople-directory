@@ -11,7 +11,7 @@ export function EncouragementSection() {
               <IconHeartHandshake className="h-8 w-8" />
             </div>
             <h2 className="font-heading text-2xl font-extrabold text-foreground sm:text-3xl">
-              عاجبك المشروع؟ شجعنا!
+              عجبتك الفكرة شجعنا!
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-base text-muted">
               «دليل الصنايعية» لسه في بدايته، ومستقبله بيحدده تفاعلكم معاه.
