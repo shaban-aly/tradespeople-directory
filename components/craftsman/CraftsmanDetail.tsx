@@ -110,6 +110,7 @@ export function CraftsmanDetail({
           whatsapp={craftsman.whatsapp}
           size="lg"
           craftsmanSlug={craftsman.slug}
+          craftsmanName={craftsman.name}
         />
       </section>
 
@@ -119,6 +120,7 @@ export function CraftsmanDetail({
         phone={craftsman.phone}
         whatsapp={craftsman.whatsapp}
         craftsmanSlug={craftsman.slug}
+        craftsmanName={craftsman.name}
       />
     </div>
   );

@@ -27,8 +27,23 @@ export function telHref(phone: string): string {
   return `tel:${phone.replace(/[\s()-]/g, "")}`;
 }
 
-export function whatsappHref(number: string): string {
-  return `https://wa.me/${number.replace(/\D/g, "")}`;
+// أرقام مصرية: 011/010/012/015 (11 رقم) أو 01X… بدون صفر (10 أرقام)
+// أو رقم محلي بدون كود الدولة — نضيف +20 تلقائياً إلا لو موجود.
+export function normalizeEgyptianNumber(digits: string): string {
+  if (digits.startsWith("0020")) return digits.slice(2);
+  if (digits.startsWith("0")) return `20${digits.slice(1)}`;
+  return digits;
+}
+
+export function craftsmanWhatsappMessage(name: string): string {
+  return `مرحبا يا استاذ ${name}، أنا أتواصل معك من خلال دليل الصنايعية`;
+}
+
+export function whatsappHref(number: string, message?: string): string {
+  let digits = number.replace(/\D/g, "");
+  digits = normalizeEgyptianNumber(digits);
+  const base = `https://wa.me/${digits}`;
+  return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }
 
 export function mailtoHref(email: string): string {

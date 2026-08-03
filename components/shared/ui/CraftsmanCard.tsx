@@ -66,6 +66,7 @@ export function CraftsmanCard({
           phone={craftsman.phone}
           whatsapp={craftsman.whatsapp}
           craftsmanSlug={craftsman.slug}
+          craftsmanName={craftsman.name}
         />
       </div>
     </article>

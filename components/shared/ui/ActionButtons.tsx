@@ -2,21 +2,30 @@
 
 import { IconPhone, IconWhatsApp } from "@/components/shared/icons";
 import { useStats } from "@/hooks/admin/useStats";
-import { telHref, whatsappHref } from "@/lib/utils/url";
+import {
+  craftsmanWhatsappMessage,
+  telHref,
+  whatsappHref,
+} from "@/lib/utils/url";
 
 export function ActionButtons({
   phone,
   whatsapp,
   size = "md",
   craftsmanSlug,
+  craftsmanName,
 }: {
   phone: string;
   whatsapp: string;
   size?: "md" | "lg";
   craftsmanSlug?: string;
+  craftsmanName?: string;
 }) {
   const { track } = useStats();
-  const waUrl = whatsappHref(whatsapp);
+  const waUrl = whatsappHref(
+    whatsapp,
+    craftsmanName ? craftsmanWhatsappMessage(craftsmanName) : undefined,
+  );
   const isLarge = size === "lg";
 
   return (

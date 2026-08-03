@@ -2,20 +2,29 @@
 
 import { IconPhone, IconWhatsApp } from "@/components/shared/icons";
 import { useStats } from "@/hooks/admin/useStats";
-import { telHref, whatsappHref } from "@/lib/utils/url";
+import {
+  craftsmanWhatsappMessage,
+  telHref,
+  whatsappHref,
+} from "@/lib/utils/url";
 
 export function StickyCallBar({
   phone,
   whatsapp,
   craftsmanSlug,
+  craftsmanName,
 }: {
   phone: string;
   whatsapp: string;
   craftsmanSlug?: string;
+  craftsmanName?: string;
 }) {
   const { track } = useStats();
   const hasWhatsapp = Boolean(whatsapp);
-  const waUrl = whatsappHref(whatsapp);
+  const waUrl = whatsappHref(
+    whatsapp,
+    craftsmanName ? craftsmanWhatsappMessage(craftsmanName) : undefined,
+  );
 
   return (
     <div className="sticky bottom-3 z-20 sm:hidden">
