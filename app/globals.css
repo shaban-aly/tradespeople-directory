@@ -1,27 +1,102 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f5f7ff;
+  --foreground: #14142b;
+  --muted: #6b7280;
+  --muted-foreground: #6b7280;
+  --accent: #3b5fe3;
+  --on-accent: #ffffff;
+  --action: #22c55e;
+  --on-action: #14142b;
+  --danger: #ef4444;
+  --on-danger: #ffffff;
+  --card: #ffffff;
+  --border: #e5e8f5;
+  --card-shadow: 0 8px 24px rgba(20, 20, 43, 0.08);
+  --bar-shadow: 0 -8px 24px rgba(20, 20, 43, 0.12);
+
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #10131f;
+  --foreground: #f2f4ff;
+  --muted: #9ca3c4;
+  --muted-foreground: #9ca3c4;
+  --accent: #5b7fff;
+  --on-accent: #10131f;
+  --action: #34d399;
+  --on-action: #10131f;
+  --danger: #f87171;
+  --on-danger: #10131f;
+  --card: #181c2c;
+  --border: #262b45;
+  --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --bar-shadow: 0 -8px 24px rgba(0, 0, 0, 0.45);
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-action: var(--action);
+  --color-on-action: var(--on-action);
+  --color-danger: var(--danger);
+  --color-on-danger: var(--on-danger);
+  --color-card: var(--card);
+  --color-border: var(--border);
+
+  --shadow-card: var(--card-shadow);
+  --shadow-up: var(--bar-shadow);
+
+  --font-heading: var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-tajawal), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-tajawal), ui-sans-serif, system-ui, sans-serif;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 4.5rem;
+  overflow-x: clip;
+}
+
+body {
+  overflow-x: clip;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.5s ease-out,
+    transform 0.5s ease-out;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }
