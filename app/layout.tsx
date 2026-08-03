@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cairo, Tajawal } from "next/font/google";
+import { siteDescription, siteName, siteTagline, siteUrl } from "@/lib/data/site";
 import "./globals.css";
 
 const cairo = Cairo({
@@ -15,12 +16,50 @@ const tajawal = Tajawal({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
-    default: "دليل الصنايعية — السويس",
+    default: siteTagline,
     template: "%s | دليل الصنايعية",
   },
-  description:
-    "اعثر على صنايعي محترف في مدينة السويس (سباكة، كهرباء، نجارة...) واتصل به أو راسله واتساب مباشرة في ثوانٍ.",
+  description: siteDescription,
+  applicationName: siteName,
+  keywords: [
+    "دليل الصنايعية",
+    "صنايعية السويس",
+    "سباك في السويس",
+    "كهربائي في السويس",
+    "نجار في السويس",
+    "دليل حرف ومهن السويس",
+    "أصحاب حرف ومهن",
+  ],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "ar_EG",
+    url: siteUrl,
+    siteName,
+    title: siteTagline,
+    description: siteDescription,
+    images: [
+      { url: "/og.png", width: 1200, height: 630, alt: siteTagline },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteTagline,
+    description: siteDescription,
+    images: ["/og.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   icons: {
     icon: [
       { url: "/favicon-96x96.png", type: "image/png", sizes: "96x96" },

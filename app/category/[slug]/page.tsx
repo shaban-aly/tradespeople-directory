@@ -4,8 +4,11 @@ import { getAreas, getCategories, getCategoryBySlug, getCraftsmenByCategory } fr
 import { toArabicDigits } from "@/lib/utils/format";
 import { Footer } from "@/components/shared/layout/Footer";
 import { Header } from "@/components/shared/layout/Header";
+import { JsonLd } from "@/components/shared/seo/JsonLd";
 import { CategoryIcon } from "@/components/shared/ui/CategoryIcon";
 import { CraftsmanList } from "@/components/category/CraftsmanList";
+import { breadcrumbSchema, categoryPageSchema } from "@/lib/seo/schema";
+import { siteUrl } from "@/lib/data/site";
 
 export const revalidate = 3600;
 
@@ -25,6 +28,13 @@ export async function generateMetadata({
   return {
     title: category.name,
     description: `أفضل ${category.name} في السويس — اتصل أو راسل واتساب مباشرة.`,
+    alternates: { canonical: `/category/${category.slug}` },
+    openGraph: {
+      title: `${category.name} في السويس — دليل الصنايعية`,
+      description: `أفضل ${category.name} في السويس — اتصل أو راسل واتساب مباشرة.`,
+      type: "website",
+      images: [{ url: "/og.png", width: 1200, height: 630 }],
+    },
   };
 }
 
@@ -48,6 +58,13 @@ export default async function CategoryPage({
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1">
+        <JsonLd
+          data={breadcrumbSchema([
+            { name: "الرئيسية", url: `${siteUrl}/` },
+            { name: category.name, url: `${siteUrl}/category/${category.slug}` },
+          ])}
+        />
+        <JsonLd data={categoryPageSchema(category, craftsmen)} />
         <section className="relative overflow-hidden border-b border-border bg-card">
           <div
             className="absolute inset-0 bg-gradient-to-b from-accent/10 to-card"

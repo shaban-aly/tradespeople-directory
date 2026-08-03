@@ -30,6 +30,11 @@ export async function generateMetadata({
     title: query ? `بحث: ${query}` : "البحث",
     description:
       "ابحث عن صنايعي محترف في السويس بالاسم أو التخصص أو المنطقة.",
+    alternates: { canonical: "/search" },
+    robots: {
+      index: false,
+      follow: true,
+    },
   };
 }
 

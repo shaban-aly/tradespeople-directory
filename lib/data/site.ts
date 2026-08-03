@@ -4,6 +4,13 @@ export const siteContact = {
   email: "sa676185@gami.com",
 };
 
+// ثوابت السيو
+export const siteUrl = "https://sanay.daleel-al-suez.com";
+export const siteName = "دليل الصنايعية";
+export const siteTagline = "دليل الصنايعية — السويس";
+export const siteDescription =
+  "اعثر على صنايعي محترف في مدينة السويس (سباكة، كهرباء، نجارة...) واتصل به أو راسله واتساب مباشرة في ثوانٍ.";
+
 export const siteNavLinks = [
   { href: "/", label: "الرئيسية" },
   { href: "/categories", label: "التصنيفات" },

@@ -10,6 +10,14 @@ export const metadata: Metadata = {
   title: "أضف صنايعي",
   description:
     "سجّل اسمك وتخصصك ومنطقتك لينضم دليلك إلى دليل الصنايعية في السويس.",
+  alternates: { canonical: "/join" },
+  openGraph: {
+    title: "أضف صنايعي — دليل الصنايعية في السويس",
+    description:
+      "سجّل اسمك وتخصصك ومنطقتك لينضم دليلك إلى دليل الصنايعية في السويس.",
+    type: "website",
+    images: [{ url: "/og.png", width: 1200, height: 630 }],
+  },
 };
 
 export default async function JoinPage() {
