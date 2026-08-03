@@ -9,6 +9,12 @@
 # testing
 /coverage
 
+# local tests — لا تُرفع إلى GitHub
+*.test.ts
+*.test.tsx
+/tests
+/vitest.config.mts
+
 # next.js
 /.next/
 /out/
