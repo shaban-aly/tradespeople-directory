@@ -1,5 +1,6 @@
 import type { CraftsmanSort } from "../data/craftsmen";
 import { toArabicDigits } from "../utils/format";
+import { categoryHref, craftsmanHref, searchHref } from "../utils/url";
 
 export type SearchResultKind = "craftsman" | "category" | "area";
 
@@ -159,7 +160,7 @@ export function buildSuggestions(data: SearchData, rawQuery: string): SearchSugg
       subtitle: `${toArabicDigits(category.count)} ${
         category.count === 1 ? "صنايعي" : "صنايعية"
       }`,
-      href: `/category/${category.slug}`,
+      href: categoryHref(category.slug),
       icon: category.icon,
     });
   }
@@ -174,7 +175,7 @@ export function buildSuggestions(data: SearchData, rawQuery: string): SearchSugg
       kind: "area",
       name: area,
       subtitle: "بحث في المنطقة",
-      href: `/search?area=${encodeURIComponent(area)}`,
+      href: searchHref({ area }),
     });
   }
 
@@ -195,7 +196,7 @@ export function buildSuggestions(data: SearchData, rawQuery: string): SearchSugg
       kind: "craftsman",
       name: craftsman.name,
       subtitle: `${craftsman.category} · ${craftsman.area}`,
-      href: `/craftsman/${craftsman.slug}`,
+      href: craftsmanHref(craftsman.slug),
       image: craftsman.image || undefined,
       verified: craftsman.verified,
     });

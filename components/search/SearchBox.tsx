@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useSearch } from "@/hooks/search/useSearch";
 import { SearchResultsList } from "@/components/search/SearchResultsList";
 import { IconRefresh, IconSearch, IconX } from "@/components/shared/icons";
+import { searchHref } from "@/lib/utils/url";
 
 export function SearchBox() {
   const router = useRouter();
@@ -36,7 +37,7 @@ export function SearchBox() {
     if (active) {
       router.push(active.href);
     } else if (trimmed) {
-      router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+      router.push(searchHref({ q: trimmed }));
     }
     setOpen(false);
   }
@@ -117,7 +118,7 @@ export function SearchBox() {
             )
           )}
           <Link
-            href={`/search?q=${encodeURIComponent(trimmed)}`}
+            href={searchHref({ q: trimmed })}
             onClick={() => setOpen(false)}
             className="mt-1 block rounded-xl border-t border-border px-3 py-2.5 text-center text-base font-bold text-accent transition-colors hover:bg-card"
           >

@@ -2,6 +2,7 @@
 
 import { IconPhone, IconWhatsApp } from "@/components/shared/icons";
 import { useStats } from "@/hooks/admin/useStats";
+import { telHref, whatsappHref } from "@/lib/utils/url";
 
 export function StickyCallBar({
   phone,
@@ -14,7 +15,7 @@ export function StickyCallBar({
 }) {
   const { track } = useStats();
   const hasWhatsapp = Boolean(whatsapp);
-  const waUrl = `https://wa.me/${whatsapp.replace(/[^0-9]/g, "")}`;
+  const waUrl = whatsappHref(whatsapp);
 
   return (
     <div className="sticky bottom-3 z-20 sm:hidden">
@@ -23,7 +24,7 @@ export function StickyCallBar({
           className={`grid gap-2 ${hasWhatsapp ? "grid-cols-2" : "grid-cols-1"}`}
         >
           <a
-            href={`tel:${phone}`}
+            href={telHref(phone)}
             onClick={() => {
               if (craftsmanSlug) track(craftsmanSlug, "call");
             }}

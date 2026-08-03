@@ -2,6 +2,7 @@
 
 import { IconPhone, IconWhatsApp } from "@/components/shared/icons";
 import { useStats } from "@/hooks/admin/useStats";
+import { telHref, whatsappHref } from "@/lib/utils/url";
 
 export function ActionButtons({
   phone,
@@ -15,13 +16,13 @@ export function ActionButtons({
   craftsmanSlug?: string;
 }) {
   const { track } = useStats();
-  const waUrl = `https://wa.me/${whatsapp.replace(/[^0-9]/g, "")}`;
+  const waUrl = whatsappHref(whatsapp);
   const isLarge = size === "lg";
 
   return (
     <div className="grid grid-cols-2 gap-2">
       <a
-        href={`tel:${phone}`}
+        href={telHref(phone)}
         onClick={() => {
           if (craftsmanSlug) track(craftsmanSlug, "call");
         }}

@@ -2,11 +2,12 @@ import Link from "next/link";
 import type { CategoryWithCount } from "@/lib/data/craftsmen";
 import { CategoryIcon } from "@/components/shared/ui/CategoryIcon";
 import { IconArrow } from "@/components/shared/icons";
+import { categoryHref } from "@/lib/utils/url";
 
 export function CategoryCard({ category }: { category: CategoryWithCount }) {
   return (
     <Link
-      href={`/category/${category.slug}`}
+      href={categoryHref(category.slug)}
       className="group flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-card transition-all duration-300 hover:-translate-y-0.5 hover:border-accent hover:shadow-md"
     >
       <div className="rounded-lg bg-accent/15 p-2 text-accent">

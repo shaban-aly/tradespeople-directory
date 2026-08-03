@@ -6,6 +6,7 @@ import { CategoryBadge } from "@/components/shared/ui/CategoryBadge";
 import { RecentBadge } from "@/components/shared/ui/RecentBadge";
 import { VerifiedBadge } from "@/components/shared/ui/VerifiedBadge";
 import { IconArrow, IconWrench } from "@/components/shared/icons";
+import { craftsmanHref } from "@/lib/utils/url";
 
 export function CraftsmanCard({
   craftsman,
@@ -18,7 +19,7 @@ export function CraftsmanCard({
 }) {
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-accent hover:shadow-md">
-      <Link href={`/craftsman/${craftsman.slug}`} className="flex flex-1 flex-col">
+      <Link href={craftsmanHref(craftsman.slug)} className="flex flex-1 flex-col">
         <div className="relative aspect-[4/3] overflow-hidden bg-accent/10">
           {craftsman.image ? (
             <Image

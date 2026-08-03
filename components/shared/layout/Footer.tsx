@@ -3,6 +3,7 @@ import Image from "next/image";
 import { getCategories } from "@/lib/db/queries";
 import { siteContact, siteNavLinks } from "@/lib/data/site";
 import { toArabicDigits } from "@/lib/utils/format";
+import { categoryHref, mailtoHref, telHref, whatsappHref } from "@/lib/utils/url";
 import {
   IconMail,
   IconPhone,
@@ -73,7 +74,7 @@ export async function Footer() {
               {categoryLinks.map((category) => (
                 <li key={category.slug}>
                   <Link
-                    href={`/category/${category.slug}`}
+                    href={categoryHref(category.slug)}
                     className="text-base text-muted transition-colors hover:text-accent"
                   >
                     {category.name}
@@ -90,7 +91,7 @@ export async function Footer() {
             <ul className="mt-3 space-y-3">
               <li>
                 <a
-                  href={`tel:${siteContact.phone}`}
+                  href={telHref(siteContact.phone)}
                   className="flex items-center gap-2 text-base text-muted transition-colors hover:text-accent"
                 >
                   <IconPhone className="h-5 w-5 shrink-0" />
@@ -99,7 +100,7 @@ export async function Footer() {
               </li>
               <li>
                 <a
-                  href={`https://wa.me/${siteContact.whatsapp}`}
+                  href={whatsappHref(siteContact.whatsapp)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-base text-muted transition-colors hover:text-accent"
@@ -110,7 +111,7 @@ export async function Footer() {
               </li>
               <li>
                 <a
-                  href={`mailto:${siteContact.email}`}
+                  href={mailtoHref(siteContact.email)}
                   className="flex items-center gap-2 text-base text-muted transition-colors hover:text-accent"
                 >
                   <IconMail className="h-5 w-5 shrink-0" />

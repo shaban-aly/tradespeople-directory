@@ -8,6 +8,7 @@ import { IconPin, IconWrench } from "@/components/shared/icons";
 import { SocialLinks } from "@/components/craftsman/SocialLinks";
 import { StickyCallBar } from "@/components/craftsman/StickyCallBar";
 import { ViewTracker } from "@/components/craftsman/ViewTracker";
+import { categoryHref } from "@/lib/utils/url";
 
 export function CraftsmanDetail({
   craftsman,
@@ -31,7 +32,7 @@ export function CraftsmanDetail({
         </Link>
         <span aria-hidden>·</span>
         <Link
-          href={`/category/${craftsman.category}`}
+          href={categoryHref(craftsman.category)}
           className="font-bold transition-colors hover:text-accent"
         >
           {category?.name ?? "التصنيف"}

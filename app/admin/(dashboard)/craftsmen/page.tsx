@@ -27,6 +27,7 @@ import {
 } from "@/hooks/admin/useAdminDashboard";
 import { useToast } from "@/hooks/ui/useToast";
 import { toArabicDigits } from "@/lib/utils/format";
+import { craftsmanHref } from "@/lib/utils/url";
 
 const PAGE_SIZE = 8;
 
@@ -308,7 +309,7 @@ export default function CraftsmenPage() {
                       <td className="py-3 pl-2">
                         <div className="flex flex-wrap items-center gap-2">
                           <Link
-                            href={`/craftsman/${craftsman.slug}`}
+                            href={craftsmanHref(craftsman.slug)}
                             target="_blank"
                             rel="noreferrer"
                             aria-label="عرض في الدليل"

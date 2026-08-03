@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getCategoryBySlug, getCraftsmanBySlug, getCraftsmen } from "@/lib/db/queries";
+import { getCategoryBySlug, getCraftsmanBySlug, getCraftsmen, getCraftsmenByCategory } from "@/lib/db/queries";
 import { Footer } from "@/components/shared/layout/Footer";
 import { Header } from "@/components/shared/layout/Header";
 import { JsonLd } from "@/components/shared/seo/JsonLd";
 import { CraftsmanDetail } from "@/components/craftsman/CraftsmanDetail";
+import { CraftsmanCard } from "@/components/shared/ui/CraftsmanCard";
+import { SectionHeader } from "@/components/shared/ui/SectionHeader";
 import { breadcrumbSchema, craftsmanSchema } from "@/lib/seo/schema";
 import { siteUrl } from "@/lib/data/site";
 
@@ -54,7 +56,14 @@ export default async function CraftsmanPage({
   const craftsman = await getCraftsmanBySlug(slug);
   if (!craftsman) notFound();
 
-  const category = await getCategoryBySlug(craftsman.category);
+  const [category, categoryCraftsmen] = await Promise.all([
+    getCategoryBySlug(craftsman.category),
+    getCraftsmenByCategory(craftsman.category),
+  ]);
+
+  const relatedCraftsmen = categoryCraftsmen
+    .filter((c) => c.slug !== craftsman.slug)
+    .slice(0, 3);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -73,6 +82,25 @@ export default async function CraftsmanPage({
           data={craftsmanSchema(craftsman, category?.name ?? "صنايعي")}
         />
         <CraftsmanDetail craftsman={craftsman} category={category} />
+
+        {relatedCraftsmen.length > 0 && (
+          <section className="mt-12">
+            <SectionHeader
+              eyebrow="أكثر صنايعية"
+              title={`صنايعية ${category?.name ?? "نفس التخصص"} آخرون`}
+              description="صنايعية آخرون في نفس التخصص — تواصل معهم مباشرة بدون وسيط."
+            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              {relatedCraftsmen.map((related) => (
+                <CraftsmanCard
+                  key={related.id}
+                  craftsman={related}
+                  category={category}
+                />
+              ))}
+            </div>
+          </section>
+        )}
       </main>
       <Footer />
     </div>

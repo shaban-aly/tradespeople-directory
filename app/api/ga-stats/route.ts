@@ -56,9 +56,10 @@ export async function GET() {
     return NextResponse.json({ overview });
   } catch (err) {
     console.error("[ga-stats] فشل جلب البيانات:", err);
-    return NextResponse.json(
-      { error: "مقدرناش نجيب إحصائيات جوجل حالياً" },
-      { status: 500 },
-    );
+    const message =
+      err instanceof Error && err.message
+        ? err.message
+        : "خطأ غير معروف";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

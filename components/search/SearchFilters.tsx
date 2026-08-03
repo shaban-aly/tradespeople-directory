@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import type { Category, CraftsmanSort } from "@/lib/data/craftsmen";
+import { searchHref } from "@/lib/utils/url";
 
 const sortOptions: { value: CraftsmanSort; label: string }[] = [
   { value: "verified", label: "الموثّقون أولاً" },
@@ -33,7 +34,6 @@ export function SearchFilters({
   current: CurrentFilters;
 }) {
   const router = useRouter();
-  const pathname = usePathname();
 
   function update(next: Partial<Omit<CurrentFilters, "query">>) {
     const merged = {
@@ -41,12 +41,14 @@ export function SearchFilters({
       area: next.area ?? current.area,
       sort: next.sort ?? current.sort,
     };
-    const params = new URLSearchParams();
-    if (current.query) params.set("q", current.query);
-    if (merged.category) params.set("category", merged.category);
-    if (merged.area) params.set("area", merged.area);
-    params.set("sort", merged.sort);
-    router.push(`${pathname}?${params.toString()}`);
+    router.push(
+      searchHref({
+        q: current.query,
+        category: merged.category,
+        area: merged.area,
+        sort: merged.sort,
+      }),
+    );
   }
 
   return (
