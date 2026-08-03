@@ -20,14 +20,18 @@ const nextConfig = {
 
     const isDev = process.env.NODE_ENV === "development";
 
+    const gaHost = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
+      ? "https://www.googletagmanager.com https://*.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com"
+      : "";
+
     const csp = [
       "default-src 'self'",
-      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}${gaHost ? ` ${gaHost}` : ""}`,
       "style-src 'self' 'unsafe-inline'",
       "font-src 'self' data:",
-      `img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com${supabaseHost ? ` ${supabaseHost}` : ""}`,
+      `img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com${supabaseHost ? ` ${supabaseHost}` : ""}${gaHost ? ` ${gaHost}` : ""}`,
       "media-src 'self' blob:",
-      `connect-src 'self'${supabaseUrl ? ` ${supabaseUrl}` : ""}`,
+      `connect-src 'self'${supabaseUrl ? ` ${supabaseUrl}` : ""}${gaHost ? ` ${gaHost}` : ""}`,
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'",

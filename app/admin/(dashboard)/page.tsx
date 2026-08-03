@@ -19,6 +19,7 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { StatCard } from "@/components/admin/StatCard";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { useAdminDashboard } from "@/hooks/admin/useAdminDashboard";
+import { useGaStats } from "@/hooks/admin/useGaStats";
 import { useToast } from "@/hooks/ui/useToast";
 import { toArabicDigits } from "@/lib/utils/format";
 
@@ -43,6 +44,9 @@ export default function OverviewPage() {
     craftsmen: true,
     messages: true,
   });
+
+  const { overview: ga, loading: gaLoading, error: gaError, needsSetup } =
+    useGaStats();
 
   useEffect(() => {
     if (error) toast("error", error);
@@ -145,20 +149,50 @@ export default function OverviewPage() {
         </div>
       </section>
 
-      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <div className="grid gap-3 rounded-2xl border border-border bg-card p-4">
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+        <div className="grid gap-3 rounded-2xl border border-border bg-card p-4 shadow-card">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="truncate text-sm text-muted">زوار اليوم</p>
-              <p className="mt-1 font-heading text-2xl font-extrabold text-muted">
-                —
+              <p className="mt-1 font-heading text-2xl font-extrabold text-foreground">
+                {ga && !gaLoading ? toArabicDigits(ga.todayUsers) : "—"}
               </p>
             </div>
-            <div className="shrink-0 rounded-xl bg-muted/10 p-2.5 text-muted">
+            <div className="shrink-0 rounded-xl bg-accent/10 p-2.5 text-accent">
               <IconTrendingUp className="h-6 w-6" />
             </div>
           </div>
-          <p className="text-xs text-muted">سيُربط بـ Vercel Analytics</p>
+          <p className="truncate text-xs text-muted">
+            {needsSetup
+              ? "اضبط بيانات GA في المتغيرات"
+              : gaError
+                ? gaError
+                : ga
+                  ? `مشاهدات الصفحات: ${toArabicDigits(ga.todayPageviews)}`
+                  : "جاري التحميل..."}
+          </p>
+        </div>
+        <div className="grid gap-3 rounded-2xl border border-border bg-card p-4 shadow-card">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-sm text-muted">زوار آخر 7 أيام</p>
+              <p className="mt-1 font-heading text-2xl font-extrabold text-foreground">
+                {ga && !gaLoading ? toArabicDigits(ga.weekUsers) : "—"}
+              </p>
+            </div>
+            <div className="shrink-0 rounded-xl bg-accent/10 p-2.5 text-accent">
+              <IconTrendingUp className="h-6 w-6" />
+            </div>
+          </div>
+          <p className="truncate text-xs text-muted">
+            {needsSetup
+              ? "اضبط بيانات GA في المتغيرات"
+              : gaError
+                ? gaError
+                : ga
+                  ? `مشاهدات الصفحات: ${toArabicDigits(ga.weekPageviews)}`
+                  : "جاري التحميل..."}
+          </p>
         </div>
         <StatCard
           icon={<IconUsers className="h-6 w-6" />}

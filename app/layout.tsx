@@ -40,6 +40,15 @@ try {
 } catch (e) {}
 `;
 
+const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+
+const gaInitScript = `
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${gaId}', { anonymize_ip: true });
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -49,6 +58,15 @@ export default function RootLayout({
     <html lang="ar" dir="rtl">
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        {gaId ? (
+          <>
+            <script
+              async
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+            />
+            <script dangerouslySetInnerHTML={{ __html: gaInitScript }} />
+          </>
+        ) : null}
       </head>
       <body
         className={`${cairo.variable} ${tajawal.variable} bg-background font-body text-foreground antialiased`}
