@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cairo, Tajawal } from "next/font/google";
-import { siteDescription, siteName, siteTagline, siteUrl } from "@/lib/data/site";
 import "./globals.css";
+import { PwaRegister } from "@/components/shared/layout/PwaRegister";
+import { siteName, siteTagline, siteUrl, siteDescription } from "@/lib/data/site";
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -71,6 +72,10 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
 };
 
+export const viewport: Viewport = {
+  themeColor: "#3b5fe3",
+};
+
 const themeInitScript = `
 try {
   if (localStorage.getItem("tradespeople-theme") === "dark") {
@@ -97,6 +102,11 @@ export default function RootLayout({
     <html lang="ar" dir="rtl" data-scroll-behavior="smooth">
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <meta name="theme-color" content="#3b5fe3" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="دليل الصنايعية" />
         {gaId ? (
           <>
             <script
@@ -110,6 +120,7 @@ export default function RootLayout({
       <body
         className={`${cairo.variable} ${tajawal.variable} bg-background font-body text-foreground antialiased`}
       >
+        <PwaRegister />
         {children}
       </body>
     </html>
