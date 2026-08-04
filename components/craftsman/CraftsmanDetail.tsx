@@ -22,7 +22,7 @@ export function CraftsmanDetail({
       <ViewTracker slug={craftsman.slug} />
       <nav
         aria-label="مسار التنقل"
-        className="flex flex-wrap items-center gap-1.5 text-sm text-muted"
+        className="flex flex-wrap items-center gap-1 text-sm text-muted"
       >
         <Link
           href="/"
@@ -44,7 +44,7 @@ export function CraftsmanDetail({
       </nav>
 
       <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
-        <div className="relative aspect-[16/9] bg-accent/10 sm:aspect-[16/10]">
+        <div className="relative h-[50vh] min-h-64 bg-gradient-to-br from-accent/10 via-card to-accent/10">
           {craftsman.image ? (
             <Image
               src={craftsman.image}
@@ -52,7 +52,7 @@ export function CraftsmanDetail({
               fill
               priority
               sizes="(min-width: 640px) 42rem, 100vw"
-              className="object-cover"
+              className="object-contain p-3"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-accent">
