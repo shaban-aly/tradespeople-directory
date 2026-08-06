@@ -27,7 +27,7 @@ export function ContactSection() {
         <Reveal>
           <SectionHeader
             eyebrow="إزاي بيشتغل الموقع"
-            title="وصلت للصنايعي في 3 خطوات"
+            title="اوصل للصنايعي في 3 خطوات"
             description="صممناه يبقى أسرع وأقرب حاجة للتواصل مع الصنايعي."
           />
         </Reveal>

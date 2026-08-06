@@ -1,7 +1,7 @@
 "use client";
 
 import { IconPhone, IconWhatsApp } from "@/components/shared/icons";
-import { useStats } from "@/hooks/admin/useStats";
+import { useStats } from "@/hooks/useStats";
 import {
   craftsmanWhatsappMessage,
   telHref,
@@ -17,7 +17,7 @@ export function ActionButtons({
 }: {
   phone: string;
   whatsapp: string;
-  size?: "md" | "lg";
+  size?: "sm" | "md" | "lg";
   craftsmanSlug?: string;
   craftsmanName?: string;
 }) {
@@ -27,20 +27,25 @@ export function ActionButtons({
     craftsmanName ? craftsmanWhatsappMessage(craftsmanName) : undefined,
   );
   const isLarge = size === "lg";
+  const isIconOnly = size === "sm";
+  const buttonClass = isLarge
+    ? "min-h-14 gap-3 px-4 text-lg"
+    : isIconOnly
+      ? "h-12 w-12"
+      : "min-h-12 px-3 text-base";
 
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className={isIconOnly ? "flex gap-2" : "grid grid-cols-2 gap-2"}>
       <a
         href={telHref(phone)}
         onClick={() => {
           if (craftsmanSlug) track(craftsmanSlug, "call");
         }}
-        className={`flex items-center justify-center gap-2 rounded-xl bg-accent font-bold text-on-accent transition-colors hover:bg-accent/90 ${
-          isLarge ? "min-h-14 gap-3 px-4 text-lg" : "min-h-12 px-3 text-base"
-        }`}
+        aria-label="اتصال هاتفي"
+        className={`flex items-center justify-center gap-2 rounded-xl bg-accent font-bold text-on-accent transition-colors hover:bg-accent/90 ${buttonClass}`}
       >
         <IconPhone className={isLarge ? "h-6 w-6" : "h-5 w-5"} />
-        اتصل
+        {!isIconOnly && "اتصل"}
       </a>
       <a
         href={waUrl}
@@ -49,12 +54,11 @@ export function ActionButtons({
         onClick={() => {
           if (craftsmanSlug) track(craftsmanSlug, "whatsapp");
         }}
-        className={`flex items-center justify-center gap-2 rounded-xl bg-action font-bold text-on-action transition-colors hover:bg-action/90 ${
-          isLarge ? "min-h-14 gap-3 px-4 text-lg" : "min-h-12 px-3 text-base"
-        }`}
+        aria-label="مراسلة واتساب"
+        className={`flex items-center justify-center gap-2 rounded-xl bg-action font-bold text-on-action transition-colors hover:bg-action/90 ${buttonClass}`}
       >
         <IconWhatsApp className={isLarge ? "h-6 w-6" : "h-5 w-5"} />
-        واتساب
+        {!isIconOnly && "واتساب"}
       </a>
     </div>
   );

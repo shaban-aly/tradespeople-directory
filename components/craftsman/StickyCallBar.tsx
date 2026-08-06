@@ -1,7 +1,7 @@
 "use client";
 
 import { IconPhone, IconWhatsApp } from "@/components/shared/icons";
-import { useStats } from "@/hooks/admin/useStats";
+import { useStats } from "@/hooks/useStats";
 import {
   craftsmanWhatsappMessage,
   telHref,

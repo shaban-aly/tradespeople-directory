@@ -4,6 +4,7 @@ import {
   BarChart3,
   Camera,
   Check,
+  ChevronDown,
   ExternalLink,
   Eye,
   EyeOff,
@@ -11,6 +12,8 @@ import {
   HeartHandshake,
   Inbox,
   LayoutDashboard,
+  LayoutGrid,
+  List,
   Lock,
   LogOut,
   Mail,
@@ -22,6 +25,8 @@ import {
   Plus,
   RefreshCw,
   Search,
+  SlidersHorizontal,
+  Star,
   Sun,
   Tags,
   Trash2,
@@ -80,8 +85,24 @@ export function IconMenu(props: LucideProps) {
   return <Menu {...props} />;
 }
 
+export function IconSliders(props: LucideProps) {
+  return <SlidersHorizontal {...props} />;
+}
+
+export function IconChevronDown(props: LucideProps) {
+  return <ChevronDown {...props} />;
+}
+
 export function IconLayoutDashboard(props: LucideProps) {
   return <LayoutDashboard {...props} />;
+}
+
+export function IconGrid(props: LucideProps) {
+  return <LayoutGrid {...props} />;
+}
+
+export function IconList(props: LucideProps) {
+  return <List {...props} />;
 }
 
 export function IconInbox(props: LucideProps) {
@@ -106,6 +127,10 @@ export function IconRefresh(props: LucideProps) {
 
 export function IconSearch(props: LucideProps) {
   return <Search {...props} />;
+}
+
+export function IconStar(props: LucideProps) {
+  return <Star {...props} />;
 }
 
 export function IconPlus(props: LucideProps) {

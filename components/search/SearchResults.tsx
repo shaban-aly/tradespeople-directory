@@ -1,5 +1,6 @@
 import type { Category, Craftsman } from "@/lib/data/craftsmen";
-import { CraftsmanCard } from "@/components/shared/ui/CraftsmanCard";
+import { CraftsmanGrid } from "@/components/shared/ui/CraftsmanGrid";
+import { SearchTracker } from "@/components/search/SearchTracker";
 import { toArabicDigits } from "@/lib/utils/format";
 
 export function SearchResults({
@@ -11,15 +12,9 @@ export function SearchResults({
   categories: Category[];
   query: string;
 }) {
-  const categoryMap = new Map(categories.map((category) => [category.slug, category]));
-
   return (
     <div className="mt-6">
-      <p className="mb-4 text-base text-muted">
-        {toArabicDigits(craftsmen.length)}{" "}
-        {craftsmen.length === 1 ? "صنايعي" : "صنايعية"}
-      </p>
-
+      <SearchTracker query={query} />
       {craftsmen.length === 0 ? (
         <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-card">
           <p className="font-heading text-xl font-bold">لا توجد نتائج</p>
@@ -30,15 +25,16 @@ export function SearchResults({
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {craftsmen.map((craftsman) => (
-            <CraftsmanCard
-              key={craftsman.id}
-              craftsman={craftsman}
-              category={categoryMap.get(craftsman.category)}
-            />
-          ))}
-        </div>
+        <CraftsmanGrid
+          craftsmen={craftsmen}
+          categories={categories}
+          toolbar={
+            <p className="text-base text-muted">
+              {toArabicDigits(craftsmen.length)}{" "}
+              {craftsmen.length === 1 ? "صنايعي" : "صنايعية"}
+            </p>
+          }
+        />
       )}
     </div>
   );

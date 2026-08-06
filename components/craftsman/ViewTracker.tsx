@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useStats } from "@/hooks/admin/useStats";
+import { useStats } from "@/hooks/useStats";
 
 export function ViewTracker({ slug }: { slug: string }) {
   const { track } = useStats();

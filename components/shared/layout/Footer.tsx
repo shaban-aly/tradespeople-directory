@@ -1,26 +1,21 @@
 import Link from "next/link";
 import Image from "next/image";
-import { getCategories } from "@/lib/db/queries";
 import { siteContact, siteNavLinks } from "@/lib/data/site";
 import { toArabicDigits } from "@/lib/utils/format";
-import { categoryHref, mailtoHref, telHref, whatsappHref } from "@/lib/utils/url";
+import { mailtoHref, telHref, whatsappHref } from "@/lib/utils/url";
 import {
   IconMail,
   IconPhone,
   IconWhatsApp,
 } from "@/components/shared/icons";
 
-const CATEGORY_LINKS_COUNT = 8;
-
 export async function Footer() {
-  const categories = await getCategories();
-  const categoryLinks = categories.slice(0, CATEGORY_LINKS_COUNT);
   const year = toArabicDigits(new Date().getFullYear());
 
   return (
     <footer className="border-t border-border bg-card/40">
       <div className="mx-auto w-full max-w-5xl px-4 py-10">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           <div>
             <Link href="/" className="flex w-fit items-center gap-2">
               <Image
@@ -66,24 +61,6 @@ export async function Footer() {
             </ul>
           </nav>
 
-          <nav aria-label="التخصصات">
-            <h3 className="font-heading text-base font-bold text-foreground">
-              التخصصات
-            </h3>
-            <ul className="mt-3 space-y-2">
-              {categoryLinks.map((category) => (
-                <li key={category.slug}>
-                  <Link
-                    href={categoryHref(category.slug)}
-                    className="text-base text-muted transition-colors hover:text-accent"
-                  >
-                    {category.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
           <div>
             <h3 className="font-heading text-base font-bold text-foreground">
               تواصل معنا
@@ -95,7 +72,7 @@ export async function Footer() {
                   className="flex items-center gap-2 text-base text-muted transition-colors hover:text-accent"
                 >
                   <IconPhone className="h-5 w-5 shrink-0" />
-                  <bdi dir="ltr">{siteContact.phone}</bdi>
+                  <bdi dir="ltr">+20101 997 9315</bdi>
                 </a>
               </li>
               <li>
@@ -115,7 +92,7 @@ export async function Footer() {
                   className="flex items-center gap-2 text-base text-muted transition-colors hover:text-accent"
                 >
                   <IconMail className="h-5 w-5 shrink-0" />
-                  <bdi dir="ltr">{siteContact.email}</bdi>
+                  <bdi dir="ltr">ShabanAly@gmail.com</bdi>
                 </a>
               </li>
             </ul>

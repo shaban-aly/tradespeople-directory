@@ -1,7 +1,7 @@
 "use client";
 
 import { CategoryIcon } from "@/components/shared/ui/CategoryIcon";
-import { CATEGORY_ICON_OPTIONS } from "@/hooks/admin/useAdminDashboard";
+import { CATEGORY_ICON_OPTIONS } from "@/lib/db/admin";
 
 const ICON_LABELS: Record<(typeof CATEGORY_ICON_OPTIONS)[number], string> = {
   plumbing: "سباكة",

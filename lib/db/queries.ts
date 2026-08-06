@@ -243,6 +243,88 @@ export const getFeaturedCraftsmen = unstable_cache(getFeaturedCraftsmenImpl, [
   "featured-craftsmen",
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
 
+/** صنايعي مع إحصائياته الحقيقية — مجموعة اقتراحات «مقترحات لك». */
+export type CraftsmanWithStats = Craftsman & {
+  stats: { views: number; calls: number; whatsapp: number };
+};
+
+async function getRecommendationPoolImpl(
+  limit = 40,
+): Promise<CraftsmanWithStats[]> {
+  const { data } = (await createServerReadClient()
+    .from("craftsmen")
+    .select(`${CRAFTSMAN_SELECT}, stats:craftsman_stats(views, calls, whatsapp)`)
+    .eq("is_published", true)
+    .limit(limit)) as { data: FeaturedRow[] | null };
+
+  return (data ?? []).map((row) => ({
+    ...mapCraftsman(row),
+    stats: row.stats ?? { views: 0, calls: 0, whatsapp: 0 },
+  }));
+}
+
+export const getRecommendationPool = unstable_cache(getRecommendationPoolImpl, [
+  "recommendation-pool",
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
+
+/** صف نتيجة دالة `get_related_craftsmen` (توصية تعاونية من أحداث الجلسات). */
+type RelatedCraftsmanRow = {
+  id: string;
+  slug: string;
+  name: string;
+  image_url: string | null;
+  phone: string;
+  whatsapp: string | null;
+  description: string | null;
+  verified: boolean;
+  added_at: string;
+  category_slug: string;
+  category_name: string;
+  category_icon: string;
+  area_name: string;
+  co_count: number;
+};
+
+function mapRelatedRow(row: RelatedCraftsmanRow): Craftsman {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    category: row.category_slug,
+    image: row.image_url ?? "",
+    phone: row.phone,
+    whatsapp: row.whatsapp ?? "",
+    area: row.area_name ?? "",
+    description: row.description ?? "",
+    verified: row.verified,
+    addedAt: row.added_at,
+  };
+}
+
+/**
+ * «من شاف كمان»: صنايعية تفاعلت معهم نفس جلسات هذا الصنايعي (collaborative filtering).
+ * تعتمد على دالة `get_related_craftsmen` في القاعدة — إن لم تكن مثبّتة أو
+ * لم توجد بيانات بعد، ترجع قائمة فارغة بأمان.
+ */
+export async function getRelatedByCoEngagement(
+  craftsmanId: string,
+  limit = 6,
+): Promise<Craftsman[]> {
+  const { data, error } = await (
+    createServerReadClient() as unknown as {
+      rpc: (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: RelatedCraftsmanRow[] | null; error: { message: string } | null }>;
+    }
+  ).rpc("get_related_craftsmen", {
+    p_craftsman_id: craftsmanId,
+    p_limit: limit,
+  });
+  if (error || !data || data.length === 0) return [];
+  return data.map(mapRelatedRow);
+}
+
 async function getSearchDataImpl(): Promise<SearchData> {
   const [categories, areas, craftsmen] = await Promise.all([
     getCategoriesWithCounts(),

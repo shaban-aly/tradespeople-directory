@@ -1,39 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  IconEdit,
-  IconPlus,
-  IconRefresh,
-  IconTags,
-  IconTrash,
-} from "@/components/shared/icons";
-import { CategoryIcon } from "@/components/shared/ui/CategoryIcon";
-import { CategoryIconPicker } from "@/components/admin/CategoryIconPicker";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { DashboardLoading } from "@/components/admin/DashboardLoading";
 import { EmptyState } from "@/components/admin/EmptyState";
-import { Modal } from "@/components/admin/Modal";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { ToggleSwitch } from "@/components/admin/ToggleSwitch";
+import { RefreshButton } from "@/components/admin/RefreshButton";
+import { CategoriesTable } from "@/components/admin/categories/CategoriesTable";
 import {
-  CATEGORY_ICON_OPTIONS,
-  type CategoryRow,
-  useAdminDashboard,
-} from "@/hooks/admin/useAdminDashboard";
+  CategoryFormModal,
+  type CategoryFormValues,
+} from "@/components/admin/categories/CategoryFormModal";
+import { IconPlus, IconTags } from "@/components/shared/icons";
+import type { CategoryRow } from "@/lib/db/admin";
+import { useAdminCategories } from "@/hooks/admin/useAdminCategories";
 import { useToast } from "@/hooks/ui/useToast";
 import { toArabicDigits } from "@/lib/utils/format";
-import { Field, fieldErrorId } from "@/components/shared/form/Field";
-import { TextField } from "@/components/shared/form/TextField";
-import {
-  anyError,
-  type CategoryFormErrors,
-  FIELD_LIMITS,
-  validateCategoryFields,
-} from "@/lib/utils/validation";
-
-const inputClass =
-  "w-full rounded-xl border border-border bg-card px-3 py-2.5 text-base text-foreground placeholder:text-muted focus:border-accent focus:outline-none";
 
 export default function CategoriesPage() {
   const { toast } = useToast();
@@ -48,14 +30,9 @@ export default function CategoriesPage() {
     deleteCategory,
     toggleCategoryActive,
     refresh,
-  } = useAdminDashboard({ categories: true, counts: true });
+  } = useAdminCategories();
   const [formTarget, setFormTarget] = useState<CategoryRow | "new" | null>(null);
-  const [slug, setSlug] = useState("");
-  const [name, setName] = useState("");
-  const [icon, setIcon] = useState<(typeof CATEGORY_ICON_OPTIONS)[number]>("plumbing");
   const [deleteTarget, setDeleteTarget] = useState<CategoryRow | null>(null);
-  const [touched, setTouched] = useState<Partial<Record<"name" | "slug", boolean>>>({});
-  const [errors, setErrors] = useState<CategoryFormErrors>({});
 
   useEffect(() => {
     if (error) toast("error", error);
@@ -63,64 +40,24 @@ export default function CategoriesPage() {
 
   if (loading) return <DashboardLoading />;
 
-  function openForm(target: CategoryRow | "new") {
-    setFormTarget(target);
-    setErrors({});
-    setTouched({});
-    if (target === "new") {
-      setSlug("");
-      setName("");
-      setIcon("plumbing");
-    } else {
-      setSlug(target.slug);
-      setName(target.name);
-      setIcon(target.icon as (typeof CATEGORY_ICON_OPTIONS)[number]);
-    }
-  }
-
-  function getError(field: "name" | "slug"): string | undefined {
-    return touched[field] ? errors[field] : undefined;
-  }
-
-  function handleChange(field: "name" | "slug", value: string) {
-    if (field === "name") setName(value);
-    else setSlug(value);
-    if (touched[field]) {
-      const single = validateCategoryFields({
-        name: field === "name" ? value : name,
-        slug: field === "slug" ? value : slug,
-      });
-      setErrors((prev) => ({ ...prev, [field]: single[field] }));
-    }
-  }
-
-  function handleBlur(field: "name" | "slug") {
-    setTouched((prev) => ({ ...prev, [field]: true }));
-    const single = validateCategoryFields({ name, slug });
-    setErrors((prev) => ({ ...prev, [field]: single[field] }));
-  }
-
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    const nextErrors = validateCategoryFields({ name: name.trim(), slug: slug.trim() });
-    setErrors(nextErrors);
-    setTouched({ name: true, slug: true });
-    if (anyError(nextErrors)) return;
-
-    const payload = { slug: slug.trim(), name: name.trim(), icon };
+  async function handleSubmit(payload: CategoryFormValues): Promise<boolean> {
     if (formTarget === "new") {
       const ok = await addCategory(payload);
       if (ok) {
         toast("success", "تمت إضافة التخصص");
         setFormTarget(null);
       }
-    } else if (formTarget) {
+      return ok;
+    }
+    if (formTarget) {
       const ok = await updateCategory(formTarget.id, payload);
       if (ok) {
         toast("success", "تم حفظ تعديلات التخصص");
         setFormTarget(null);
       }
+      return ok;
     }
+    return false;
   }
 
   async function handleToggle(category: CategoryRow) {
@@ -154,17 +91,10 @@ export default function CategoriesPage() {
         description={`إدارة ${categories.length} تخصص معروض في الموقع.`}
         actions={
           <>
+            <RefreshButton onRefresh={() => void refresh()} />
             <button
               type="button"
-              onClick={() => void refresh()}
-              className="flex min-h-12 items-center gap-2 rounded-xl border border-border px-4 text-base font-bold text-foreground transition-colors hover:border-accent hover:text-accent"
-            >
-              <IconRefresh className="h-5 w-5" />
-              تحديث
-            </button>
-            <button
-              type="button"
-              onClick={() => openForm("new")}
+              onClick={() => setFormTarget("new")}
               className="flex min-h-12 items-center gap-2 rounded-xl bg-accent px-4 text-base font-bold text-on-accent transition-colors hover:bg-accent/90"
             >
               <IconPlus className="h-5 w-5" />
@@ -182,138 +112,26 @@ export default function CategoriesPage() {
             description="أضف أول تخصص ليظهر في الصفحة الرئيسية."
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] border-collapse text-right">
-              <thead>
-                <tr className="border-b border-border text-base text-muted">
-                  <th className="py-3 pr-2 font-bold">الأيقونة</th>
-                  <th className="py-3 px-3 font-bold">الاسم</th>
-                  <th className="py-3 px-3 font-bold">slug</th>
-                  <th className="py-3 px-3 font-bold">الصنايعية</th>
-                  <th className="py-3 px-3 font-bold">نشط</th>
-                  <th className="py-3 pl-2 font-bold">إجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {categories.map((category) => (
-                  <tr
-                    key={category.id}
-                    className="border-b border-border last:border-0"
-                  >
-                    <td className="py-3 pr-2">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
-                        <CategoryIcon name={category.icon} className="h-6 w-6" />
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 text-base font-bold text-foreground">
-                      {category.name}
-                    </td>
-                    <td className="py-3 px-3 text-base text-muted" dir="ltr">
-                      {category.slug}
-                    </td>
-                    <td className="py-3 px-3 text-base text-muted">
-                      {toArabicDigits(categoryCounts[category.slug] ?? 0)}
-                    </td>
-                    <td className="py-3 px-3">
-                      <ToggleSwitch
-                        checked={category.is_active}
-                        onChange={() => void handleToggle(category)}
-                        disabled={busyKey === `category-${category.id}`}
-                        label={`إظهار/إخفاء ${category.name}`}
-                      />
-                    </td>
-                    <td className="py-3 pl-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          aria-label="تعديل"
-                          onClick={() => openForm(category)}
-                          className="rounded-xl border border-border p-3 text-muted transition-colors hover:border-accent hover:text-accent"
-                        >
-                          <IconEdit className="h-5 w-5" />
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="حذف"
-                          onClick={() => setDeleteTarget(category)}
-                          className="rounded-xl border border-border p-3 text-muted transition-colors hover:border-danger hover:text-danger"
-                        >
-                          <IconTrash className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <CategoriesTable
+            categories={categories}
+            counts={categoryCounts}
+            busyKey={busyKey}
+            onEdit={setFormTarget}
+            onToggle={(category) => void handleToggle(category)}
+            onDelete={setDeleteTarget}
+          />
         )}
       </section>
 
-      <Modal
+      <CategoryFormModal
+        target={formTarget}
         open={formTarget !== null}
+        busy={
+          busyKey === "add-category" || busyKey.startsWith("update-category-")
+        }
         onClose={() => setFormTarget(null)}
-        title={formTarget === "new" ? "إضافة تخصص" : "تعديل التخصص"}
-      >
-        <form onSubmit={handleSubmit} noValidate className="grid gap-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field
-              label="الاسم"
-              htmlFor="category-name"
-              required
-              error={getError("name")}
-            >
-              <TextField
-                id="category-name"
-                required
-                maxLength={FIELD_LIMITS.nameMax}
-                value={name}
-                invalid={Boolean(getError("name"))}
-                aria-describedby={getError("name") ? fieldErrorId("category-name") : undefined}
-                onChange={(event) => handleChange("name", event.target.value)}
-                onBlur={() => handleBlur("name")}
-                placeholder="مثال: سباكة"
-                className={inputClass}
-              />
-            </Field>
-            <Field
-              label="slug"
-              htmlFor="category-slug"
-              required
-              error={getError("slug")}
-            >
-              <TextField
-                id="category-slug"
-                required
-                dir="ltr"
-                maxLength={FIELD_LIMITS.slugMax}
-                value={slug}
-                invalid={Boolean(getError("slug"))}
-                aria-describedby={getError("slug") ? fieldErrorId("category-slug") : undefined}
-                onChange={(event) => handleChange("slug", event.target.value)}
-                onBlur={() => handleBlur("slug")}
-                placeholder="plumbing"
-                className={inputClass}
-              />
-            </Field>
-          </div>
-          <label className="grid gap-1">
-            <span className="text-base font-bold text-foreground">الأيقونة</span>
-            <CategoryIconPicker value={icon} onChange={setIcon} />
-          </label>
-          <button
-            type="submit"
-            disabled={busyKey === "add-category" || busyKey.startsWith("update-category-")}
-            className="min-h-12 rounded-xl bg-accent px-4 text-base font-bold text-on-accent transition-colors hover:bg-accent/90 disabled:opacity-50"
-          >
-            {busyKey === "add-category" || busyKey.startsWith("update-category-")
-              ? "جاري الحفظ..."
-              : formTarget === "new"
-                ? "إضافة التخصص"
-                : "حفظ التعديلات"}
-          </button>
-        </form>
-      </Modal>
+        onSubmit={handleSubmit}
+      />
 
       <ConfirmDialog
         open={deleteTarget !== null}

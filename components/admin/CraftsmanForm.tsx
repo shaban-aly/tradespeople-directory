@@ -9,7 +9,7 @@ import {
   type CraftsmanInput,
   type CraftsmanRow,
   type SocialLinkRow,
-} from "@/hooks/admin/useAdminDashboard";
+} from "@/lib/db/admin";
 import { useImageUpload } from "@/hooks/forms/useImageUpload";
 import { SocialLinksEditor } from "@/components/shared/ui/SocialLinksEditor";
 import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE_MB } from "@/lib/storage/images";

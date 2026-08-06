@@ -1,28 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Category, CraftsmanSort } from "@/lib/data/craftsmen";
+import type { Category } from "@/lib/data/craftsmen";
 import { searchHref } from "@/lib/utils/url";
+import { toArabicDigits } from "@/lib/utils/format";
+import { BottomSheet } from "@/components/shared/ui/BottomSheet";
+import { IconChevronDown, IconSliders } from "@/components/shared/icons";
+import {
+  FilterSections,
+  activeFilterCount,
+  type CurrentFilters,
+} from "@/components/search/FilterSections";
 
-const sortOptions: { value: CraftsmanSort; label: string }[] = [
-  { value: "verified", label: "الموثّقون أولاً" },
-  { value: "recent", label: "الأحدث أولاً" },
-];
-
-export type CurrentFilters = {
-  query: string;
-  category: string;
-  area: string;
-  sort: CraftsmanSort;
-};
-
-function chipClass(active: boolean) {
-  return `inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-base font-bold transition-colors ${
-    active
-      ? "border-accent bg-accent text-on-accent"
-      : "border-border bg-card text-foreground hover:border-accent hover:text-accent"
-  }`;
-}
+export { type CurrentFilters } from "@/components/search/FilterSections";
 
 export function SearchFilters({
   categories,
@@ -34,6 +25,7 @@ export function SearchFilters({
   current: CurrentFilters;
 }) {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
 
   function update(next: Partial<Omit<CurrentFilters, "query">>) {
     const merged = {
@@ -51,68 +43,59 @@ export function SearchFilters({
     );
   }
 
+  const count = activeFilterCount(current);
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-base font-bold">التخصص:</span>
-        <button
-          type="button"
-          onClick={() => update({ category: "" })}
-          aria-pressed={current.category === ""}
-          className={chipClass(current.category === "")}
-        >
-          كل التخصصات
-        </button>
-        {categories.map((category) => (
-          <button
-            key={category.slug}
-            type="button"
-            onClick={() => update({ category: category.slug })}
-            aria-pressed={current.category === category.slug}
-            className={chipClass(current.category === category.slug)}
-          >
-            {category.name}
-          </button>
-        ))}
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 text-base font-bold text-foreground shadow-card transition-colors hover:border-accent sm:hidden"
+      >
+        <span className="flex items-center gap-2">
+          <IconSliders className="h-5 w-5 text-muted" />
+          تعديل الفلاتر
+        </span>
+        <span className="flex items-center gap-2">
+          {count > 0 ? (
+            <span className="flex min-w-6 h-6 items-center justify-center rounded-full bg-accent px-2 text-sm font-bold text-on-accent">
+              {toArabicDigits(count)}
+            </span>
+          ) : null}
+          <IconChevronDown className="h-5 w-5 text-muted" />
+        </span>
+      </button>
+
+      <div className="hidden sm:block">
+        <FilterSections
+          categories={categories}
+          areas={areas}
+          current={current}
+          onUpdate={update}
+        />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-base font-bold">المنطقة:</span>
-        <button
-          type="button"
-          onClick={() => update({ area: "" })}
-          aria-pressed={current.area === ""}
-          className={chipClass(current.area === "")}
-        >
-          كل المناطق
-        </button>
-        {areas.map((area) => (
+      <BottomSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        title="تعديل الفلاتر"
+        footer={
           <button
-            key={area}
             type="button"
-            onClick={() => update({ area })}
-            aria-pressed={current.area === area}
-            className={chipClass(current.area === area)}
+            onClick={() => setOpen(false)}
+            className="flex min-h-12 w-full items-center justify-center rounded-xl bg-accent px-4 text-base font-bold text-on-accent transition-colors hover:bg-accent/90"
           >
-            {area}
+            عرض النتائج
           </button>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-base font-bold">ترتيب:</span>
-        <select
-          value={current.sort}
-          onChange={(event) => update({ sort: event.target.value as CraftsmanSort })}
-          className="rounded-lg border border-border bg-card px-3 py-2 text-base text-foreground focus:border-accent focus:outline-none"
-        >
-          {sortOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-    </div>
+        }
+      >
+        <FilterSections
+          categories={categories}
+          areas={areas}
+          current={current}
+          onUpdate={update}
+        />
+      </BottomSheet>
+    </>
   );
 }

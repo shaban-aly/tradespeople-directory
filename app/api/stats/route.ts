@@ -10,8 +10,11 @@ const LIMIT = 60;
 const WINDOW_MS = 60_000;
 const MAX_SLUG_LENGTH = 60;
 const MAX_DEVICE_ID_LENGTH = 200;
+const MAX_SESSION_ID_LENGTH = 64;
+const MAX_PATH_LENGTH = 200;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DEVICE_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
+const SESSION_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 
 type Metric = "view" | "call" | "whatsapp";
 type ErrorResponse = { error: string };
@@ -24,10 +27,31 @@ function makeDeviceKey(deviceId: string, ip: string): string {
     .digest("hex");
 }
 
+function sanitizePath(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const cleaned = value
+    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .trim()
+    .slice(0, MAX_PATH_LENGTH);
+  return cleaned.startsWith("/") ? cleaned : `/${cleaned}`;
+}
+
 export async function POST(request: NextRequest) {
-  let body: { slug?: unknown; type?: unknown; deviceId?: unknown };
+  let body: {
+    slug?: unknown;
+    type?: unknown;
+    deviceId?: unknown;
+    sessionId?: unknown;
+    path?: unknown;
+  };
   try {
-    body = (await request.json()) as { slug?: unknown; type?: unknown; deviceId?: unknown };
+    body = (await request.json()) as {
+      slug?: unknown;
+      type?: unknown;
+      deviceId?: unknown;
+      sessionId?: unknown;
+      path?: unknown;
+    };
   } catch {
     return NextResponse.json<ErrorResponse>({ error: "بيانات غير صحيحة" }, { status: 400 });
   }
@@ -47,6 +71,14 @@ export async function POST(request: NextRequest) {
   if (!deviceId || !DEVICE_ID_PATTERN.test(deviceId)) {
     return NextResponse.json<ErrorResponse>({ error: "معرف الجهاز غير صحيح" }, { status: 400 });
   }
+  const sessionId =
+    typeof body.sessionId === "string"
+      ? body.sessionId.trim().slice(0, MAX_SESSION_ID_LENGTH)
+      : "";
+  if (!sessionId || !SESSION_ID_PATTERN.test(sessionId)) {
+    return NextResponse.json<ErrorResponse>({ error: "معرف الجلسة غير صحيح" }, { status: 400 });
+  }
+  const path = sanitizePath(body.path);
 
   const ip = getClientIpFromRequest(request);
   const { allowed } = await rateLimitConsume(`stats:${ip}:${slug}`, {
@@ -67,17 +99,19 @@ export async function POST(request: NextRequest) {
         args: Record<string, unknown>,
       ) => Promise<{ data: boolean | null; error: { message: string } | null }>;
     }
-  ).rpc("record_craftsman_stat", {
+  ).rpc("record_craftsman_event", {
     p_slug: slug,
     p_metric: type,
     p_device_key: makeDeviceKey(deviceId, ip),
+    p_session_id: sessionId,
+    p_path: path,
   });
   if (error) {
     return NextResponse.json<ErrorResponse>({ error: "فشل تسجيل الحدث" }, { status: 500 });
   }
   if (data === false) {
     return NextResponse.json<ErrorResponse>(
-      { error: "الصنايعي غير موجود أو المشاهدة مسجّلة بالفعل" },
+      { error: "الصنايعي غير موجود أو غير منشور" },
       { status: 409 },
     );
   }
