@@ -45,7 +45,7 @@ export function MobileNav() {
       </button>
 
       {open && (
-        <div className="absolute inset-x-0 top-full border-b border-border bg-background/95 backdrop-blur">
+        <div className="absolute inset-x-0 top-full border-b border-border bg-background">
           <div className="mx-auto flex w-full max-w-5xl flex-col gap-1 px-4 py-3">
             <SiteNavLinks
               variant="mobile"
