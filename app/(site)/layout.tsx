@@ -1,5 +1,6 @@
 import { Header } from "@/components/shared/layout/Header";
 import { Footer } from "@/components/shared/layout/Footer";
+import { BackToTop } from "@/components/shared/ui/BackToTop";
 
 export default function SiteLayout({
   children,
@@ -11,6 +12,7 @@ export default function SiteLayout({
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />
+      <BackToTop />
     </div>
   );
 }

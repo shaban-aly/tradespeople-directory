@@ -5,8 +5,8 @@
 :root {
   --background: #f5f7ff;
   --foreground: #14142b;
-  --muted: #6b7280;
-  --muted-foreground: #6b7280;
+  --muted: #5d6674;
+  --muted-foreground: #5d6674;
   --accent: #3b5fe3;
   --on-accent: #ffffff;
   --action: #22c55e;
@@ -14,8 +14,8 @@
   --danger: #ef4444;
   --on-danger: #ffffff;
   --card: #ffffff;
-  --border: #e5e8f5;
-  --card-shadow: 0 8px 24px rgba(20, 20, 43, 0.08);
+  --border: #c9d0e4;
+  --card-shadow: 0 8px 24px rgba(20, 20, 43, 0.12);
   --bar-shadow: 0 -8px 24px rgba(20, 20, 43, 0.12);
 
   color-scheme: light;

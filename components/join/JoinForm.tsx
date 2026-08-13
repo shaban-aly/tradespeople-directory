@@ -7,6 +7,7 @@ import {
 } from "@/hooks/forms/useJoinRequest";
 import { useImageUpload } from "@/hooks/forms/useImageUpload";
 import { IconCheck } from "@/components/shared/icons";
+import { Button } from "@/components/shared/ui/Button";
 import { ImageUpload } from "@/components/join/ImageUpload";
 import { SocialLinksEditor } from "@/components/shared/ui/SocialLinksEditor";
 import { Field, fieldErrorId } from "@/components/shared/form/Field";
@@ -356,17 +357,13 @@ export function JoinForm({
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="min-h-12 rounded-xl bg-accent px-4 text-lg font-bold text-on-accent transition-colors hover:bg-accent/90"
-        >
+        <Button type="submit" disabled={submitting}>
           {submitting
             ? "جاري الإرسال..."
             : type === "register"
               ? "أرسل بياناتك"
               : "أرسل البلاغ"}
-        </button>
+        </Button>
       </form>
     </>
   );

@@ -19,7 +19,6 @@ const CRAFTSMAN_BY_CATEGORY_SELECT =
 
 type CategoryRow = { slug: string; name: string; icon: string };
 type AreaRow = { name: string };
-type SocialLinkRow = { platform: SocialPlatform; url: string };
 
 type CraftsmanRow = {
   id: string;
@@ -56,20 +55,20 @@ function mapCategory(row: CategoryRow): Category {
 }
 
 async function getSocialLinks(craftsmanId: string): Promise<SocialLink[]> {
-  const { data } = (await createServerReadClient()
+  const { data } = await createServerReadClient()
     .from("social_links")
     .select("platform, url")
     .eq("craftsman_id", craftsmanId)
-    .order("created_at")) as { data: SocialLinkRow[] | null };
-  return (data ?? []).map((r) => ({ platform: r.platform, url: r.url }));
+    .order("created_at");
+  return (data ?? []).map((r) => ({ platform: r.platform as SocialPlatform, url: r.url }));
 }
 
 async function getCategoriesImpl(): Promise<Category[]> {
-  const { data } = (await createServerReadClient()
+  const { data } = await createServerReadClient()
     .from("categories")
     .select("slug, name, icon")
     .eq("is_active", true)
-    .order("sort_order")) as { data: CategoryRow[] | null };
+    .order("sort_order");
   return (data ?? []).map(mapCategory);
 }
 
@@ -78,21 +77,21 @@ export const getCategories = unstable_cache(getCategoriesImpl, [
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
 
 export async function getCategoryBySlug(slug: string): Promise<Category | undefined> {
-  const { data } = (await createServerReadClient()
+  const { data } = await createServerReadClient()
     .from("categories")
     .select("slug, name, icon")
     .eq("slug", slug)
     .eq("is_active", true)
-    .maybeSingle()) as { data: CategoryRow | null };
+    .maybeSingle();
   return data ? mapCategory(data) : undefined;
 }
 
 async function getCraftsmenImpl(): Promise<Craftsman[]> {
-  const { data } = (await createServerReadClient()
+  const { data } = await createServerReadClient()
     .from("craftsmen")
     .select(CRAFTSMAN_SELECT)
     .eq("is_published", true)
-    .order("added_at", { ascending: false })) as { data: CraftsmanRow[] | null };
+    .order("added_at", { ascending: false });
   return (data ?? []).map(mapCraftsman);
 }
 
@@ -101,24 +100,24 @@ export const getCraftsmen = unstable_cache(getCraftsmenImpl, [
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
 
 export async function getCraftsmanBySlug(slug: string): Promise<Craftsman | undefined> {
-  const { data } = (await createServerReadClient()
+  const { data } = await createServerReadClient()
     .from("craftsmen")
     .select(CRAFTSMAN_SELECT)
     .eq("slug", slug)
     .eq("is_published", true)
-    .maybeSingle()) as { data: CraftsmanRow | null };
+    .maybeSingle();
   if (!data) return undefined;
   const socialLinks = await getSocialLinks(data.id);
   return { ...mapCraftsman(data), socialLinks };
 }
 
 export async function getCraftsmenByCategory(slug: string): Promise<Craftsman[]> {
-  const { data } = (await createServerReadClient()
+  const { data } = await createServerReadClient()
     .from("craftsmen")
     .select(CRAFTSMAN_BY_CATEGORY_SELECT)
     .eq("is_published", true)
     .eq("category.slug", slug)
-    .order("added_at", { ascending: false })) as { data: CraftsmanRow[] | null };
+    .order("added_at", { ascending: false });
   return (data ?? []).map(mapCraftsman);
 }
 
@@ -137,11 +136,11 @@ export async function getHomeCategories(limit: number): Promise<CategoryWithCoun
 }
 
 async function getAreasImpl(): Promise<string[]> {
-  const { data } = (await createServerReadClient()
+  const { data } = await createServerReadClient()
     .from("areas")
     .select("name")
     .eq("is_active", true)
-    .order("sort_order")) as { data: AreaRow[] | null };
+    .order("sort_order");
   return (data ?? []).map((r) => r.name);
 }
 
@@ -163,8 +162,6 @@ export async function getStats() {
 }
 
 type StatsRow = { views: number; calls: number; whatsapp: number };
-
-type FeaturedRow = CraftsmanRow & { stats: StatsRow | null };
 
 type RankedCraftsman = {
   id: string;
@@ -215,10 +212,10 @@ async function getFeaturedCraftsmenImpl(
   count: number,
   seed?: number,
 ): Promise<Craftsman[]> {
-  const { data } = (await createServerReadClient()
+  const { data } = await createServerReadClient()
     .from("craftsmen")
     .select(`${CRAFTSMAN_SELECT}, stats:craftsman_stats(views, calls, whatsapp)`)
-    .eq("is_published", true)) as { data: FeaturedRow[] | null };
+    .eq("is_published", true);
 
   const ranked: RankedCraftsman[] = (data ?? []).map((row) => ({
     id: row.id,
@@ -251,11 +248,11 @@ export type CraftsmanWithStats = Craftsman & {
 async function getRecommendationPoolImpl(
   limit = 40,
 ): Promise<CraftsmanWithStats[]> {
-  const { data } = (await createServerReadClient()
+  const { data } = await createServerReadClient()
     .from("craftsmen")
     .select(`${CRAFTSMAN_SELECT}, stats:craftsman_stats(views, calls, whatsapp)`)
     .eq("is_published", true)
-    .limit(limit)) as { data: FeaturedRow[] | null };
+    .limit(limit);
 
   return (data ?? []).map((row) => ({
     ...mapCraftsman(row),
@@ -310,14 +307,7 @@ export async function getRelatedByCoEngagement(
   craftsmanId: string,
   limit = 6,
 ): Promise<Craftsman[]> {
-  const { data, error } = await (
-    createServerReadClient() as unknown as {
-      rpc: (
-        fn: string,
-        args: Record<string, unknown>,
-      ) => Promise<{ data: RelatedCraftsmanRow[] | null; error: { message: string } | null }>;
-    }
-  ).rpc("get_related_craftsmen", {
+  const { data, error } = await createServerReadClient().rpc("get_related_craftsmen", {
     p_craftsman_id: craftsmanId,
     p_limit: limit,
   });

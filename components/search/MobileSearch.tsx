@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSearch } from "@/hooks/search/useSearch";
 import { SearchResultsList } from "@/components/search/SearchResultsList";
+import { Button } from "@/components/shared/ui/Button";
 import { IconRefresh, IconSearch, IconX } from "@/components/shared/icons";
 
 export function MobileSearch() {
@@ -96,13 +97,13 @@ export function MobileSearch() {
                     query={query}
                     onSelect={() => setOpen(false)}
                   />
-                  <button
+                  <Button
                     type="button"
                     onClick={submit}
-                    className="mt-3 flex min-h-12 w-full items-center justify-center rounded-xl bg-accent px-4 text-base font-bold text-on-accent transition-colors hover:bg-accent/90"
+                    className="mt-3 w-full"
                   >
                     عرض كل النتائج
-                  </button>
+                  </Button>
                 </>
               ) : (
                 <p className="py-8 text-center text-base text-muted">

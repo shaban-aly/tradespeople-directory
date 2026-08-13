@@ -1,5 +1,6 @@
 import { useContactForm } from "@/hooks/forms/useContactForm";
 import { IconCheck } from "@/components/shared/icons";
+import { Button } from "@/components/shared/ui/Button";
 import { Field, fieldErrorId } from "@/components/shared/form/Field";
 import { TextField } from "@/components/shared/form/TextField";
 import { TextArea } from "@/components/shared/form/TextArea";
@@ -110,13 +111,13 @@ export function ContactForm() {
         </p>
       )}
 
-      <button
+      <Button
         type="submit"
+        variant="action"
         disabled={submitting}
-        className="min-h-12 rounded-xl bg-action px-4 text-lg font-bold text-on-action transition-colors hover:bg-action/90 disabled:opacity-60"
       >
         {submitting ? "جاري الإرسال..." : "أرسل الرسالة"}
-      </button>
+      </Button>
     </form>
   );
 }

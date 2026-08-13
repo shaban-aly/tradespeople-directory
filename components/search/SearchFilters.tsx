@@ -6,6 +6,7 @@ import type { Category } from "@/lib/data/craftsmen";
 import { searchHref } from "@/lib/utils/url";
 import { toArabicDigits } from "@/lib/utils/format";
 import { BottomSheet } from "@/components/shared/ui/BottomSheet";
+import { Button } from "@/components/shared/ui/Button";
 import { IconChevronDown, IconSliders } from "@/components/shared/icons";
 import {
   FilterSections,
@@ -80,13 +81,13 @@ export function SearchFilters({
         onClose={() => setOpen(false)}
         title="تعديل الفلاتر"
         footer={
-          <button
+          <Button
             type="button"
             onClick={() => setOpen(false)}
-            className="flex min-h-12 w-full items-center justify-center rounded-xl bg-accent px-4 text-base font-bold text-on-accent transition-colors hover:bg-accent/90"
+            className="w-full"
           >
             عرض النتائج
-          </button>
+          </Button>
         }
       >
         <FilterSections

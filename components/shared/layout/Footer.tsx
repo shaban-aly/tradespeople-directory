@@ -92,7 +92,7 @@ export async function Footer() {
                   className="flex items-center gap-2 text-base text-muted transition-colors hover:text-accent"
                 >
                   <IconMail className="h-5 w-5 shrink-0" />
-                  <bdi dir="ltr">ShabanAly@gmail.com</bdi>
+                  <bdi dir="ltr">shabanaly@gmail.com</bdi>
                 </a>
               </li>
             </ul>
@@ -104,7 +104,7 @@ export async function Footer() {
             دليل الصنايعية — كل الأرقام تُراجع قبل النشر. © {year} تم التطوير
             بواسطة{" "}
             <a
-              className="text-action font-semibold "
+              className="font-semibold text-accent hover:underline"
               target="_blank"
               href="https://shabanaly.vercel.app/"
             >

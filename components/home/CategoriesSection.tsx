@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { getHomeCategories, getStats } from "@/lib/db/queries";
 import { homeCategoriesLimit } from "@/lib/data/site";
 import { toArabicDigits } from "@/lib/utils/format";
+import { ButtonLink } from "@/components/shared/ui/Button";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { Reveal } from "@/components/shared/ui/Reveal";
 import { SectionHeader } from "@/components/shared/ui/SectionHeader";
@@ -24,13 +24,10 @@ export async function CategoriesSection() {
       <CategoryGrid categories={categories} />
       <Reveal>
         <div className="mt-8 flex justify-center">
-          <Link
-            href="/categories"
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-accent px-8 text-base font-bold text-on-accent transition-colors hover:bg-accent/90"
-          >
+          <ButtonLink href="/categories" variant="primary">
             كل التصنيفات
             <span className="text-on-accent/80">{toArabicDigits(stats.categories)}</span>
-          </Link>
+          </ButtonLink>
         </div>
       </Reveal>
     </section>

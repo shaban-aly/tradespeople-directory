@@ -27,17 +27,13 @@ export type ReportRequestPayload = {
   message: string;
 };
 
-type LookupRow = {
-  id: string;
-};
-
 async function getCategoryId(slug: string): Promise<string> {
-  const { data, error } = (await createSupabase()
+  const { data, error } = await createSupabase()
     .from("categories")
     .select("id")
     .eq("slug", slug)
     .eq("is_active", true)
-    .maybeSingle()) as { data: LookupRow | null; error: { message: string } | null };
+    .maybeSingle();
   if (error || !data) {
     throw new Error("التخصص المختار غير متاح حالياً");
   }
@@ -45,14 +41,14 @@ async function getCategoryId(slug: string): Promise<string> {
 }
 
 async function getAreaId(name: string): Promise<string> {
-  const { data, error } = (await createSupabase()
+  const { data, error } = await createSupabase()
     .from("areas")
     .select("id")
     .eq("name", name)
     .eq("is_active", true)
-    .maybeSingle()) as { data: LookupRow | null; error: { message: string } | null };
+    .maybeSingle();
   if (error || !data) {
-    throw new Error("المنطقة المختارة غير متاحة حالياً");
+    throw new Error("المنطقة المختارة غير متاح حالياً");
   }
   return data.id;
 }

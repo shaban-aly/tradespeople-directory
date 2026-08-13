@@ -15,7 +15,7 @@ export function RecentCraftsmenList({ craftsmen }: { craftsmen: CraftsmanRow[] }
       action={
         <Link
           href="/admin/craftsmen"
-          className="min-h-12 rounded-xl border border-border px-4 py-2.5 text-base font-bold text-accent transition-colors hover:bg-accent/10"
+          className="flex min-h-12 w-full items-center justify-center rounded-xl border border-border px-4 text-base font-bold text-accent transition-colors hover:bg-accent/10 sm:w-auto"
         >
           الكل
         </Link>

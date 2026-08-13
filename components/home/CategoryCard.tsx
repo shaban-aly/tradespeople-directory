@@ -17,9 +17,6 @@ export function CategoryCard({ category }: { category: CategoryWithCount }) {
         <h3 className="truncate font-heading text-base font-bold text-foreground">
           {category.name}
         </h3>
-        <p className="truncate text-sm text-muted">
-          {category.count} {category.count === 1 ? "صنايعي" : "صنايعية"}
-        </p>
       </div>
       <IconArrow className="h-3.5 w-3.5 shrink-0 text-muted transition-colors group-hover:text-accent" />
     </Link>

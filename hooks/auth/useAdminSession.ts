@@ -4,16 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createSupabase } from "@/lib/db/client";
 
-type ProfileRow = {
-  is_admin: boolean;
-};
-
 async function getAdminFlag(userId: string): Promise<boolean> {
-  const { data } = (await createSupabase()
+  const { data } = await createSupabase()
     .from("profiles")
     .select("is_admin")
     .eq("id", userId)
-    .maybeSingle()) as { data: ProfileRow | null };
+    .maybeSingle();
   return Boolean(data?.is_admin);
 }
 

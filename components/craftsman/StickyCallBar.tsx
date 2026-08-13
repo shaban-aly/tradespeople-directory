@@ -1,6 +1,7 @@
 "use client";
 
 import { IconPhone, IconWhatsApp } from "@/components/shared/icons";
+import { buttonClasses } from "@/components/shared/ui/Button";
 import { useStats } from "@/hooks/useStats";
 import {
   craftsmanWhatsappMessage,
@@ -29,6 +30,12 @@ export function StickyCallBar({
   return (
     <div className="sticky bottom-3 z-20 sm:hidden">
       <div className="rounded-2xl border border-border bg-card/95 p-3 shadow-up backdrop-blur">
+        <p className="mb-2 flex items-center justify-center gap-1.5 text-sm text-muted">
+          <span>اتصل مباشرة على</span>
+          <bdi className="font-bold text-foreground" dir="ltr">
+            {phone}
+          </bdi>
+        </p>
         <div
           className={`grid gap-2 ${hasWhatsapp ? "grid-cols-2" : "grid-cols-1"}`}
         >
@@ -37,7 +44,7 @@ export function StickyCallBar({
             onClick={() => {
               if (craftsmanSlug) track(craftsmanSlug, "call");
             }}
-            className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-accent px-3 text-base font-bold text-on-accent transition-colors hover:bg-accent/90"
+            className={buttonClasses("primary", "md")}
           >
             <IconPhone className="h-5 w-5" />
             اتصل
@@ -50,7 +57,7 @@ export function StickyCallBar({
               onClick={() => {
                 if (craftsmanSlug) track(craftsmanSlug, "whatsapp");
               }}
-              className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-action px-3 text-base font-bold text-on-action transition-colors hover:bg-action/90"
+              className={buttonClasses("action", "md")}
             >
               <IconWhatsApp className="h-5 w-5" />
               واتساب

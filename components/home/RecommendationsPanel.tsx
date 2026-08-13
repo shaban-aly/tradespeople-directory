@@ -32,10 +32,10 @@ export function RecommendationsPanel({
             : "الصنايعية الأكثر تواصلاً من زوار الدليل — جرّبهم."
         }
       />
-      <div className="-mx-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex snap-x gap-3">
+      <div className="-mx-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0 md:pb-0">
+        <div className="flex snap-x gap-3 md:grid md:grid-cols-2 md:gap-4 lg:grid-cols-4">
           {ranked.map((craftsman) => (
-            <div key={craftsman.id} className="w-60 shrink-0 snap-start">
+            <div key={craftsman.id} className="w-60 shrink-0 snap-start md:w-auto">
               <CraftsmanCard
                 craftsman={craftsman}
                 category={categoryBySlug.get(craftsman.category)}

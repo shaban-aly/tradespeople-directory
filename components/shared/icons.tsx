@@ -1,6 +1,7 @@
 import {
   AlertTriangle,
   ArrowLeft,
+  ArrowUp,
   BarChart3,
   Camera,
   Check,
@@ -13,6 +14,7 @@ import {
   Inbox,
   LayoutDashboard,
   LayoutGrid,
+  Link,
   List,
   Lock,
   LogOut,
@@ -63,6 +65,10 @@ export function IconMoon(props: LucideProps) {
 
 export function IconArrow(props: LucideProps) {
   return <ArrowLeft {...props} />;
+}
+
+export function IconArrowUp(props: LucideProps) {
+  return <ArrowUp {...props} />;
 }
 
 export function IconGlobe(props: LucideProps) {
@@ -179,6 +185,10 @@ export function IconLock(props: LucideProps) {
 
 export function IconMail(props: LucideProps) {
   return <Mail {...props} />;
+}
+
+export function IconLink(props: LucideProps) {
+  return <Link {...props} />;
 }
 
 export function IconWhatsApp({ className }: IconProps) {

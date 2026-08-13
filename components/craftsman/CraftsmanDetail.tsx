@@ -7,6 +7,7 @@ import { ActionButtons } from "@/components/shared/ui/ActionButtons";
 import { IconPin, IconWrench } from "@/components/shared/icons";
 import { SocialLinks } from "@/components/craftsman/SocialLinks";
 import { StickyCallBar } from "@/components/craftsman/StickyCallBar";
+import { ShareButtons } from "@/components/craftsman/ShareButtons";
 import { ViewTracker } from "@/components/craftsman/ViewTracker";
 import { categoryHref } from "@/lib/utils/url";
 
@@ -44,7 +45,7 @@ export function CraftsmanDetail({
       </nav>
 
       <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
-        <div className="relative h-[50vh] min-h-64 bg-gradient-to-br from-accent/10 via-card to-accent/10">
+        <div className="relative h-64 bg-gradient-to-br from-accent/10 via-card to-accent/10 sm:h-80">
           {craftsman.image ? (
             <Image
               src={craftsman.image}
@@ -80,6 +81,25 @@ export function CraftsmanDetail({
               </div>
             </div>
           </div>
+
+          <div className="mt-5 hidden flex-col gap-4 border-t border-border pt-5 sm:flex">
+            <p className="flex flex-wrap items-center justify-center gap-1.5 text-base text-muted">
+              <span>اتصل مباشرة على</span>
+              <bdi className="font-bold text-foreground" dir="ltr">
+                {craftsman.phone}
+              </bdi>
+            </p>
+            <ActionButtons
+              phone={craftsman.phone}
+              whatsapp={craftsman.whatsapp}
+              size="lg"
+              craftsmanSlug={craftsman.slug}
+              craftsmanName={craftsman.name}
+            />
+            <div className="flex justify-center">
+              <ShareButtons slug={craftsman.slug} name={craftsman.name} />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -92,26 +112,8 @@ export function CraftsmanDetail({
         </p>
       </section>
 
-      <section
-        aria-label="التواصل"
-        className="hidden rounded-3xl border border-border bg-card p-6 text-center shadow-card sm:block sm:p-8"
-      >
-        <h2 className="mb-2 font-heading text-xl font-bold text-foreground">
-          تواصل معه
-        </h2>
-        <p className="mb-4 flex flex-wrap items-center justify-center gap-1.5 text-base text-muted">
-          <span>اتصل مباشرة على</span>
-          <bdi className="font-bold text-foreground" dir="ltr">
-            {craftsman.phone}
-          </bdi>
-        </p>
-        <ActionButtons
-          phone={craftsman.phone}
-          whatsapp={craftsman.whatsapp}
-          size="lg"
-          craftsmanSlug={craftsman.slug}
-          craftsmanName={craftsman.name}
-        />
+      <section aria-label="مشاركة" className="flex justify-center sm:hidden">
+        <ShareButtons slug={craftsman.slug} name={craftsman.name} />
       </section>
 
       <SocialLinks socialLinks={craftsman.socialLinks} />

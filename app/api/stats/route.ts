@@ -92,14 +92,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { data, error } = await (
-    createServerReadClient() as unknown as {
-      rpc: (
-        fn: string,
-        args: Record<string, unknown>,
-      ) => Promise<{ data: boolean | null; error: { message: string } | null }>;
-    }
-  ).rpc("record_craftsman_event", {
+  const { data, error } = await createServerReadClient().rpc("record_craftsman_event", {
     p_slug: slug,
     p_metric: type,
     p_device_key: makeDeviceKey(deviceId, ip),

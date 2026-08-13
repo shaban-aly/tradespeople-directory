@@ -16,7 +16,6 @@ export const siteNavLinks = [
   { href: "/", label: "الرئيسية" },
   { href: "/categories", label: "التصنيفات" },
   { href: "/favorites", label: "محفوظاتي" },
-  { href: "/#featured", label: "الصنايعية المميزين" },
   { href: "/#contact", label: "تواصل معنا" },
 ];
 

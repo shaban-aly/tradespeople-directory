@@ -12,6 +12,7 @@ import {
   validateSocialLinks,
 } from "../utils/validation";
 import { createSupabase } from "./client";
+import type { Json } from "./database.types";
 
 export const CATEGORY_ICON_OPTIONS = [
   "plumbing",
@@ -150,12 +151,27 @@ export type CountRow = {
   area: { name: string } | null;
 };
 
-type RequestSelectRow = Omit<JoinRequestRow, "socialLinks"> & {
-  social_links?: SocialLinkRow[];
+type RequestSelectRow = {
+  id: string;
+  type: string;
+  name: string | null;
+  category_id: string | null;
+  area_id: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  description: string | null;
+  image_url: string | null;
+  craftsman_name: string | null;
+  report_message: string | null;
+  status: string;
+  created_at: string;
+  category: CategoryJoin | null;
+  area: AreaJoin | null;
+  social_links: Json;
 };
 
 type CraftsmanSelectRow = Omit<CraftsmanRow, "socialLinks"> & {
-  social_links?: SocialLinkRow[];
+  social_links: { platform: string; url: string }[] | null;
 };
 
 const REQUESTS_SELECT =
@@ -168,15 +184,34 @@ const COUNTS_SELECT = "id, category:categories(slug), area:areas(name)";
 
 function mapSocialLinks(row: RequestSelectRow): JoinRequestRow {
   return {
-    ...row,
-    socialLinks: Array.isArray(row.social_links) ? row.social_links : undefined,
+    id: row.id,
+    type: row.type as JoinRequestRow["type"],
+    name: row.name,
+    category_id: row.category_id,
+    area_id: row.area_id,
+    phone: row.phone,
+    whatsapp: row.whatsapp,
+    description: row.description,
+    image_url: row.image_url,
+    craftsman_name: row.craftsman_name,
+    report_message: row.report_message,
+    status: row.status as JoinRequestRow["status"],
+    created_at: row.created_at,
+    category: row.category,
+    area: row.area,
+    socialLinks: Array.isArray(row.social_links)
+      ? (row.social_links as SocialLinkRow[])
+      : undefined,
   };
 }
 
 function mapCraftsmanSocialLinks(row: CraftsmanSelectRow): CraftsmanRow {
   return {
     ...row,
-    socialLinks: Array.isArray(row.social_links) ? row.social_links : undefined,
+    socialLinks: row.social_links?.map((link) => ({
+      platform: link.platform as SocialLinkRow["platform"],
+      url: link.url,
+    })),
   };
 }
 
@@ -200,7 +235,7 @@ export async function fetchRequests(): Promise<JoinRequestRow[]> {
     .select(REQUESTS_SELECT)
     .order("created_at", { ascending: false });
   if (error) throw new Error("مقدرناش نحمّل بيانات لوحة التحكم");
-  return ((data ?? []) as RequestSelectRow[]).map(mapSocialLinks);
+  return (data ?? []).map(mapSocialLinks);
 }
 
 export async function fetchCategories(): Promise<CategoryRow[]> {
@@ -209,7 +244,7 @@ export async function fetchCategories(): Promise<CategoryRow[]> {
     .select("id, slug, name, icon, sort_order, is_active")
     .order("sort_order");
   if (error) throw new Error("مقدرناش نحمّل بيانات لوحة التحكم");
-  return (data ?? []) as CategoryRow[];
+  return data ?? [];
 }
 
 export async function fetchAreas(): Promise<AreaRow[]> {
@@ -218,7 +253,7 @@ export async function fetchAreas(): Promise<AreaRow[]> {
     .select("id, name, sort_order, is_active")
     .order("sort_order");
   if (error) throw new Error("مقدرناش نحمّل بيانات لوحة التحكم");
-  return (data ?? []) as AreaRow[];
+  return data ?? [];
 }
 
 export async function fetchCraftsmen(): Promise<CraftsmanRow[]> {
@@ -227,7 +262,7 @@ export async function fetchCraftsmen(): Promise<CraftsmanRow[]> {
     .select(CRAFTSMEN_ADMIN_SELECT)
     .order("created_at", { ascending: false });
   if (error) throw new Error("مقدرناش نحمّل بيانات لوحة التحكم");
-  return ((data ?? []) as CraftsmanSelectRow[]).map(mapCraftsmanSocialLinks);
+  return (data ?? []).map(mapCraftsmanSocialLinks);
 }
 
 export async function fetchMessages(): Promise<ContactMessageRow[]> {
@@ -236,7 +271,7 @@ export async function fetchMessages(): Promise<ContactMessageRow[]> {
     .select("id, name, phone, message, is_read, created_at")
     .order("created_at", { ascending: false });
   if (error) throw new Error("مقدرناش نحمّل بيانات لوحة التحكم");
-  return (data ?? []) as ContactMessageRow[];
+  return data ?? [];
 }
 
 export async function fetchCounts(): Promise<CountRow[]> {
@@ -244,7 +279,7 @@ export async function fetchCounts(): Promise<CountRow[]> {
     .from("craftsmen")
     .select(COUNTS_SELECT);
   if (error) throw new Error("مقدرناش نحمّل بيانات لوحة التحكم");
-  return (data ?? []) as CountRow[];
+  return data ?? [];
 }
 
 // ------------------------------ عمليات التصنيفات ------------------------------
@@ -500,10 +535,7 @@ export async function approveJoinRequest(
   }
 
   if (request.image_url && createdCraftsmanId) {
-    const imageUrl = await copyImageToCraftsman(
-      request.image_url,
-      createdCraftsmanId as string,
-    );
+    const imageUrl = await copyImageToCraftsman(request.image_url, createdCraftsmanId);
     const { error: imageError } = await createSupabase()
       .from("craftsmen")
       .update({ image_url: imageUrl })

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { siteNavLinks } from "@/lib/data/site";
+import { ButtonLink } from "@/components/shared/ui/Button";
 import { MobileNav } from "@/components/shared/layout/MobileNav";
+import { SiteNavLinks } from "@/components/shared/layout/SiteNavLinks";
 import { ThemeToggle } from "@/components/shared/ui/ThemeToggle";
 
 export function Header() {
@@ -25,24 +26,17 @@ export function Header() {
           className="hidden items-center gap-1 md:flex"
           aria-label="التنقل الرئيسي"
         >
-          {siteNavLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="rounded-lg px-3 py-2 text-base font-bold text-muted transition-colors hover:bg-card hover:text-foreground"
-            >
-              {link.label}
-            </Link>
-          ))}
+          <SiteNavLinks variant="desktop" />
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link
+          <ButtonLink
             href="/join"
-            className="hidden min-h-11 items-center justify-center rounded-xl bg-accent px-4 text-base font-bold text-on-accent transition-all hover:-translate-y-0.5 hover:bg-accent/90 lg:inline-flex"
+            variant="primary"
+            className="hidden sm:inline-flex"
           >
             أضف صنايعي
-          </Link>
+          </ButtonLink>
           <ThemeToggle />
           <MobileNav />
         </div>

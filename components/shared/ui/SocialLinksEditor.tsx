@@ -1,6 +1,7 @@
 "use client";
 
 import { IconPlus, IconX } from "@/components/shared/icons";
+import { Button } from "@/components/shared/ui/Button";
 import { SelectField } from "@/components/shared/form/SelectField";
 import { TextField } from "@/components/shared/form/TextField";
 import {
@@ -63,15 +64,15 @@ export function SocialLinksEditor({
             {toArabicDigits(SOCIAL_LINKS_LIMITS.max)} روابط
           </p>
         </div>
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={addLink}
           disabled={links.length >= SOCIAL_LINKS_LIMITS.max}
-          className="flex min-h-12 items-center gap-2 rounded-xl border border-accent px-4 text-base font-bold text-accent transition-colors hover:bg-accent hover:text-on-accent disabled:opacity-40"
         >
           <IconPlus className="h-5 w-5" />
           أضف رابط
-        </button>
+        </Button>
       </div>
 
       {links.length === 0 ? (

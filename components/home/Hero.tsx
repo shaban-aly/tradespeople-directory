@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { getStats } from "@/lib/db/queries";
 import { toArabicDigits } from "@/lib/utils/format";
 import { heroVideos, type HeroVideoSource } from "@/lib/data/site";
+import { ButtonAnchor, ButtonLink } from "@/components/shared/ui/Button";
+import { HeroVideo } from "@/components/home/HeroVideo";
 import { SearchBox } from "@/components/search/SearchBox";
 import { MobileSearch } from "@/components/search/MobileSearch";
 
@@ -24,21 +25,11 @@ export async function Hero({ videos = heroVideos }: { videos?: HeroVideoSource[]
       <div className="absolute inset-0 overflow-hidden" aria-hidden>
         {videos.length > 0 ? (
           <>
-            <video
-              className="h-full w-full object-cover"
-              autoPlay
-              muted
-              loop
-              playsInline
-              disablePictureInPicture
-              preload="metadata"
+            <HeroVideo videos={videos} />
+            <div
+              className="absolute inset-0 bg-background/70 dark:bg-background/40"
               aria-hidden
-            >
-              {videos.map((video) => (
-                <source key={video.src} src={video.src} media={video.media} />
-              ))}
-            </video>
-            <div className="absolute inset-0 bg-background/70" aria-hidden />
+            />
           </>
         ) : (
           <div className="h-full w-full bg-background" aria-hidden />
@@ -64,18 +55,22 @@ export async function Hero({ videos = heroVideos }: { videos?: HeroVideoSource[]
         </div>
 
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <a
+          <ButtonAnchor
             href="/categories"
-            className="flex min-h-12 w-full items-center justify-center rounded-xl bg-action px-6 text-base font-bold text-on-action transition-all hover:-translate-y-0.5 hover:bg-action/90 sm:w-auto"
+            variant="action"
+            size="md"
+            className="w-full sm:w-auto"
           >
             تصفح التصنيفات
-          </a>
-          <Link
+          </ButtonAnchor>
+          <ButtonLink
             href="/join"
-            className="flex min-h-12 w-full items-center justify-center rounded-xl border-2 border-accent px-6 text-base font-bold text-accent transition-all hover:-translate-y-0.5 hover:bg-accent hover:text-on-accent sm:w-auto"
+            variant="outline"
+            size="md"
+            className="w-full sm:w-auto"
           >
             أضف صنايعي
-          </Link>
+          </ButtonLink>
         </div>
 
         <dl className="mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4">

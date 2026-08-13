@@ -91,7 +91,7 @@ export default async function CategoryPage({
               {craftsmen.length === 1 ? "صنايعي" : "صنايعية"}
             </div>
             {verifiedCount > 0 && (
-              <div className="rounded-full border border-border bg-background px-4 py-2 text-base font-bold text-action">
+              <div className="rounded-full border border-border bg-background px-4 py-2 text-base font-bold text-foreground">
                 {toArabicDigits(verifiedCount)} موثّق
               </div>
             )}

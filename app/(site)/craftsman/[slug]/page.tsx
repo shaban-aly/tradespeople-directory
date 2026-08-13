@@ -69,49 +69,55 @@ export default async function CraftsmanPage({
     .slice(0, 3);
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 pb-8 pt-4">
-      <JsonLd
-        data={breadcrumbSchema([
-          { name: "الرئيسية", url: `${siteUrl}/` },
-          ...(category
-            ? [{ name: category.name, url: `${siteUrl}/category/${category.slug}` }]
-            : []),
-          { name: craftsman.name, url: `${siteUrl}/craftsman/${craftsman.slug}` },
-        ])}
-      />
-      <JsonLd
-        data={craftsmanSchema(craftsman, category?.name ?? "صنايعي")}
-      />
-      <CraftsmanDetail craftsman={craftsman} category={category} />
+    <>
+      <div className="mx-auto w-full max-w-2xl px-4 pb-8 pt-4">
+        <JsonLd
+          data={breadcrumbSchema([
+            { name: "الرئيسية", url: `${siteUrl}/` },
+            ...(category
+              ? [{ name: category.name, url: `${siteUrl}/category/${category.slug}` }]
+              : []),
+            { name: craftsman.name, url: `${siteUrl}/craftsman/${craftsman.slug}` },
+          ])}
+        />
+        <JsonLd
+          data={craftsmanSchema(craftsman, category?.name ?? "صنايعي")}
+        />
+        <CraftsmanDetail craftsman={craftsman} category={category} />
+      </div>
 
       {relatedByCo.length > 0 && (
-        <section className="mt-12">
-          <SectionHeader
-            eyebrow="مقترحات من الزوار"
-            title="صنايعية تانية"
-            description="صنايعية تانية زوّار كتير تواصلوا معاهم جرّبهم."
-          />
-          <div className="mt-8">
-            <CraftsmanGrid craftsmen={relatedByCo} categories={categories} />
+        <section className="border-t border-border bg-card/40 py-16">
+          <div className="mx-auto w-full max-w-5xl px-4">
+            <SectionHeader
+              eyebrow="مقترحات من الزوار"
+              title="صنايعية تانية"
+              description="صنايعية تانية زوّار كتير تواصلوا معاهم جرّبهم."
+            />
+            <div className="mt-8">
+              <CraftsmanGrid craftsmen={relatedByCo} categories={categories} />
+            </div>
           </div>
         </section>
       )}
 
       {relatedCraftsmen.length > 0 && (
-        <section className="mt-12">
-          <SectionHeader
-            eyebrow="أكثر صنايعية"
-            title={`صنايعية ${category?.name ?? "نفس التخصص"} آخرون`}
-            description="صنايعية آخرون في نفس التخصص — تواصل معهم مباشرة بدون وسيط."
-          />
-          <div className="mt-8">
-            <CraftsmanGrid
-              craftsmen={relatedCraftsmen}
-              categories={category ? [category] : []}
+        <section className="border-t border-border bg-card/40 py-16">
+          <div className="mx-auto w-full max-w-5xl px-4">
+            <SectionHeader
+              eyebrow="أكثر صنايعية"
+              title={`صنايعية ${category?.name ?? "نفس التخصص"} آخرون`}
+              description="صنايعية آخرون في نفس التخصص — تواصل معهم مباشرة بدون وسيط."
             />
+            <div className="mt-8">
+              <CraftsmanGrid
+                craftsmen={relatedCraftsmen}
+                categories={category ? [category] : []}
+              />
+            </div>
           </div>
         </section>
       )}
-    </div>
+    </>
   );
 }

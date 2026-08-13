@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import type { Category, Craftsman } from "@/lib/data/craftsmen";
 import { useFavorites } from "@/hooks/useFavorites";
 import { CraftsmanGrid } from "@/components/shared/ui/CraftsmanGrid";
+import { ButtonLink } from "@/components/shared/ui/Button";
 import { toArabicDigits } from "@/lib/utils/format";
 
 export function FavoritesPanel({
@@ -24,12 +24,9 @@ export function FavoritesPanel({
         <p className="mt-2 text-base text-muted">
           اضغط أيقونة النجمة على أي كارت صنايعي وحتلاقيه هنا في أي وقت.
         </p>
-        <Link
-          href="/categories"
-          className="mt-5 inline-flex min-h-12 items-center justify-center rounded-xl bg-accent px-6 text-base font-bold text-on-accent transition-colors hover:bg-accent/90"
-        >
+        <ButtonLink href="/categories" className="mt-5">
           تصفّح التصنيفات
-        </Link>
+        </ButtonLink>
       </div>
     );
   }

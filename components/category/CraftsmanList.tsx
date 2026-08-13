@@ -9,6 +9,7 @@ import {
 } from "@/lib/data/craftsmen";
 import { CraftsmanGrid } from "@/components/shared/ui/CraftsmanGrid";
 import { BottomSheet } from "@/components/shared/ui/BottomSheet";
+import { Button } from "@/components/shared/ui/Button";
 import { IconChevronDown, IconSliders } from "@/components/shared/icons";
 import { toArabicDigits } from "@/lib/utils/format";
 
@@ -189,13 +190,13 @@ export function CraftsmanList({
         onClose={() => setSheetOpen(false)}
         title="تعديل الفلاتر"
         footer={
-          <button
+          <Button
             type="button"
             onClick={() => setSheetOpen(false)}
-            className="flex min-h-12 w-full items-center justify-center rounded-xl bg-accent px-4 text-base font-bold text-on-accent transition-colors hover:bg-accent/90"
+            className="w-full"
           >
             عرض الصنايعية
-          </button>
+          </Button>
         }
       >
         <SheetFilters
@@ -218,13 +219,9 @@ export function CraftsmanList({
               : "سجّل أول من ينضم لهذا التخصص."}
           </p>
           {hasFilters && (
-            <button
-              type="button"
-              onClick={() => setArea("all")}
-              className="mt-5 inline-flex min-h-12 items-center justify-center rounded-xl bg-accent px-6 text-base font-bold text-on-accent transition-colors hover:bg-accent/90"
-            >
+            <Button type="button" onClick={() => setArea("all")} className="mt-5">
               عرض كل المناطق
-            </button>
+            </Button>
           )}
         </div>
       ) : (

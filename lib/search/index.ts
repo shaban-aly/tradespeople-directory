@@ -1,5 +1,4 @@
 import type { CraftsmanSort } from "../data/craftsmen";
-import { toArabicDigits } from "../utils/format";
 import { categoryHref, craftsmanHref, searchHref } from "../utils/url";
 
 export type SearchResultKind = "craftsman" | "category" | "area";
@@ -157,9 +156,7 @@ export function buildSuggestions(data: SearchData, rawQuery: string): SearchSugg
     suggestions.push({
       kind: "category",
       name: category.name,
-      subtitle: `${toArabicDigits(category.count)} ${
-        category.count === 1 ? "صنايعي" : "صنايعية"
-      }`,
+      subtitle: "تصفح التصنيف",
       href: categoryHref(category.slug),
       icon: category.icon,
     });
