@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { siteNavLinks } from "@/lib/data/site";
 
-function isActive(href: string, pathname: string): boolean {
-  if (href === "/#contact") return pathname === "/";
+function isActive(href: string, pathname: string, hash: string): boolean {
+  if (href === "/#contact") return pathname === "/" && hash === "#contact";
   return pathname === href;
 }
 
@@ -17,6 +18,14 @@ export function SiteNavLinks({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  const [hash, setHash] = useState("");
+
+  useEffect(() => {
+    const updateHash = () => setHash(window.location.hash);
+    updateHash();
+    window.addEventListener("hashchange", updateHash);
+    return () => window.removeEventListener("hashchange", updateHash);
+  }, []);
 
   const className =
     variant === "mobile"
@@ -26,7 +35,7 @@ export function SiteNavLinks({
   return (
     <>
       {siteNavLinks.map((link) => {
-        const active = isActive(link.href, pathname);
+        const active = isActive(link.href, pathname, hash);
         return (
           <Link
             key={link.href}
