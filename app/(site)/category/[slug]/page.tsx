@@ -28,7 +28,7 @@ export async function generateMetadata({
     description: `أفضل ${category.name} في السويس — اتصل أو راسل واتساب مباشرة.`,
     alternates: { canonical: `/category/${category.slug}` },
     openGraph: {
-      title: `${category.name} في السويس — دليل الصنايعية`,
+      title: `صنايعية ${category.name} في السويس — دليل الصنايعية`,
       description: `أفضل ${category.name} في السويس — اتصل أو راسل واتساب مباشرة.`,
       type: "website",
       images: [{ url: "/og.png", width: 1200, height: 630 }],

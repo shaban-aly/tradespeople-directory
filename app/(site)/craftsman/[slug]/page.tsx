@@ -88,8 +88,8 @@ export default async function CraftsmanPage({
         <section className="mt-12">
           <SectionHeader
             eyebrow="مقترحات من الزوار"
-            title="اللي شافوا ده شافوا كمان"
-            description="صنايعية تانية زوّار كتير تواصلوا معاها بعد ما شافوا ده — جرّبهم."
+            title="صنايعية تانية"
+            description="صنايعية تانية زوّار كتير تواصلوا معاهم جرّبهم."
           />
           <div className="mt-8">
             <CraftsmanGrid craftsmen={relatedByCo} categories={categories} />
