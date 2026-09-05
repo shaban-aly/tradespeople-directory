@@ -6,7 +6,7 @@ import { CategoryBadge } from "@/components/shared/ui/CategoryBadge";
 import { FavoriteButton } from "@/components/shared/ui/FavoriteButton";
 import { RecentBadge } from "@/components/shared/ui/RecentBadge";
 import { VerifiedBadge } from "@/components/shared/ui/VerifiedBadge";
-import { IconWrench } from "@/components/shared/icons";
+import { CraftsmanAvatar } from "@/components/shared/ui/CraftsmanAvatar";
 import { craftsmanHref } from "@/lib/utils/url";
 
 type CardView = "grid" | "list";
@@ -25,9 +25,11 @@ function CraftsmanImage({ craftsman }: { craftsman: Craftsman }) {
     );
   }
   return (
-    <div className="flex h-full w-full items-center justify-center text-accent">
-      <IconWrench className="h-8 w-8" />
-    </div>
+    <CraftsmanAvatar
+      name={craftsman.name}
+      className="h-full w-full"
+      textClassName="text-3xl"
+    />
   );
 }
 

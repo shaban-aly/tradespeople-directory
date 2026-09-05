@@ -11,8 +11,8 @@ import { SectionHeader } from "@/components/shared/ui/SectionHeader";
 
 function Step({ n, title, text }: { n: number; title: string; text: string }) {
   return (
-    <li className="flex flex-col items-center gap-1 rounded-2xl border border-border bg-card p-4">
-      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/15 font-heading text-lg font-bold text-accent">
+    <li className="relative flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-5">
+      <span className="relative flex h-12 w-12 items-center justify-center rounded-full bg-accent/15 font-heading text-xl font-extrabold text-accent">
         {toArabicDigits(n)}
       </span>
       <h3 className="font-heading text-lg font-bold">{title}</h3>
@@ -34,7 +34,7 @@ export function ContactSection() {
         </Reveal>
 
         <Reveal delay={80}>
-          <ol className="mb-8 grid gap-3 sm:grid-cols-3">
+          <ol className="steps-connector mb-8 grid gap-3 sm:grid-cols-3">
             <Step
               n={1}
               title="اختار التخصص"

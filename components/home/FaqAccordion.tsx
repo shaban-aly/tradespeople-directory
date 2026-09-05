@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { FaqItem } from "@/lib/data/faq";
+import { IconChevronDown } from "@/components/shared/icons";
 
 export function FaqAccordion({ items }: { items: FaqItem[] }) {
   const [openId, setOpenId] = useState<string | null>(items[0]?.id ?? null);
@@ -11,7 +12,12 @@ export function FaqAccordion({ items }: { items: FaqItem[] }) {
       {items.map((item) => {
         const open = openId === item.id;
         return (
-          <div key={item.id} className="border-b border-border last:border-b-0">
+          <div
+            key={item.id}
+            className={`border-b border-border last:border-b-0 transition-colors ${
+              open ? "bg-accent/[0.04]" : ""
+            }`}
+          >
             <button
               type="button"
               onClick={() => setOpenId(open ? null : item.id)}
@@ -21,14 +27,12 @@ export function FaqAccordion({ items }: { items: FaqItem[] }) {
               <span className="font-heading text-base font-bold sm:text-lg">
                 {item.question}
               </span>
-              <span
-                className={`shrink-0 text-2xl font-bold text-accent transition-transform duration-300 ${
-                  open ? "rotate-45" : ""
+              <IconChevronDown
+                className={`h-5 w-5 shrink-0 text-accent transition-transform duration-300 ${
+                  open ? "rotate-180" : ""
                 }`}
                 aria-hidden
-              >
-                +
-              </span>
+              />
             </button>
             <div
               className={`grid transition-[grid-template-rows] duration-300 ease-out ${

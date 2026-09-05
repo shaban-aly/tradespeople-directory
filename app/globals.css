@@ -17,6 +17,19 @@
   --border: #c9d0e4;
   --card-shadow: 0 8px 24px rgba(20, 20, 43, 0.12);
   --bar-shadow: 0 -8px 24px rgba(20, 20, 43, 0.12);
+  --radius-card: 1rem;
+  --cat-1: #3b5fe3; /* أزرق */
+  --cat-2: #0ea5a4; /* فيروزي */
+  --cat-3: #f59e0b; /* كهرماني */
+  --cat-4: #8b5cf6; /* بنفسجي */
+  --cat-5: #ef4444; /* أحمر */
+  --cat-6: #ec4899; /* وردي */
+  --cat-7: #22c55e; /* أخضر */
+  --cat-8: #f97316; /* برتقالي */
+  --cat-9: #06b6d4; /* سماوي */
+  --cat-10: #a855f7; /* أرجواني */
+  --cat-11: #84cc16; /* ليموني */
+  --cat-12: #6366f1; /* نيلي */
 
   color-scheme: light;
 }
@@ -53,6 +66,19 @@
   --color-on-danger: var(--on-danger);
   --color-card: var(--card);
   --color-border: var(--border);
+
+  --color-cat-1: var(--cat-1);
+  --color-cat-2: var(--cat-2);
+  --color-cat-3: var(--cat-3);
+  --color-cat-4: var(--cat-4);
+  --color-cat-5: var(--cat-5);
+  --color-cat-6: var(--cat-6);
+  --color-cat-7: var(--cat-7);
+  --color-cat-8: var(--cat-8);
+  --color-cat-9: var(--cat-9);
+  --color-cat-10: var(--cat-10);
+  --color-cat-11: var(--cat-11);
+  --color-cat-12: var(--cat-12);
 
   --shadow-card: var(--card-shadow);
   --shadow-up: var(--bar-shadow);
@@ -91,6 +117,64 @@ body {
 .reveal.is-visible {
   opacity: 1;
   transform: none;
+}
+
+/* لمعان خفيف على شارة "موثّق" للفت الانتباه دون إزعاج */
+.verified-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.verified-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  animation: verified-shimmer 2.75s ease-in-out 1.2s infinite;
+}
+
+@keyframes verified-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .verified-shimmer::after {
+    animation: none;
+  }
+}
+
+/* خط واصل بين خطوات "إزاي بيشتغل الموقع" — يظهر على الشاشات المتوسطة+
+   (مع سهم خفيف عند منتصف الخط) */
+.steps-connector > li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -0.9rem;
+  width: 0.9rem;
+  height: 2px;
+  transform: translateY(-50%);
+  background: linear-gradient(to left, var(--accent), transparent);
+}
+
+@media (min-width: 640px) {
+  .steps-connector > li:not(:last-child)::after {
+    left: auto;
+    right: -0.95rem;
+    width: 1.1rem;
+    background: var(--border);
+  }
+}
+
+.steps-connector > li {
+  position: relative;
 }
 
 @media (prefers-reduced-motion: reduce) {

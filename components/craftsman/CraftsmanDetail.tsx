@@ -4,7 +4,8 @@ import type { Category, Craftsman } from "@/lib/data/craftsmen";
 import { CategoryBadge } from "@/components/shared/ui/CategoryBadge";
 import { VerifiedBadge } from "@/components/shared/ui/VerifiedBadge";
 import { ActionButtons } from "@/components/shared/ui/ActionButtons";
-import { IconPin, IconWrench } from "@/components/shared/icons";
+import { CraftsmanAvatar } from "@/components/shared/ui/CraftsmanAvatar";
+import { IconPin, IconAlert } from "@/components/shared/icons";
 import { SocialLinks } from "@/components/craftsman/SocialLinks";
 import { StickyCallBar } from "@/components/craftsman/StickyCallBar";
 import { ShareButtons } from "@/components/craftsman/ShareButtons";
@@ -45,19 +46,45 @@ export function CraftsmanDetail({
       </nav>
 
       <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
-        <div className="relative h-64 bg-gradient-to-br from-accent/10 via-card to-accent/10 sm:h-80">
+        <div className="relative h-64 sm:h-80">
           {craftsman.image ? (
-            <Image
-              src={craftsman.image}
-              alt={craftsman.name}
-              fill
-              priority
-              sizes="(min-width: 640px) 42rem, 100vw"
-              className="object-contain p-3"
-            />
+            <>
+              <Image
+                src={craftsman.image}
+                alt={craftsman.name}
+                fill
+                priority
+                sizes="(min-width: 640px) 42rem, 100vw"
+                className="object-cover"
+              />
+              <div
+                className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"
+                aria-hidden
+              />
+            </>
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-accent">
-              <IconWrench className="h-16 w-16" />
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent/10 via-card to-accent/10">
+              <CraftsmanAvatar
+                name={craftsman.name}
+                className="h-28 w-28 rounded-2xl shadow-card"
+                textClassName="text-5xl"
+              />
+            </div>
+          )}
+          {craftsman.image && (
+            <div className="absolute bottom-4 right-4 left-4">
+              <h1 className="font-heading text-3xl font-extrabold text-white drop-shadow sm:text-4xl">
+                {craftsman.name}
+              </h1>
+              {category && (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <CategoryBadge category={category} />
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1 text-sm font-bold text-white backdrop-blur">
+                    <IconPin className="h-4 w-4 shrink-0" />
+                    {craftsman.area}
+                  </span>
+                </div>
+              )}
             </div>
           )}
           {craftsman.verified && (
@@ -67,20 +94,22 @@ export function CraftsmanDetail({
           )}
         </div>
         <div className="p-6 sm:p-8">
-          <div className="flex flex-wrap items-start gap-4">
-            <div className="min-w-0 flex-1">
-              <h1 className="font-heading text-3xl font-extrabold text-foreground sm:text-4xl">
-                {craftsman.name}
-              </h1>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                {category && <CategoryBadge category={category} />}
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-background px-3 py-1 text-sm font-bold text-muted">
-                  <IconPin className="h-4 w-4 shrink-0" />
-                  {craftsman.area}
-                </span>
+          {!craftsman.image && (
+            <div className="flex flex-wrap items-start gap-4">
+              <div className="min-w-0 flex-1">
+                <h1 className="font-heading text-3xl font-extrabold text-foreground sm:text-4xl">
+                  {craftsman.name}
+                </h1>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {category && <CategoryBadge category={category} />}
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-background px-3 py-1 text-sm font-bold text-muted">
+                    <IconPin className="h-4 w-4 shrink-0" />
+                    {craftsman.area}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="mt-5 hidden flex-col gap-4 border-t border-border pt-5 sm:flex">
             <p className="flex flex-wrap items-center justify-center gap-1.5 text-base text-muted">
@@ -109,6 +138,15 @@ export function CraftsmanDetail({
         </h2>
         <p className="text-base leading-relaxed text-muted">
           {craftsman.description}
+        </p>
+      </section>
+
+      <section className="rounded-2xl border border-border bg-background/60 p-4 sm:p-5">
+        <p className="flex items-start gap-2 text-sm text-muted">
+          <IconAlert className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
+          <span>
+           الأرقام بنراجعها بنفسنا للتأكد إنها شغالة. لو لقيت رقم اتغير أو مش بيرد، اضغط على 'إبلاغ' وهنحدّثه في نفس اليوم.
+          </span>
         </p>
       </section>
 

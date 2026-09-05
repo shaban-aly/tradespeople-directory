@@ -14,6 +14,10 @@ export async function Footer() {
 
   return (
     <footer className="border-t border-border bg-card/40">
+      <div
+        className="h-1 w-full bg-gradient-to-l from-accent via-action to-accent"
+        aria-hidden
+      />
       <div className="mx-auto w-full max-w-5xl px-4 py-10">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           <div>
@@ -30,8 +34,7 @@ export async function Footer() {
               </span>
             </Link>
             <p className="mt-3 text-base leading-relaxed text-muted">
-              دليلك لأفضل الصنايعية في السويس — سباكة، كهرباء، نجارة وأكثر.
-              تواصل مباشر بدون وسيط أو تسجيل.
+              صنعناه لأهل السويس، وراجعنا أرقام كل صنايعي فيه باليد قبل النشر.
             </p>
           </div>
 
@@ -101,8 +104,8 @@ export async function Footer() {
 
         <div className="mt-8 border-t border-border pt-4">
           <p className="text-center text-sm text-muted">
-            دليل الصنايعية — كل الأرقام تُراجع قبل النشر. © {year} تم التطوير
-            بواسطة{" "}
+            دليل الصنايعية — كل الأرقام تُراجع يدوياً قبل النشر ودورياً كل أسبوع.
+            © {year} تم التطوير بواسطة{" "}
             <a
               className="font-semibold text-accent hover:underline"
               target="_blank"

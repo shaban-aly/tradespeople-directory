@@ -1,16 +1,16 @@
 import { getStats } from "@/lib/db/queries";
-import { toArabicDigits } from "@/lib/utils/format";
 import { heroVideos, type HeroVideoSource } from "@/lib/data/site";
 import { ButtonAnchor, ButtonLink } from "@/components/shared/ui/Button";
 import { HeroVideo } from "@/components/home/HeroVideo";
 import { SearchBox } from "@/components/search/SearchBox";
 import { MobileSearch } from "@/components/search/MobileSearch";
+import { AnimatedNumber } from "@/components/shared/ui/AnimatedNumber";
 
 function Stat({ value, label }: { value: number; label: string }) {
   return (
     <div className="rounded-xl border border-border bg-card/70 px-4 py-3 text-center">
       <div className="font-heading text-2xl font-extrabold text-foreground">
-        {toArabicDigits(value)}
+        <AnimatedNumber value={value} />
       </div>
       <div className="text-sm text-muted">{label}</div>
     </div>
@@ -43,6 +43,11 @@ export async function Hero({ videos = heroVideos }: { videos?: HeroVideoSource[]
         <p className="mx-auto mt-4 max-w-2xl text-base text-muted sm:text-lg">
           دليلك لأفضل الصنايعية المحليين — سباك، كهربائي، نجار... اختار التخصص
           وكلم الصنايعي مباشرة
+        </p>
+
+        <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-4 py-1.5 text-sm font-bold text-foreground">
+          <span className="h-2 w-2 rounded-full bg-action" aria-hidden />
+          أرقام مراجَعة يدوياً — تم التأكد من رقم يعمل في الدليل
         </p>
 
         <div className="mx-auto mt-6 max-w-xl">
