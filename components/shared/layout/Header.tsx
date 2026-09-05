@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { ButtonLink } from "@/components/shared/ui/Button";
 import { MobileNav } from "@/components/shared/layout/MobileNav";
 import { SiteNavLinks } from "@/components/shared/layout/SiteNavLinks";

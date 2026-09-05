@@ -24,14 +24,19 @@ const nextConfig = {
       ? "https://www.googletagmanager.com https://*.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com"
       : "";
 
+    const adsenseScriptHost = "https://pagead2.googlesyndication.com";
+    const adsenseHosts =
+      "https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com";
+
     const csp = [
       "default-src 'self'",
-      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}${gaHost ? ` ${gaHost}` : ""}`,
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}${gaHost ? ` ${gaHost}` : ""} ${adsenseScriptHost}`,
       "style-src 'self' 'unsafe-inline'",
       "font-src 'self' data:",
-      `img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com${supabaseHost ? ` ${supabaseHost}` : ""}${gaHost ? ` ${gaHost}` : ""}`,
+      `img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com${supabaseHost ? ` ${supabaseHost}` : ""}${gaHost ? ` ${gaHost}` : ""} ${adsenseHosts}`,
       "media-src 'self' blob:",
-      `connect-src 'self'${supabaseUrl ? ` ${supabaseUrl}` : ""}${gaHost ? ` ${gaHost}` : ""}`,
+      `connect-src 'self'${supabaseUrl ? ` ${supabaseUrl}` : ""}${gaHost ? ` ${gaHost}` : ""} ${adsenseHosts}`,
+      `frame-src 'self' ${adsenseHosts}`,
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'",

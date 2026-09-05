@@ -46,8 +46,10 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(RUNTIME_NAME).then((cache) => cache.put(request, copy));
+          if (response.status === 200) {
+            const copy = response.clone();
+            caches.open(RUNTIME_NAME).then((cache) => cache.put(request, copy));
+          }
           return response;
         })
         .catch(() =>
@@ -64,7 +66,7 @@ self.addEventListener("fetch", (event) => {
       (cached) =>
         cached ||
         fetch(request).then((response) => {
-          if (response.ok) {
+          if (response.status === 200) {
             const copy = response.clone();
             caches.open(RUNTIME_NAME).then((cache) => cache.put(request, copy));
           }
