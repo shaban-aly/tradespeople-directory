@@ -32,22 +32,22 @@ export const heroSlides: HeroSlide[] = [
   {
     alt: "مجموعة صنايعية أثناء العمل",
     images: [
-      { src: "/hero-images/groub_mobile.png", media: "(max-width: 767px)" },
-      { src: "/hero-images/groub_desktop.png", media: "(min-width: 768px)" },
+      { src: "/hero-images/groub_mobile.webp", media: "(max-width: 767px)" },
+      { src: "/hero-images/groub_desktop.webp", media: "(min-width: 768px)" },
     ],
   },
   {
     alt: "صنايعي سباك أثناء العمل",
     images: [
-      { src: "/hero-images/pol_mobile.png", media: "(max-width: 767px)" },
-      { src: "/hero-images/pol_desktop.png", media: "(min-width: 768px)" },
+      { src: "/hero-images/pol_mobile.webp", media: "(max-width: 767px)" },
+      { src: "/hero-images/pol_desktop.webp", media: "(min-width: 768px)" },
     ],
   },
   {
     alt: "صنايعي كهربائي أثناء العمل",
     images: [
-      { src: "/hero-images/elc_mobile.png", media: "(max-width: 767px)" },
-      { src: "/hero-images/elc_desktop.png", media: "(min-width: 768px)" },
+      { src: "/hero-images/elc_mobile.webp", media: "(max-width: 767px)" },
+      { src: "/hero-images/elc_desktop.webp", media: "(min-width: 768px)" },
     ],
   },
 ];

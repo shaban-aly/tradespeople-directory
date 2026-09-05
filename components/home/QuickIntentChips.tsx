@@ -26,7 +26,7 @@ export function QuickIntentChips() {
           <Link
             key={category.slug}
             href={categoryHref(category.slug)}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border bg-card/80 px-3.5 text-sm font-bold text-foreground shadow-card backdrop-blur transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-md"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border bg-card/90 px-3.5 text-sm font-bold text-foreground shadow-card backdrop-blur transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-md"
           >
             <span style={{ color }}>
               <CategoryIcon name={category.slug} className="h-4 w-4" />

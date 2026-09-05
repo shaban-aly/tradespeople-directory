@@ -31,6 +31,7 @@ function ResponsiveImage({ images, alt }: { images: HeroImage[]; alt: string }) 
         src={images[images.length - 1].src}
         alt={alt}
         fill
+        className="object-cover object-right"
         sizes="100vw"
         priority
       />
@@ -85,9 +86,8 @@ export function HeroSlider({ slides }: { slides: { alt: string; images: HeroImag
               type="button"
               onClick={() => goTo(index)}
               aria-label={index === active ? "الشريحة الحالية" : `الانتقال للشريحة ${index + 1}`}
-              className={`h-2 rounded-full transition-all ${
-                index === active ? "w-6 bg-white" : "w-2 bg-white/60"
-              }`}
+              className={`h-2 rounded-full transition-all ring-1 ring-background ${index === active ? "w-6 bg-foreground" : "w-2 bg-foreground/50"
+                }`}
             />
           ))}
         </div>

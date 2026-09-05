@@ -9,7 +9,7 @@ import { QuickIntentChips } from "@/components/home/QuickIntentChips";
 
 function Stat({ value, label }: { value: number; label: string }) {
   return (
-    <div className="rounded-xl border border-border bg-card/70 px-4 py-3 text-center">
+    <div className="rounded-xl border border-border bg-card/85 px-4 py-3 text-center">
       <div className="font-heading text-2xl font-extrabold text-foreground">
         <AnimatedNumber value={value} />
       </div>
@@ -27,10 +27,7 @@ export async function Hero({ slides = heroSlides }: { slides?: HeroSlide[] }) {
         {slides.length > 0 ? (
           <>
             <HeroSlider slides={slides} />
-            <div
-              className="absolute inset-0 bg-background/40 dark:bg-background/40"
-              aria-hidden
-            />
+            <div className="hero-scrim absolute inset-0" aria-hidden />
           </>
         ) : (
           <div className="h-full w-full bg-background" aria-hidden />
@@ -38,10 +35,10 @@ export async function Hero({ slides = heroSlides }: { slides?: HeroSlide[] }) {
       </div>
 
       <div className="relative mx-auto w-full max-w-5xl px-4 py-20 text-center sm:py-28">
-        <h1 className="mx-auto max-w-3xl font-heading text-4xl font-extrabold leading-tight sm:text-5xl">
+        <h1 className="text-halo mx-auto max-w-3xl font-heading text-4xl font-extrabold leading-tight sm:text-5xl">
           الصنايعي اللي محتاجه، في السويس، خلال ثواني
         </h1>
-        <p className="mx-auto mt-4 max-w-2xl text-base text-muted/155 sm:text-lg">
+        <p className="text-halo mx-auto mt-4 max-w-2xl text-base  sm:text-lg">
           دليلك لأفضل الصنايعية المحليين — سباك، كهربائي، نجار... اختار التخصص
           وكلم الصنايعي مباشرة
         </p>
