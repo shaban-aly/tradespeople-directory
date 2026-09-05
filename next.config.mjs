@@ -32,6 +32,10 @@ const nextConfig = {
     const adsenseHosts =
       "https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.adtrafficquality.google https://*.googlesyndication.com";
 
+    // دومينات الـ frames — Google Ads بتفتح iframes لـ google.com و doubleclick.net
+    const adsenseFrameHosts =
+      "https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.adtrafficquality.google https://*.googlesyndication.com https://www.google.com https://*.doubleclick.net";
+
     // دومينات Google Analytics للـ connect-src (تشمل POST requests)
     const gaConnectHosts = gaHost
       ? `${gaHost} https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net`
@@ -49,7 +53,7 @@ const nextConfig = {
       "media-src 'self' blob:",
       // connect-src: تشمل GA POST requests وكل دومينات Ads
       `connect-src 'self'${supabaseUrl ? ` ${supabaseUrl}` : ""} ${gaConnectHosts} ${adsenseHosts}`,
-      `frame-src 'self' ${adsenseHosts}`,
+      `frame-src 'self' ${adsenseFrameHosts}`,
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'",

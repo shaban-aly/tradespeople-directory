@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2"; // رُفع الإصدار لإجبار تحديث SW عند كل المستخدمين
 const PRECACHE_NAME = `shell-${CACHE_VERSION}`;
 const RUNTIME_NAME = `runtime-${CACHE_VERSION}`;
 
@@ -65,6 +65,10 @@ self.addEventListener("fetch", (event) => {
 
   // تجاوز أي طلب غير GET (مثل POST)
   if (request.method !== "GET") return;
+
+  // تجاوز ملفات الوسائط الكبيرة — Chrome يطبع log لكل respondWith لذا نتجنب الفيديو والصوت
+  const MEDIA_EXTENSIONS = [".mp4", ".webm", ".ogg", ".mp3", ".wav"];
+  if (MEDIA_EXTENSIONS.some((ext) => url.pathname.endsWith(ext))) return;
 
   // تنقل بين الصفحات: شبكة أولاً ثم cache كاحتياطي
   if (request.mode === "navigate") {
