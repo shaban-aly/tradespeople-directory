@@ -47,7 +47,7 @@ export async function Hero({ videos = heroVideos }: { videos?: HeroVideoSource[]
 
         <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-4 py-1.5 text-sm font-bold text-foreground">
           <span className="h-2 w-2 rounded-full bg-action" aria-hidden />
-          أرقام مراجَعة يدوياً — تم التأكد من رقم يعمل في الدليل
+          أرقام مراجَعة يدوياً — تم التأكد من كل رقم انه يعمل في الدليل
         </p>
 
         <div className="mx-auto mt-6 max-w-xl">
