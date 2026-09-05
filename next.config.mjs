@@ -24,18 +24,31 @@ const nextConfig = {
       ? "https://www.googletagmanager.com https://*.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com"
       : "";
 
-    const adsenseScriptHost = "https://pagead2.googlesyndication.com";
+    // دومينات سكريبتات الإعلانات — تشمل كل subdomains مطلوبة لـ Google Ads
+    const adsenseScriptHosts =
+      "https://pagead2.googlesyndication.com https://*.adtrafficquality.google";
+
+    // دومينات موارد الإعلانات (صور، connect، frames)
     const adsenseHosts =
-      "https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://ep1.adtrafficquality.google";
+      "https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.adtrafficquality.google https://*.googlesyndication.com";
+
+    // دومينات Google Analytics للـ connect-src (تشمل POST requests)
+    const gaConnectHosts = gaHost
+      ? `${gaHost} https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net`
+      : "";
 
     const csp = [
       "default-src 'self'",
-      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}${gaHost ? ` ${gaHost}` : ""} ${adsenseScriptHost}`,
+      // script-src: جميع مصادر السكريبتات
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}${gaHost ? ` ${gaHost}` : ""} ${adsenseScriptHosts}`,
+      // script-src-elem صريح لتجنب أخطاء الـ fallback من المتصفح
+      `script-src-elem 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}${gaHost ? ` ${gaHost}` : ""} ${adsenseScriptHosts}`,
       "style-src 'self' 'unsafe-inline'",
       "font-src 'self' data:",
-      `img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com${supabaseHost ? ` ${supabaseHost}` : ""}${gaHost ? ` ${gaHost}` : ""} ${adsenseHosts}`,
+      `img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com${supabaseHost ? ` https://${supabaseHost}` : ""}${gaHost ? ` ${gaHost}` : ""} ${adsenseHosts}`,
       "media-src 'self' blob:",
-      `connect-src 'self'${supabaseUrl ? ` ${supabaseUrl}` : ""}${gaHost ? ` ${gaHost}` : ""} ${adsenseHosts}`,
+      // connect-src: تشمل GA POST requests وكل دومينات Ads
+      `connect-src 'self'${supabaseUrl ? ` ${supabaseUrl}` : ""} ${gaConnectHosts} ${adsenseHosts}`,
       `frame-src 'self' ${adsenseHosts}`,
       "base-uri 'self'",
       "form-action 'self'",

@@ -11,6 +11,24 @@ const PRECACHE_URLS = [
   "/favicon.svg",
 ];
 
+// دومينات Google التي يجب تركها تذهب للشبكة مباشرة (بدون cache أو تدخل)
+const BYPASS_HOSTS = [
+  "www.google-analytics.com",
+  "analytics.google.com",
+  "stats.g.doubleclick.net",
+  "www.googletagmanager.com",
+  "googletagmanager.com",
+  "pagead2.googlesyndication.com",
+  "googleads.g.doubleclick.net",
+  "tpc.googlesyndication.com",
+  "ep1.adtrafficquality.google",
+  "ep2.adtrafficquality.google",
+];
+
+function shouldBypass(url) {
+  return BYPASS_HOSTS.some((host) => url.hostname === host || url.hostname.endsWith(`.${host}`));
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
@@ -39,9 +57,16 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
+  // تجاوز API routes دائماً
   if (url.pathname.startsWith("/api/")) return;
+
+  // تجاوز كل دومينات Google (Analytics, Ads, TagManager) — اتركها للشبكة مباشرة
+  if (shouldBypass(url)) return;
+
+  // تجاوز أي طلب غير GET (مثل POST)
   if (request.method !== "GET") return;
 
+  // تنقل بين الصفحات: شبكة أولاً ثم cache كاحتياطي
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
@@ -59,6 +84,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // باقي الموارد من نفس الأصل: cache أولاً ثم شبكة
   if (url.origin !== self.location.origin) return;
 
   event.respondWith(
