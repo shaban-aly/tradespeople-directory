@@ -26,7 +26,7 @@ const nextConfig = {
 
     const adsenseScriptHost = "https://pagead2.googlesyndication.com";
     const adsenseHosts =
-      "https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com";
+      "https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://ep1.adtrafficquality.google";
 
     const csp = [
       "default-src 'self'",
