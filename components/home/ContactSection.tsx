@@ -34,7 +34,10 @@ export function ContactSection() {
         </Reveal>
 
         <Reveal delay={80}>
-          <ol className="steps-connector mb-8 grid gap-3 sm:grid-cols-3">
+          <ol
+            id="how-it-works"
+            className="steps-connector mb-8 scroll-mt-24 grid gap-3 sm:grid-cols-3"
+          >
             <Step
               n={1}
               title="اختار التخصص"

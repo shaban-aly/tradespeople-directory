@@ -73,6 +73,7 @@ function GridCard({
           whatsapp={craftsman.whatsapp}
           craftsmanSlug={craftsman.slug}
           craftsmanName={craftsman.name}
+          categoryName={category?.name}
         />
       </div>
       <div className="absolute left-2 top-2 flex flex-col gap-1.5">
@@ -122,6 +123,7 @@ function ListCard({
           whatsapp={craftsman.whatsapp}
           craftsmanSlug={craftsman.slug}
           craftsmanName={craftsman.name}
+          categoryName={category?.name}
         />
       </div>
     </article>

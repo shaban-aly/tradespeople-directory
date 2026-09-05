@@ -35,8 +35,12 @@ export function normalizeEgyptianNumber(digits: string): string {
   return digits;
 }
 
-export function craftsmanWhatsappMessage(name: string): string {
-  return `مرحبا يا استاذ ${name}، أنا أتواصل معك من خلال دليل الصنايعية`;
+export function craftsmanWhatsappMessage(
+  name: string,
+  categoryName?: string,
+): string {
+  const trade = categoryName && categoryName.trim() ? ` ${categoryName}` : "";
+  return `السلام عليكم يا أسطى ${name}، شفت رقمك على دليل الصنايعية بالسويس ومحتاج مساعدة في شغل${trade}.`;
 }
 
 export function whatsappHref(number: string, message?: string): string {

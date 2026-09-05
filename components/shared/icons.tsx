@@ -6,6 +6,7 @@ import {
   Camera,
   Check,
   ChevronDown,
+  Copy,
   ExternalLink,
   Eye,
   EyeOff,
@@ -53,6 +54,10 @@ export function IconPin(props: LucideProps) {
 
 export function IconCheck(props: LucideProps) {
   return <Check strokeWidth={3} {...props} />;
+}
+
+export function IconCopy(props: LucideProps) {
+  return <Copy {...props} />;
 }
 
 export function IconSun(props: LucideProps) {

@@ -15,17 +15,21 @@ export function ActionButtons({
   size = "md",
   craftsmanSlug,
   craftsmanName,
+  categoryName,
 }: {
   phone: string;
   whatsapp: string;
   size?: "sm" | "md" | "lg";
   craftsmanSlug?: string;
   craftsmanName?: string;
+  categoryName?: string;
 }) {
   const { track } = useStats();
   const waUrl = whatsappHref(
     whatsapp,
-    craftsmanName ? craftsmanWhatsappMessage(craftsmanName) : undefined,
+    craftsmanName
+      ? craftsmanWhatsappMessage(craftsmanName, categoryName)
+      : undefined,
   );
   const isLarge = size === "lg";
   const isIconOnly = size === "sm";

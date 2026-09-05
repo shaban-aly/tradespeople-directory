@@ -19,12 +19,37 @@ export const siteNavLinks = [
   { href: "/#contact", label: "تواصل معنا" },
 ];
 
-// فيديوهات خلفية الهيرو حسب مقاس الشاشة (الملفات في public/).
-export type HeroVideoSource = { src: string; media: string };
+// صورة لكل حجم شاشة (الصور في public/hero-images/).
+export type HeroImage = { src: string; media: string };
 
-export const heroVideos: HeroVideoSource[] = [
-  { src: "/hero-mobile.mp4", media: "(max-width: 767px)" },
-  { src: "/hero-decktop.mp4", media: "(min-width: 768px)" },
+// شريحة عرض الهيرو: صورة موبايل + صورة ديسكتوب.
+export type HeroSlide = {
+  alt: string;
+  images: HeroImage[];
+};
+
+export const heroSlides: HeroSlide[] = [
+  {
+    alt: "مجموعة صنايعية أثناء العمل",
+    images: [
+      { src: "/hero-images/groub_mobile.png", media: "(max-width: 767px)" },
+      { src: "/hero-images/groub_desktop.png", media: "(min-width: 768px)" },
+    ],
+  },
+  {
+    alt: "صنايعي سباك أثناء العمل",
+    images: [
+      { src: "/hero-images/pol_mobile.png", media: "(max-width: 767px)" },
+      { src: "/hero-images/pol_desktop.png", media: "(min-width: 768px)" },
+    ],
+  },
+  {
+    alt: "صنايعي كهربائي أثناء العمل",
+    images: [
+      { src: "/hero-images/elc_mobile.png", media: "(max-width: 767px)" },
+      { src: "/hero-images/elc_desktop.png", media: "(min-width: 768px)" },
+    ],
+  },
 ];
 
 // عدد التصنيفات المعروضة في قسم التصنيفات بالصفحة الرئيسية (الباقي في /categories).

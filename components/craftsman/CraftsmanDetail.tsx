@@ -4,6 +4,7 @@ import type { Category, Craftsman } from "@/lib/data/craftsmen";
 import { CategoryBadge } from "@/components/shared/ui/CategoryBadge";
 import { VerifiedBadge } from "@/components/shared/ui/VerifiedBadge";
 import { ActionButtons } from "@/components/shared/ui/ActionButtons";
+import { CopyPhoneButton } from "@/components/shared/ui/CopyPhoneButton";
 import { CraftsmanAvatar } from "@/components/shared/ui/CraftsmanAvatar";
 import { IconPin, IconAlert } from "@/components/shared/icons";
 import { SocialLinks } from "@/components/craftsman/SocialLinks";
@@ -117,6 +118,7 @@ export function CraftsmanDetail({
               <bdi className="font-bold text-foreground" dir="ltr">
                 {craftsman.phone}
               </bdi>
+              <CopyPhoneButton phone={craftsman.phone} iconOnly />
             </p>
             <ActionButtons
               phone={craftsman.phone}
@@ -124,6 +126,7 @@ export function CraftsmanDetail({
               size="lg"
               craftsmanSlug={craftsman.slug}
               craftsmanName={craftsman.name}
+              categoryName={category?.name}
             />
             <div className="flex justify-center">
               <ShareButtons slug={craftsman.slug} name={craftsman.name} />
@@ -145,7 +148,7 @@ export function CraftsmanDetail({
         <p className="flex items-start gap-2 text-sm text-muted">
           <IconAlert className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
           <span>
-           الأرقام بنراجعها بنفسنا للتأكد إنها شغالة. لو لقيت رقم اتغير أو مش بيرد، اضغط على 'إبلاغ' وهنحدّثه في نفس اليوم.
+            الأرقام بنراجعها بنفسنا للتأكد إنها شغالة. لو لقيت رقم اتغير أو مش بيرد، اضغط على &quot;إبلاغ&quot; وهنحدّثه في نفس اليوم.
           </span>
         </p>
       </section>
@@ -161,6 +164,7 @@ export function CraftsmanDetail({
         whatsapp={craftsman.whatsapp}
         craftsmanSlug={craftsman.slug}
         craftsmanName={craftsman.name}
+        categoryName={category?.name}
       />
     </div>
   );

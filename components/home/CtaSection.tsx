@@ -1,41 +1,38 @@
 import { ButtonLink } from "@/components/shared/ui/Button";
 import { Reveal } from "@/components/shared/ui/Reveal";
-
-const dotPattern = `url("data:image/svg+xml,%3Csvg width='26' height='26' viewBox='0 0 26 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.14'%3E%3Ccircle cx='2' cy='2' r='1.6'/%3E%3C/g%3E%3C/svg%3E")`;
+import { IconWrench } from "@/components/shared/icons";
 
 export function CtaSection() {
   return (
     <section className="border-t border-border px-4 py-16">
       <div className="mx-auto w-full max-w-3xl">
         <Reveal>
-          <div
-            className="relative overflow-hidden rounded-3xl bg-accent px-6 py-10 text-center shadow-card"
-            style={{ backgroundImage: dotPattern }}
-          >
-            <div className="relative">
-              <h2 className="font-heading text-2xl font-extrabold text-on-accent sm:text-3xl">
-                مش لاقي الصنايعي اللي عايزه؟
-              </h2>
-              <p className="mt-3 text-base text-on-accent/85">
-                كلّمنا على واتساب وهنساعدك — بنراجع الأرقام يدوياً وبنضيف
-                صنايعية جدد كل أسبوع.
-              </p>
-              <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <ButtonLink
-                  href="/join"
-                  variant="onAccent"
-                  className="w-full sm:w-auto"
-                >
-                  أضف صنايعي
-                </ButtonLink>
-                <ButtonLink
-                  href="/#contact"
-                  variant="onAccentGhost"
-                  className="w-full sm:w-auto"
-                >
-                  تواصل معنا
-                </ButtonLink>
-              </div>
+          <div className="rounded-3xl border border-border bg-card p-6 text-center shadow-card sm:p-10">
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/15 text-accent">
+              <IconWrench className="h-7 w-7" />
+            </div>
+            <h2 className="font-heading text-2xl font-extrabold text-foreground sm:text-3xl">
+              صاحب مهنة أو صنايعي شاطر في السويس؟
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-base text-muted">
+              انضم لأكبر دليل محلي مجاناً، واستقبل اتصالات وزبائن من منطقتك
+              مباشرة على هاتفك وواتسابك بدون وسيط أو عمولات.
+            </p>
+            <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <ButtonLink
+                href="/join"
+                variant="primary"
+                className="w-full sm:w-auto"
+              >
+                سجّل بياناتك كصنايعي
+              </ButtonLink>
+              <ButtonLink
+                href="/#contact"
+                variant="outline"
+                className="w-full sm:w-auto"
+              >
+                تواصل معنا للاستفسار
+              </ButtonLink>
             </div>
           </div>
         </Reveal>

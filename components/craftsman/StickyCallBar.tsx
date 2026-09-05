@@ -2,6 +2,7 @@
 
 import { IconPhone, IconWhatsApp } from "@/components/shared/icons";
 import { buttonClasses } from "@/components/shared/ui/Button";
+import { CopyPhoneButton } from "@/components/shared/ui/CopyPhoneButton";
 import { useStats } from "@/hooks/useStats";
 import {
   craftsmanWhatsappMessage,
@@ -14,17 +15,21 @@ export function StickyCallBar({
   whatsapp,
   craftsmanSlug,
   craftsmanName,
+  categoryName,
 }: {
   phone: string;
   whatsapp: string;
   craftsmanSlug?: string;
   craftsmanName?: string;
+  categoryName?: string;
 }) {
   const { track } = useStats();
   const hasWhatsapp = Boolean(whatsapp);
   const waUrl = whatsappHref(
     whatsapp,
-    craftsmanName ? craftsmanWhatsappMessage(craftsmanName) : undefined,
+    craftsmanName
+      ? craftsmanWhatsappMessage(craftsmanName, categoryName)
+      : undefined,
   );
 
   return (
@@ -35,6 +40,7 @@ export function StickyCallBar({
           <bdi className="font-bold text-foreground" dir="ltr">
             {phone}
           </bdi>
+          <CopyPhoneButton phone={phone} iconOnly />
         </p>
         <div
           className={`grid gap-2 ${hasWhatsapp ? "grid-cols-2" : "grid-cols-1"}`}

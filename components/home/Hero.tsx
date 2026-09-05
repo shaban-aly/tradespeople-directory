@@ -1,10 +1,11 @@
 import { getStats } from "@/lib/db/queries";
-import { heroVideos, type HeroVideoSource } from "@/lib/data/site";
+import { heroSlides, type HeroSlide } from "@/lib/data/site";
 import { ButtonAnchor, ButtonLink } from "@/components/shared/ui/Button";
-import { HeroVideo } from "@/components/home/HeroVideo";
+import { HeroSlider } from "@/components/home/HeroSlider";
 import { SearchBox } from "@/components/search/SearchBox";
 import { MobileSearch } from "@/components/search/MobileSearch";
 import { AnimatedNumber } from "@/components/shared/ui/AnimatedNumber";
+import { QuickIntentChips } from "@/components/home/QuickIntentChips";
 
 function Stat({ value, label }: { value: number; label: string }) {
   return (
@@ -17,15 +18,15 @@ function Stat({ value, label }: { value: number; label: string }) {
   );
 }
 
-export async function Hero({ videos = heroVideos }: { videos?: HeroVideoSource[] }) {
+export async function Hero({ slides = heroSlides }: { slides?: HeroSlide[] }) {
   const stats = await getStats();
 
   return (
     <section className="relative">
       <div className="absolute inset-0 overflow-hidden" aria-hidden>
-        {videos.length > 0 ? (
+        {slides.length > 0 ? (
           <>
-            <HeroVideo videos={videos} />
+            <HeroSlider slides={slides} />
             <div
               className="absolute inset-0 bg-background/70 dark:bg-background/40"
               aria-hidden
@@ -54,6 +55,8 @@ export async function Hero({ videos = heroVideos }: { videos?: HeroVideoSource[]
           </div>
         </div>
 
+        <QuickIntentChips />
+
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <ButtonAnchor
             href="/categories"
@@ -64,12 +67,12 @@ export async function Hero({ videos = heroVideos }: { videos?: HeroVideoSource[]
             تصفح التصنيفات
           </ButtonAnchor>
           <ButtonLink
-            href="/join"
+            href="/#how-it-works"
             variant="outline"
             size="md"
             className="w-full sm:w-auto"
           >
-            أضف صنايعي
+            إزاي بتوصل للصنايعي؟
           </ButtonLink>
         </div>
 
