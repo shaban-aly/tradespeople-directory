@@ -32,7 +32,6 @@ function ResponsiveImage({ images, alt }: { images: HeroImage[]; alt: string }) 
         alt={alt}
         fill
         sizes="100vw"
-        className="object-cover"
         priority
       />
     </picture>

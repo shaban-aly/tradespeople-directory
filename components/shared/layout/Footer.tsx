@@ -34,7 +34,7 @@ export async function Footer() {
               </span>
             </Link>
             <p className="mt-3 text-base leading-relaxed text-muted">
-              صنعناه لأهل السويس، وراجعنا أرقام كل صنايعي فيه باليد قبل النشر.
+              تم تطويره لأهل السويس، وراجعنا أرقام كل صنايعي قبل النشر.
             </p>
           </div>
 
@@ -104,7 +104,7 @@ export async function Footer() {
 
         <div className="mt-8 border-t border-border pt-4">
           <p className="text-center text-sm text-muted">
-            دليل الصنايعية — كل الأرقام تُراجع يدوياً قبل النشر ودورياً كل أسبوع.
+            دليل الصنايعية — كل الأرقام تُراجع يدوياً قبل النشر ودورياً .
             © {year} تم التطوير بواسطة{" "}
             <a
               className="font-semibold text-accent hover:underline"

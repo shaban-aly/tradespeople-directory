@@ -28,7 +28,7 @@ export async function Hero({ slides = heroSlides }: { slides?: HeroSlide[] }) {
           <>
             <HeroSlider slides={slides} />
             <div
-              className="absolute inset-0 bg-background/70 dark:bg-background/40"
+              className="absolute inset-0 bg-background/40 dark:bg-background/40"
               aria-hidden
             />
           </>
@@ -41,7 +41,7 @@ export async function Hero({ slides = heroSlides }: { slides?: HeroSlide[] }) {
         <h1 className="mx-auto max-w-3xl font-heading text-4xl font-extrabold leading-tight sm:text-5xl">
           الصنايعي اللي محتاجه، في السويس، خلال ثواني
         </h1>
-        <p className="mx-auto mt-4 max-w-2xl text-base text-muted sm:text-lg">
+        <p className="mx-auto mt-4 max-w-2xl text-base text-muted/155 sm:text-lg">
           دليلك لأفضل الصنايعية المحليين — سباك، كهربائي، نجار... اختار التخصص
           وكلم الصنايعي مباشرة
         </p>
