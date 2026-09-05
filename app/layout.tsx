@@ -85,6 +85,7 @@ try {
 `;
 
 const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+const adsenseClientId = "ca-pub-5152627364584775";
 
 const gaInitScript = `
 window.dataLayer = window.dataLayer || [];
@@ -107,6 +108,11 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="دليل الصنايعية" />
+        <script
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`}
+          crossOrigin="anonymous"
+        />
         {gaId ? (
           <>
             <script
