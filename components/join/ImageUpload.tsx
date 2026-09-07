@@ -57,7 +57,7 @@ export function ImageUpload({ preview, error, onSelect, onRemove }: ImageUploadP
           <IconCamera className="h-8 w-8" />
           <span className="text-base font-bold">اضغط لرفع صورة</span>
           <span className="text-base">
-            JPG أو PNG — بنحوّلها لـ WebP أوتوماتيك لحد {MAX_IMAGE_SIZE_MB} ميجا
+            JPG أو PNG —{MAX_IMAGE_SIZE_MB} ميجا
           </span>
         </button>
       )}
