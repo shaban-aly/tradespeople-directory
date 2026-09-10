@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   Clock,
   Copy,
+  Download,
   ExternalLink,
   Eye,
   EyeOff,
@@ -94,6 +95,10 @@ export function IconArrowUp(props: LucideProps) {
 
 export function IconGlobe(props: LucideProps) {
   return <Globe {...props} />;
+}
+
+export function IconDownload(props: LucideProps) {
+  return <Download {...props} />;
 }
 
 export function IconCamera(props: LucideProps) {

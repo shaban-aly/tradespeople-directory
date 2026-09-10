@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Cairo, Tajawal } from "next/font/google";
 import "./globals.css";
+import { PwaInstallBanner } from "@/components/shared/PwaInstallBanner";
 import { PwaRegister } from "@/components/shared/layout/PwaRegister";
 import {
   siteName,
@@ -146,6 +147,7 @@ export default function RootLayout({
         className={`${cairo.variable} ${tajawal.variable} bg-background font-body text-foreground antialiased`}
       >
         <PwaRegister />
+        <PwaInstallBanner />
         {children}
       </body>
     </html>
