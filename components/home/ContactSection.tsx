@@ -1,11 +1,9 @@
-"use client";
-
 import { siteContact } from "@/lib/data/site";
 import { toArabicDigits } from "@/lib/utils/format";
 import { ActionButtons } from "@/components/shared/ui/ActionButtons";
 import { ButtonAnchor } from "@/components/shared/ui/Button";
 import { ContactForm } from "@/components/home/ContactForm";
-import { IconFacebook } from "@/components/shared/icons";
+import { IconFacebook, IconClock } from "@/components/shared/icons";
 import { Reveal } from "@/components/shared/ui/Reveal";
 import { SectionHeader } from "@/components/shared/ui/SectionHeader";
 
@@ -27,8 +25,14 @@ export function ContactSection() {
       <div className="mx-auto w-full max-w-2xl px-4">
         <Reveal>
           <SectionHeader
+            icon={<IconClock className="h-4 w-4" />}
             eyebrow="إزاي بيشتغل الموقع"
-            title="اوصل للصنايعي في 3 خطوات"
+            title={
+              <>
+                اوصل للصنايعي في{" "}
+                <span className="text-accent">3 خطوات</span>
+              </>
+            }
             description="صممناه يبقى أسرع وأقرب حاجة للتواصل مع الصنايعي."
           />
         </Reveal>

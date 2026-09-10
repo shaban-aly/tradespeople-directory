@@ -9,8 +9,11 @@ import {
 import { useAdminAction } from "./useAdminAction";
 import { useAdminQuery } from "./useAdminQuery";
 
-export function useAdminMessages() {
-  const { data, loading, error: loadError, refresh } = useAdminQuery(fetchMessages);
+export function useAdminMessages(initialMessages?: ContactMessageRow[]) {
+  const { data, loading, error: loadError, refresh } = useAdminQuery(
+    fetchMessages,
+    initialMessages,
+  );
   const { busyKey, error: actionError, run } = useAdminAction();
 
   const toggleRead = (message: ContactMessageRow) =>

@@ -3,6 +3,7 @@ import { getAreas, getCategories, searchCraftsmen } from "@/lib/db/queries";
 import type { CraftsmanSort } from "@/lib/data/craftsmen";
 import { SearchFilters } from "@/components/search/SearchFilters";
 import { SearchResults } from "@/components/search/SearchResults";
+import { SearchHeaderTrigger } from "@/components/search/SearchHeaderTrigger";
 
 export const dynamic = "force-dynamic";
 
@@ -66,6 +67,8 @@ export default async function SearchPage({
               ? `نتائج البحث عن «${query}»`
               : "ابحث عن صنايعي بالاسم أو التخصص أو المنطقة، واتصل به مباشرة."}
           </p>
+
+          <SearchHeaderTrigger initialQuery={query} />
         </div>
       </section>
 

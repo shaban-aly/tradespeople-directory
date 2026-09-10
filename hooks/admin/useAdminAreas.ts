@@ -14,11 +14,16 @@ import { buildAreaCounts } from "@/lib/db/admin-selectors";
 import { useAdminAction } from "./useAdminAction";
 import { useAdminQuery } from "./useAdminQuery";
 
-export function useAdminAreas() {
+export interface AdminAreasData {
+  areas: AreaRow[];
+  counts: Awaited<ReturnType<typeof fetchCounts>>;
+}
+
+export function useAdminAreas(initialData?: AdminAreasData) {
   const { data, loading, error: loadError, refresh } = useAdminQuery(async () => {
     const [areas, counts] = await Promise.all([fetchAreas(), fetchCounts()]);
     return { areas, counts };
-  });
+  }, initialData);
   const { busyKey, error: actionError, run } = useAdminAction();
 
   const areaCounts = useMemo(

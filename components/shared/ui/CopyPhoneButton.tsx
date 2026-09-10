@@ -1,10 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
 import { IconCheck, IconCopy } from "@/components/shared/icons";
+import { useCopyToClipboard } from "@/hooks/ui/useCopyToClipboard";
 
 // زر نسخ الرقم إلى الحافظة مع تنبيه تفاعلي «تم النسخ».
-// يدعم mode مصغّر (iconOnly) بجانب الأرقام، وfallback قديم للنسخ.
+// يدعم mode مصغّر (iconOnly) بجانب الأرقام.
 export function CopyPhoneButton({
   phone,
   label = "نسخ الرقم",
@@ -14,49 +14,16 @@ export function CopyPhoneButton({
   label?: string;
   iconOnly?: boolean;
 }) {
-  const [copied, setCopied] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { copied, copy } = useCopyToClipboard();
 
-  async function copy() {
-    let ok = false;
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(phone);
-        ok = true;
-      }
-    } catch {
-      ok = false;
-    }
-
-    if (!ok) {
-      // Fallback للمتصفحات الأقدم / السياقات غير الآمنة
-      const textarea = document.createElement("textarea");
-      textarea.value = phone;
-      textarea.setAttribute("readonly", "");
-      textarea.style.position = "absolute";
-      textarea.style.left = "-9999px";
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        document.execCommand("copy");
-        ok = true;
-      } catch {
-        ok = false;
-      }
-      document.body.removeChild(textarea);
-    }
-
-    if (!ok) return;
-
-    setCopied(true);
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setCopied(false), 2000);
+  async function handleCopy() {
+    await copy(phone);
   }
 
   return (
     <button
       type="button"
-      onClick={copy}
+      onClick={handleCopy}
       aria-live="polite"
       title={copied ? "تم النسخ" : label}
       aria-label={copied ? "تم النسخ" : label}
@@ -73,9 +40,7 @@ export function CopyPhoneButton({
       ) : (
         <IconCopy className="h-5 w-5" />
       )}
-      {!iconOnly && (
-        <span className={copied ? "" : ""}>{copied ? "تم النسخ" : label}</span>
-      )}
+      {!iconOnly && <span>{copied ? "تم النسخ" : label}</span>}
     </button>
   );
 }

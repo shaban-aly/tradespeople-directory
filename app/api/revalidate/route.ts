@@ -38,11 +38,11 @@ export async function POST(request: NextRequest) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("is_admin")
+    .select("role")
     .eq("id", data.user.id)
     .maybeSingle();
 
-  if (!profile?.is_admin) {
+  if (profile?.role !== "admin") {
     return NextResponse.json(
       { error: "غير مصرح — تحتاج صلاحيات مشرف" },
       { status: 403 },

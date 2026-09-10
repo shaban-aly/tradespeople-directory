@@ -18,6 +18,7 @@ export function CraftsmenTable({
   onTogglePublished,
   onEdit,
   onDelete,
+  onLinkAccount,
 }: {
   craftsmen: CraftsmanRow[];
   busyKey: string;
@@ -25,10 +26,11 @@ export function CraftsmenTable({
   onTogglePublished: (craftsman: CraftsmanRow) => void;
   onEdit: (craftsman: CraftsmanRow) => void;
   onDelete: (craftsman: CraftsmanRow) => void;
+  onLinkAccount?: (craftsman: CraftsmanRow) => void;
 }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[860px] border-collapse text-right">
+      <table className="w-full min-w-215 border-collapse text-right">
         <thead>
           <tr className="border-b border-border text-base text-muted">
             <th className="py-3 pr-2 font-bold">الصنايعي</th>
@@ -133,6 +135,17 @@ export function CraftsmenTable({
                   >
                     <IconEdit className="h-5 w-5" />
                   </button>
+                  {onLinkAccount && (
+                    <button
+                      type="button"
+                      aria-label="ربط بحساب مستخدم"
+                      title="ربط بحساب مستخدم (فني)"
+                      onClick={() => onLinkAccount(craftsman)}
+                      className="rounded-xl border border-border p-3 text-muted transition-colors hover:border-action hover:text-action"
+                    >
+                      <IconUsers className="h-5 w-5" />
+                    </button>
+                  )}
                   <button
                     type="button"
                     aria-label="حذف"

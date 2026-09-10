@@ -15,7 +15,7 @@ import { matchScore, matchesQuery, normalizeArabic, type SearchData } from "../s
 const CRAFTSMAN_SELECT =
   "id, slug, name, image_url, phone, whatsapp, description, verified, added_at, category:categories(slug, name, icon), area:areas(name)";
 const CRAFTSMAN_BY_CATEGORY_SELECT =
-  "id, slug, name, image_url, phone, whatsapp, description, verified, added_at, category:categories!inner(slug, name, icon), area:areas(name)";
+  "id, slug, name, image_url, phone, whatsapp, description, verified, added_at, category:categories!inner(slug, name, icon), area:areas(name), stats:craftsman_stats(views, calls, whatsapp)";
 
 type CategoryRow = { slug: string; name: string; icon: string };
 type AreaRow = { name: string };
@@ -54,7 +54,7 @@ function mapCategory(row: CategoryRow): Category {
   return { slug: row.slug, name: row.name, icon: row.icon };
 }
 
-async function getSocialLinks(craftsmanId: string): Promise<SocialLink[]> {
+async function getSocialLinksImpl(craftsmanId: string): Promise<SocialLink[]> {
   const { data } = await createServerReadClient()
     .from("social_links")
     .select("platform, url")
@@ -62,6 +62,10 @@ async function getSocialLinks(craftsmanId: string): Promise<SocialLink[]> {
     .order("created_at");
   return (data ?? []).map((r) => ({ platform: r.platform as SocialPlatform, url: r.url }));
 }
+
+const getSocialLinks = unstable_cache(getSocialLinksImpl, [
+  "data-craftsman-social-links",
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
 
 async function getCategoriesImpl(): Promise<Category[]> {
   const { data } = await createServerReadClient()
@@ -76,7 +80,7 @@ export const getCategories = unstable_cache(getCategoriesImpl, [
   DATA_CACHE_KEYS.categories,
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
 
-export async function getCategoryBySlug(slug: string): Promise<Category | undefined> {
+async function getCategoryBySlugImpl(slug: string): Promise<Category | undefined> {
   const { data } = await createServerReadClient()
     .from("categories")
     .select("slug, name, icon")
@@ -85,6 +89,10 @@ export async function getCategoryBySlug(slug: string): Promise<Category | undefi
     .maybeSingle();
   return data ? mapCategory(data) : undefined;
 }
+
+export const getCategoryBySlug = unstable_cache(getCategoryBySlugImpl, [
+  "data-category-by-slug",
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
 
 async function getCraftsmenImpl(): Promise<Craftsman[]> {
   const { data } = await createServerReadClient()
@@ -99,7 +107,7 @@ export const getCraftsmen = unstable_cache(getCraftsmenImpl, [
   DATA_CACHE_KEYS.craftsmen,
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
 
-export async function getCraftsmanBySlug(slug: string): Promise<Craftsman | undefined> {
+async function getCraftsmanBySlugImpl(slug: string): Promise<Craftsman | undefined> {
   const { data } = await createServerReadClient()
     .from("craftsmen")
     .select(CRAFTSMAN_SELECT)
@@ -111,15 +119,26 @@ export async function getCraftsmanBySlug(slug: string): Promise<Craftsman | unde
   return { ...mapCraftsman(data), socialLinks };
 }
 
-export async function getCraftsmenByCategory(slug: string): Promise<Craftsman[]> {
+export const getCraftsmanBySlug = unstable_cache(getCraftsmanBySlugImpl, [
+  "data-craftsman-by-slug",
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
+
+async function getCraftsmenByCategoryImpl(slug: string): Promise<CraftsmanWithStats[]> {
   const { data } = await createServerReadClient()
     .from("craftsmen")
     .select(CRAFTSMAN_BY_CATEGORY_SELECT)
     .eq("is_published", true)
     .eq("category.slug", slug)
     .order("added_at", { ascending: false });
-  return (data ?? []).map(mapCraftsman);
+  return (data ?? []).map((row) => ({
+    ...mapCraftsman(row),
+    stats: row.stats ?? { views: 0, calls: 0, whatsapp: 0 },
+  }));
 }
+
+export const getCraftsmenByCategory = unstable_cache(getCraftsmenByCategoryImpl, [
+  "data-craftsmen-by-category",
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
 
 export async function getCategoriesWithCounts(): Promise<CategoryWithCount[]> {
   const [categories, craftsmen] = await Promise.all([getCategories(), getCraftsmen()]);
@@ -303,7 +322,7 @@ function mapRelatedRow(row: RelatedCraftsmanRow): Craftsman {
  * تعتمد على دالة `get_related_craftsmen` في القاعدة — إن لم تكن مثبّتة أو
  * لم توجد بيانات بعد، ترجع قائمة فارغة بأمان.
  */
-export async function getRelatedByCoEngagement(
+async function getRelatedByCoEngagementImpl(
   craftsmanId: string,
   limit = 6,
 ): Promise<Craftsman[]> {
@@ -314,6 +333,12 @@ export async function getRelatedByCoEngagement(
   if (error || !data || data.length === 0) return [];
   return data.map(mapRelatedRow);
 }
+
+export const getRelatedByCoEngagement = unstable_cache(
+  getRelatedByCoEngagementImpl,
+  ["data-related-craftsmen"],
+  { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] },
+);
 
 async function getSearchDataImpl(): Promise<SearchData> {
   const [categories, areas, craftsmen] = await Promise.all([

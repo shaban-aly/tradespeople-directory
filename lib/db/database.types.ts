@@ -244,6 +244,7 @@ export type Database = {
           status: string;
           created_at: string;
           social_links: Json;
+          user_id: string | null;
         };
         Insert: {
           id?: string;
@@ -260,6 +261,7 @@ export type Database = {
           status?: string;
           created_at?: string;
           social_links?: Json;
+          user_id?: string | null;
         };
         Update: {
           id?: string;
@@ -276,6 +278,7 @@ export type Database = {
           status?: string;
           created_at?: string;
           social_links?: Json;
+          user_id?: string | null;
         };
         Relationships: [
           {
@@ -297,21 +300,18 @@ export type Database = {
       profiles: {
         Row: {
           id: string;
-          is_admin: boolean;
           role: 'client' | 'craftsman' | 'admin';
           craftsman_id: string | null;
           created_at: string;
         };
         Insert: {
           id: string;
-          is_admin?: boolean;
           role?: 'client' | 'craftsman' | 'admin';
           craftsman_id?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
-          is_admin?: boolean;
           role?: 'client' | 'craftsman' | 'admin';
           craftsman_id?: string | null;
           created_at?: string;
@@ -376,6 +376,76 @@ export type Database = {
           },
         ];
       };
+      favorites: {
+        Row: {
+          id: string;
+          user_id: string;
+          craftsman_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          craftsman_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          craftsman_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "favorites_craftsman_id_fkey";
+            columns: ["craftsman_id"];
+            isOneToOne: false;
+            referencedRelation: "craftsmen";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      reviews: {
+        Row: {
+          id: string;
+          craftsman_id: string;
+          user_id: string;
+          user_name: string;
+          rating: number;
+          comment: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          craftsman_id: string;
+          user_id: string;
+          user_name?: string;
+          rating: number;
+          comment?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          craftsman_id?: string;
+          user_id?: string;
+          user_name?: string;
+          rating?: number;
+          comment?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reviews_craftsman_id_fkey";
+            columns: ["craftsman_id"];
+            isOneToOne: false;
+            referencedRelation: "craftsmen";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -421,10 +491,6 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: 'client' | 'craftsman' | 'admin' | null;
       };
-      is_admin: {
-        Args: Record<PropertyKey, never>;
-        Returns: boolean;
-      };
       rate_limit_consume: {
         Args: {
           p_key: string;
@@ -446,6 +512,21 @@ export type Database = {
           p_path?: string;
         };
         Returns: boolean;
+      };
+      get_craftsman_favorites_count: {
+        Args: {
+          p_craftsman_id: string;
+        };
+        Returns: number;
+      };
+      get_craftsman_rating_summary: {
+        Args: {
+          p_craftsman_id: string;
+        };
+        Returns: {
+          average_rating: number;
+          total_reviews: number;
+        }[];
       };
     };
     Enums: {

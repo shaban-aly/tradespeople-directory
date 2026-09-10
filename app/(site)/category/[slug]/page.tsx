@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getAreas, getCategories, getCategoryBySlug, getCraftsmenByCategory } from "@/lib/db/queries";
+import {
+  getAreas,
+  getCategories,
+  getCategoryBySlug,
+  getCraftsmenByCategory,
+} from "@/lib/db/queries";
 import { toArabicDigits } from "@/lib/utils/format";
 import { JsonLd } from "@/components/shared/seo/JsonLd";
 import { CategoryIcon } from "@/components/shared/ui/CategoryIcon";
@@ -31,7 +36,7 @@ export async function generateMetadata({
       title: `صنايعية ${category.name} في السويس — دليل الصنايعية`,
       description: `أفضل ${category.name} في السويس — اتصل أو راسل واتساب مباشرة.`,
       type: "website",
-      images: [{ url: "/og.png", width: 1200, height: 630 }],
+      images: [{ url: "/og.webp", width: 1200, height: 630 }],
     },
   };
 }
@@ -63,7 +68,7 @@ export default async function CategoryPage({
       <JsonLd data={categoryPageSchema(category, craftsmen)} />
       <section className="relative overflow-hidden border-b border-border bg-card">
         <div
-          className="absolute inset-0 bg-gradient-to-b from-accent/10 to-card"
+          className="absolute inset-0 bg-linear-to-b from-accent/10 to-card"
           aria-hidden
         />
         <div className="relative mx-auto w-full max-w-5xl px-4 py-10">
@@ -79,8 +84,8 @@ export default async function CategoryPage({
                 {category.name}
               </h1>
               <p className="mt-2 max-w-xl text-base text-muted">
-                اختر الصنايعي المناسب لمنطقتك واتصل به مباشرة — بدون تسجيل
-                أو وسيط.
+                اختر الصنايعي المناسب لمنطقتك واتصل به مباشرة — بدون تسجيل أو
+                وسيط.
               </p>
             </div>
           </div>
@@ -103,7 +108,11 @@ export default async function CategoryPage({
       </section>
 
       <section className="mx-auto w-full max-w-5xl px-4 py-8">
-        <CraftsmanList craftsmen={craftsmen} areas={areas} category={category} />
+        <CraftsmanList
+          craftsmen={craftsmen}
+          areas={areas}
+          category={category}
+        />
       </section>
     </>
   );

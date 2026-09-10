@@ -15,7 +15,15 @@ import { buildOverviewMetrics, type OverviewMetrics } from "@/lib/db/admin-selec
 import { useAdminAction } from "./useAdminAction";
 import { useAdminQuery } from "./useAdminQuery";
 
-export function useAdminOverview() {
+export interface AdminOverviewData {
+  requests: JoinRequestRow[];
+  categories: Awaited<ReturnType<typeof fetchCategories>>;
+  areas: Awaited<ReturnType<typeof fetchAreas>>;
+  craftsmen: Awaited<ReturnType<typeof fetchCraftsmen>>;
+  messages: Awaited<ReturnType<typeof fetchMessages>>;
+}
+
+export function useAdminOverview(initialData?: AdminOverviewData) {
   const { data, loading, error: loadError, refresh } = useAdminQuery(async () => {
     const [requests, categories, areas, craftsmen, messages] = await Promise.all([
       fetchRequests(),
@@ -25,7 +33,7 @@ export function useAdminOverview() {
       fetchMessages(),
     ]);
     return { requests, categories, areas, craftsmen, messages };
-  });
+  }, initialData);
   const { busyKey, error: actionError, run } = useAdminAction();
 
   const metrics = useMemo<OverviewMetrics | null>(

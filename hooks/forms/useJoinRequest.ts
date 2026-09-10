@@ -1,30 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { submitRegisterRequest, submitReportRequest } from "@/lib/db/requests";
+import { submitRegisterRequest } from "@/lib/db/requests";
 import {
   anyError,
   type FieldErrors,
   type RegisterErrors,
   type RegisterFieldName,
   type RegisterFields,
-  type ReportErrors,
-  type ReportFieldName,
-  type ReportFields,
   type SocialLinkDraft,
   validateRegisterField,
   validateRegisterFields,
-  validateReportField,
-  validateReportFields,
   validateSocialLinks,
 } from "@/lib/utils/validation";
 
-export type JoinRequestType = "register" | "report";
+export type { RegisterFields };
 
-export type { RegisterFields, ReportFields };
-
-export function useJoinRequest(initialCategory: string, initialArea: string) {
-  const [type, setType] = useState<JoinRequestType>("register");
+export function useJoinRequest(
+  initialCategory: string,
+  initialArea: string,
+) {
   const [register, setRegister] = useState<RegisterFields>({
     name: "",
     category: initialCategory,
@@ -33,27 +28,24 @@ export function useJoinRequest(initialCategory: string, initialArea: string) {
     whatsapp: "",
     description: "",
   });
-  const [report, setReport] = useState<ReportFields>({
-    craftsmanName: "",
-    phone: "",
-    message: "",
-  });
   const [registerTouched, setRegisterTouched] = useState<
     Partial<Record<RegisterFieldName, boolean>>
   >({});
-  const [reportTouched, setReportTouched] = useState<
-    Partial<Record<ReportFieldName, boolean>>
-  >({});
   const [registerErrors, setRegisterErrors] = useState<RegisterErrors>({});
-  const [reportErrors, setReportErrors] = useState<ReportErrors>({});
   const [submitted, setSubmitted] = useState(false);
   const [registerImage, setRegisterImage] = useState<File | null>(null);
   const [registerSocialLinks, setRegisterSocialLinks] = useState<
     SocialLinkDraft[]
   >([]);
   const [registerSocialError, setRegisterSocialError] = useState("");
+  const [registerImageError, setRegisterImageError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+
+  function changeRegisterImage(file: File | null) {
+    setRegisterImage(file);
+    if (file) setRegisterImageError("");
+  }
 
   function setRegisterField(field: RegisterFieldName, value: string) {
     setRegister((prev) => ({ ...prev, [field]: value }));
@@ -70,24 +62,6 @@ export function useJoinRequest(initialCategory: string, initialArea: string) {
     setRegisterErrors((prev) => ({
       ...prev,
       [field]: validateRegisterField(field, register[field]) ?? undefined,
-    }));
-  }
-
-  function setReportField(field: ReportFieldName, value: string) {
-    setReport((prev) => ({ ...prev, [field]: value }));
-    if (reportTouched[field]) {
-      setReportErrors((prev) => ({
-        ...prev,
-        [field]: validateReportField(field, value) ?? undefined,
-      }));
-    }
-  }
-
-  function touchReportField(field: ReportFieldName) {
-    setReportTouched((prev) => ({ ...prev, [field]: true }));
-    setReportErrors((prev) => ({
-      ...prev,
-      [field]: validateReportField(field, report[field]) ?? undefined,
     }));
   }
 
@@ -108,47 +82,38 @@ export function useJoinRequest(initialCategory: string, initialArea: string) {
     e.preventDefault();
     setSubmitError("");
 
-    if (type === "register") {
-      const nextErrors = validateRegisterFields(register);
-      setRegisterErrors(nextErrors);
-      setRegisterTouched({
-        name: true,
-        category: true,
-        area: true,
-        phone: true,
-        whatsapp: true,
-        description: true,
-      });
-      if (anyError(nextErrors)) return;
+    const nextErrors = validateRegisterFields(register);
+    setRegisterErrors(nextErrors);
+    setRegisterTouched({
+      name: true,
+      category: true,
+      area: true,
+      phone: true,
+      whatsapp: true,
+      description: true,
+    });
+    if (anyError(nextErrors)) return;
 
-      const activeLinks = registerSocialLinks.filter(
-        (link) => link.url.trim() !== "",
-      );
-      const linksError = validateSocialLinks(activeLinks);
-      setRegisterSocialError(linksError ?? "");
-      if (linksError) return;
-    } else {
-      const nextErrors = validateReportFields(report);
-      setReportErrors(nextErrors);
-      setReportTouched({
-        craftsmanName: true,
-        phone: true,
-        message: true,
-      });
-      if (anyError(nextErrors)) return;
+    const activeLinks = registerSocialLinks.filter(
+      (link) => link.url.trim() !== "",
+    );
+    const linksError = validateSocialLinks(activeLinks);
+    setRegisterSocialError(linksError ?? "");
+    if (linksError) return;
+
+    if (!registerImage) {
+      setRegisterImageError("صورة الصنايعي مطلوبة");
+      return;
     }
+    setRegisterImageError("");
 
     setSubmitting(true);
     try {
-      if (type === "register") {
-        await submitRegisterRequest({
-          ...register,
-          image: registerImage,
-          socialLinks: registerSocialLinks.filter((link) => link.url.trim() !== ""),
-        });
-      } else {
-        await submitReportRequest(report);
-      }
+      await submitRegisterRequest({
+        ...register,
+        image: registerImage,
+        socialLinks: activeLinks,
+      });
       setSubmitted(true);
     } catch (error) {
       setSubmitError(
@@ -160,22 +125,15 @@ export function useJoinRequest(initialCategory: string, initialArea: string) {
   }
 
   return {
-    type,
-    setType,
     register,
     setRegisterField,
     touchRegisterField,
     registerErrors,
     getRegisterError: (field: RegisterFieldName) =>
       getError(registerErrors, registerTouched, field),
-    report,
-    setReportField,
-    touchReportField,
-    reportErrors,
-    getReportError: (field: ReportFieldName) =>
-      getError(reportErrors, reportTouched, field),
     registerImage,
-    setRegisterImage,
+    changeRegisterImage,
+    registerImageError,
     registerSocialLinks,
     registerSocialError,
     changeRegisterSocialLinks,

@@ -6,11 +6,18 @@ import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE_MB } from "@/lib/storage/images";
 type ImageUploadProps = {
   preview: string;
   error: string;
+  required?: boolean;
   onSelect: (file: File | undefined) => void;
   onRemove: () => void;
 };
 
-export function ImageUpload({ preview, error, onSelect, onRemove }: ImageUploadProps) {
+export function ImageUpload({
+  preview,
+  error,
+  required,
+  onSelect,
+  onRemove,
+}: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   function handleChange(e: ChangeEvent<HTMLInputElement>) {
@@ -21,7 +28,15 @@ export function ImageUpload({ preview, error, onSelect, onRemove }: ImageUploadP
   return (
     <div>
       <label className="mb-1 block text-base font-bold">
-        صورة الصنايعي <span className="font-normal text-muted">(اختياري)</span>
+        صورة الصنايعي
+        {required ? (
+          <>
+            <span className="text-danger"> *</span>{" "}
+            <span className="font-normal text-muted">(مطلوبة)</span>
+          </>
+        ) : (
+          <span className="font-normal text-muted"> (اختياري)</span>
+        )}
       </label>
 
       {preview ? (
@@ -62,7 +77,11 @@ export function ImageUpload({ preview, error, onSelect, onRemove }: ImageUploadP
         </button>
       )}
 
-      {error && <p className="mt-2 text-base font-bold text-accent">{error}</p>}
+      {error && (
+        <p role="alert" className="mt-2 text-base font-bold text-danger">
+          {error}
+        </p>
+      )}
 
       <input
         ref={inputRef}

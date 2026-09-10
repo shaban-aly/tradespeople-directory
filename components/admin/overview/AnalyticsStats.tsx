@@ -1,4 +1,4 @@
-import type { AnalyticsOverview } from "@/app/api/analytics/route";
+import type { AnalyticsOverview } from "@/lib/db/analytics";
 import { AdminSection } from "@/components/admin/AdminSection";
 import { StatCard } from "@/components/admin/StatCard";
 import {

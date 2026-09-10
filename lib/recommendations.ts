@@ -18,7 +18,8 @@ export type BehaviorEvent = {
 
 /** صنايعي مع إحصائياته الحقيقية — حقل الترشيحات. */
 export type RecommendableCraftsman = Craftsman & {
-  stats: { views: number; calls: number; whatsapp: number };
+  stats?: { views: number; calls: number; whatsapp: number };
+  recommendationReason?: string;
 };
 
 export type BehaviorProfile = {
@@ -30,6 +31,7 @@ export type BehaviorProfile = {
 export type RankOptions = {
   count?: number;
   maxPerCategory?: number;
+  now?: number;
 };
 
 const EVENTS_STORAGE_KEY = "sanay:rec:events";
@@ -111,6 +113,29 @@ export function hasBehaviorHistory(events: BehaviorEvent[]): boolean {
   return events.some((event) => event.type !== "dismiss");
 }
 
+/**
+ * هل هناك تفاعل نوعي كافٍ (بحث، اتصال، واتساب، إعجاب، أو أكثر من تصفحين)
+ * لتخصيص عنوان القسم لـ «مقترحات مخصصة لك»؟
+ */
+export function hasPersonalizedHistory(events: BehaviorEvent[]): boolean {
+  let views = 0;
+  for (const event of events) {
+    if (
+      event.type === "call" ||
+      event.type === "whatsapp" ||
+      event.type === "like" ||
+      event.type === "search"
+    ) {
+      return true;
+    }
+    if (event.type === "view") {
+      views++;
+      if (views >= 2) return true;
+    }
+  }
+  return false;
+}
+
 const eventListeners = new Set<() => void>();
 const favoriteListeners = new Set<() => void>();
 let cachedEvents: BehaviorEvent[] | null = null;
@@ -157,6 +182,18 @@ export function readFavorites(): string[] {
   } catch {
     return [];
   }
+}
+
+/** حفظ قائمة المفضلة وتحديث كاش الذاكرة وlocalStorage. */
+export function writeFavorites(slugs: string[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(slugs));
+  } catch {
+    // تجاهل فشل التخزين
+  }
+  cachedFavorites = slugs;
+  window.dispatchEvent(new Event(CHANGED_EVENT));
 }
 
 /** تبديل حالة المفضلة لصنايعي — مع تسجيل إشارة «إعجاب» للتوصية. */
@@ -220,17 +257,23 @@ export function buildBehaviorProfile(events: BehaviorEvent[]): BehaviorProfile {
   return { contacted, dismissed, searches };
 }
 
+const HALF_LIFE_DAYS = 7;
+const HALF_LIFE_MS = HALF_LIFE_DAYS * 24 * 60 * 60 * 1000;
+
 /**
  * ترتيب اقتراحات الصنايعية بمعادلة تجمع بين:
- * ميل المستخدم (التخصصات/المناطق اللي تفاعل معها) + شهرة الصنايعي (إحصائيات حقيقية) + تنوّع التخصصات.
- * بلا أي أحداث يعود ترتيب الشهرة — نفس «الأكثر طلباً».
+ * - تقادم الإشارات الزمني (Time Decay)
+ * - ميل المستخدم (التخصصات/المناطق/كلمات البحث)
+ * - شهرة الصنايعي الحقيقية (إحصائيات الاتصال والواتساب والزيارات)
+ * - معزز التوثيق الذكي وحداثة الإضافة
+ * - تنوع التخصصات لمنع احتكار تخصص واحد
  */
 export function rankRecommendations(
   pool: RecommendableCraftsman[],
   events: BehaviorEvent[],
   options: RankOptions = {},
 ): RecommendableCraftsman[] {
-  const { count = 8, maxPerCategory = 2 } = options;
+  const { count = 8, maxPerCategory = 2, now = Date.now() } = options;
   const profile = buildBehaviorProfile(events);
 
   const bySlug = new Map(pool.map((craftsman) => [craftsman.slug, craftsman]));
@@ -241,7 +284,16 @@ export function rankRecommendations(
     if (event.type === "search" || !event.craftsmanSlug) continue;
     const craftsman = bySlug.get(event.craftsmanSlug);
     if (!craftsman) continue;
-    const weight = TYPE_WEIGHTS[event.type] ?? 1;
+
+    // تقادم الإشارات الزمني (Time Decay):
+    // نصف عمر 7 أيام للإشارات الفعلية المسجلة بطوابع زمنية حقيقية
+    const ageMs = Math.max(0, now - event.ts);
+    const isRealTimestamp = event.ts > 1_000_000_000_000;
+    const decay = isRealTimestamp
+      ? Math.exp(-ageMs / (HALF_LIFE_MS / Math.LN2))
+      : 1;
+
+    const weight = (TYPE_WEIGHTS[event.type] ?? 1) * decay;
     categoryAffinity.set(
       craftsman.category,
       (categoryAffinity.get(craftsman.category) ?? 0) + weight,
@@ -259,31 +311,70 @@ export function rankRecommendations(
   );
 
   const scored = candidates.map((craftsman) => {
+    const categoryScore = categoryAffinity.get(craftsman.category) ?? 0;
+    const areaScore = areaAffinity.get(craftsman.area) ?? 0;
+
+    const searchMatchScore = profile.searches.reduce(
+      (sum, query) =>
+        sum +
+        (matchesQuery(
+          query,
+          craftsman.name,
+          craftsman.category,
+          craftsman.area,
+          craftsman.description,
+        )
+          ? 2
+          : 0),
+      0,
+    );
+
     const affinity =
-      (categoryAffinity.get(craftsman.category) ?? 0) * 2 +
-      (areaAffinity.get(craftsman.area) ?? 0) * 1.5 +
-      profile.searches.reduce(
-        (sum, query) =>
-          sum +
-          (matchesQuery(
-            query,
-            craftsman.name,
-            craftsman.category,
-            craftsman.area,
-            craftsman.description,
-          )
-            ? 2
-            : 0),
-        0,
-      );
+      categoryScore * 2 +
+      areaScore * 1.5 +
+      searchMatchScore;
+
+    const calls = craftsman.stats?.calls ?? 0;
+    const whatsapp = craftsman.stats?.whatsapp ?? 0;
+    const views = craftsman.stats?.views ?? 0;
+
     const popularity =
-      Math.log1p(
-        craftsman.stats.calls * 3 +
-          craftsman.stats.whatsapp * 3 +
-          craftsman.stats.views,
-      ) + (craftsman.verified ? 0.5 : 0);
-    // الميول الشخصي خطي (يستجيب حتى لإشارة واحدة) والسمعة مضغوطة log
-    return { craftsman, score: 0.7 * affinity + 0.3 * popularity };
+      Math.log1p(calls * 3 + whatsapp * 3 + views) +
+      (craftsman.verified ? 0.5 : 0);
+
+    // دفعة للصنايعية الجدد المضافين آخر 30 يوماً
+    const addedTime = new Date(craftsman.addedAt).getTime();
+    const isRecent =
+      !isNaN(addedTime) && now - addedTime <= 30 * 24 * 60 * 60 * 1000;
+    const recencyBoost = isRecent ? 0.3 : 0;
+
+    // دفعة ثقة للصنايعي الموثق في تخصص يفضله المستخدم
+    const verifiedCategoryBoost =
+      craftsman.verified && categoryScore > 0 ? 0.5 : 0;
+
+    const finalScore =
+      0.7 * affinity + 0.3 * popularity + recencyBoost + verifiedCategoryBoost;
+
+    // استنتاج سبب التوصية لعرضه للمستخدم
+    let recommendationReason: string | undefined;
+    if (searchMatchScore > 0) {
+      recommendationReason = "يطابق بحثك الأخير";
+    } else if (categoryScore > 0 && areaScore > 0) {
+      recommendationReason = `يناسب تخصصك ومنطقتك (${craftsman.area})`;
+    } else if (categoryScore > 0) {
+      recommendationReason = "بناءً على تصفحك لهذا التخصص";
+    } else if (areaScore > 0) {
+      recommendationReason = `في منطقتك (${craftsman.area})`;
+    } else if (craftsman.verified && popularity > 2) {
+      recommendationReason = "موثّق والأكثر طلباً بالسويس";
+    } else if (isRecent) {
+      recommendationReason = "صنايعي جديد مميز في الدليل";
+    }
+
+    return {
+      craftsman: { ...craftsman, recommendationReason },
+      score: finalScore,
+    };
   });
 
   scored.sort((a, b) => b.score - a.score);
@@ -298,4 +389,40 @@ export function rankRecommendations(
     result.push(craftsman);
   }
   return result;
+}
+
+/**
+ * خوارزمية قسم «شاهد أيضاً» الذكي أسفل صفحة التفاصيل — ترتيب مترشحي نفس التخصص:
+ * 1) التفاعل الحقيقي: الاتصال والواتساب بوزن 6 مقابل 1 للظهور («الأكثر تواصلاً»).
+ * 2) دفعة قوية لمن شاهدهم المشاهدون معاً (co-engagement) — إشارة سلوكية شخصية.
+ * 3) الصنايعي الموثّق كسر للتعادل، ثم الأحدث إضافة.
+ * ويُستبعد الصنايعي نفسه، ويُقصّ الطول إلى `count`.
+ */
+export function rankRelatedCraftsmen(
+  candidates: RecommendableCraftsman[],
+  coViewedSlugs: ReadonlySet<string> | readonly string[],
+  options: { count?: number; excludeId?: string } = {},
+): RecommendableCraftsman[] {
+  const { count = 6, excludeId } = options;
+  const coViewed = new Set(coViewedSlugs);
+
+  const scored = candidates
+    .filter((craftsman) => craftsman.id !== excludeId)
+    .map((craftsman) => {
+      const stats = craftsman.stats ?? { views: 0, calls: 0, whatsapp: 0 };
+      const popularity = Math.log1p(
+        (stats.calls + stats.whatsapp) * 6 + stats.views,
+      );
+      const coBoost = coViewed.has(craftsman.slug) ? 3 : 0;
+      const verifiedBoost = craftsman.verified ? 0.5 : 0;
+      const recency =
+        new Date(craftsman.addedAt).getTime() / 1_000_000_000_000_000;
+      return {
+        craftsman,
+        score: popularity + coBoost + verifiedBoost + recency,
+      };
+    });
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, count).map(({ craftsman }) => craftsman);
 }

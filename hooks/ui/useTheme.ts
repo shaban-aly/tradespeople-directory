@@ -21,6 +21,7 @@ export function useTheme() {
 
   return {
     theme,
+    setTheme: (next: "light" | "dark") => setToggled(next),
     toggleTheme: () =>
       setToggled((prev) => {
         if (prev) return prev === "dark" ? "light" : "dark";

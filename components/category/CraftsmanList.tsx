@@ -10,6 +10,7 @@ import {
 import { CraftsmanGrid } from "@/components/shared/ui/CraftsmanGrid";
 import { BottomSheet } from "@/components/shared/ui/BottomSheet";
 import { Button } from "@/components/shared/ui/Button";
+import { EmptyState } from "@/components/shared/ui/EmptyState";
 import { IconChevronDown, IconSliders } from "@/components/shared/icons";
 import { toArabicDigits } from "@/lib/utils/format";
 
@@ -209,21 +210,21 @@ export function CraftsmanList({
       </BottomSheet>
 
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-card">
-          <p className="font-heading text-xl font-bold">
-            لا يوجد صنايعية حالياً
-          </p>
-          <p className="mt-2 text-base text-muted">
-            {hasFilters
+        <EmptyState
+          title="لا يوجد صنايعية حالياً"
+          description={
+            hasFilters
               ? "جرّب اختيار منطقة أخرى أو إزالة الفلاتر."
-              : "سجّل أول من ينضم لهذا التخصص."}
-          </p>
-          {hasFilters && (
-            <Button type="button" onClick={() => setArea("all")} className="mt-5">
-              عرض كل المناطق
-            </Button>
-          )}
-        </div>
+              : "سجّل أول من ينضم لهذا التخصص."
+          }
+          action={
+            hasFilters ? (
+              <Button type="button" onClick={() => setArea("all")}>
+                عرض كل المناطق
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <CraftsmanGrid
           craftsmen={filtered}

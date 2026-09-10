@@ -1,3 +1,5 @@
+"use client";
+
 import { useContactForm } from "@/hooks/forms/useContactForm";
 import { IconCheck } from "@/components/shared/icons";
 import { Button } from "@/components/shared/ui/Button";

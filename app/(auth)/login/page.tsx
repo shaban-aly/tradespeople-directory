@@ -13,6 +13,7 @@ interface Props {
 const REASON_MESSAGES: Record<string, string> = {
   favorites: "سجّل دخولك عشان تضيف الصنايعي لمفضّلتك",
   craftsman: "المنطقة دي خاصة بحساب الفني",
+  join: "سجّل دخولك الأول عشان تقدّم صنايعي للدليل",
 };
 
 export default async function LoginPage({ searchParams }: Props) {

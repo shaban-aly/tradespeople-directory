@@ -1,5 +1,6 @@
 import type { SocialLink } from "@/lib/data/craftsmen";
-import { IconFacebook, IconGlobe, IconInstagram, IconTikTok } from "@/components/shared/icons";
+import { SectionTitle } from "@/components/shared/ui/SectionTitle";
+import { IconFacebook, IconGlobe, IconInstagram, IconLink, IconTikTok } from "@/components/shared/icons";
 
 const platformLabels: Record<SocialLink["platform"], string> = {
   facebook: "فيسبوك",
@@ -25,10 +26,15 @@ export function SocialLinks({ socialLinks }: { socialLinks?: SocialLink[] }) {
   if (!socialLinks || socialLinks.length === 0) return null;
 
   return (
-    <section aria-label="روابط السوشيال ميديا">
-      <h2 className="mb-3 font-heading text-xl font-bold text-foreground">
-        روابط أخرى
-      </h2>
+    <section
+      aria-label="روابط السوشيال ميديا"
+      className="rounded-3xl border border-border bg-card p-6 shadow-card sm:p-8"
+    >
+      <SectionTitle
+        eyebrow="تابع الصنايعي"
+        icon={<IconLink className="h-4 w-4" />}
+        title="على السوشيال ميديا"
+      />
       <div className="flex flex-wrap gap-3">
         {socialLinks.map((link) => (
           <a

@@ -35,6 +35,12 @@ const PROTECTED: {
     roles: ["client", "craftsman", "admin"],
     fallback: `${CLIENT_LOGIN}?reason=favorites`,
   },
+  {
+    // إضافة صنايعي — أي مستخدم مسجّل (الطلب يُربط بحسابه عند الموافقة)
+    pattern: /^\/join$/,
+    roles: ["client", "craftsman", "admin"],
+    fallback: `${CLIENT_LOGIN}?reason=join`,
+  },
 ];
 
 export async function proxy(request: NextRequest) {
@@ -98,6 +104,11 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/dashboard/:path*", "/favorites/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/dashboard/:path*",
+    "/favorites/:path*",
+    "/join",
+  ],
 };
 

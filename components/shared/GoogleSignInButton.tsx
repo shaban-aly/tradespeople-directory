@@ -7,9 +7,10 @@ import { generateNonce } from "@/lib/utils/nonce";
 
 interface GoogleSignInButtonProps {
   redirectTo?: string;
+  onSuccess?: () => void;
 }
 
-export function GoogleSignInButton({ redirectTo = "/" }: GoogleSignInButtonProps) {
+export function GoogleSignInButton({ redirectTo = "/", onSuccess }: GoogleSignInButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -42,8 +43,12 @@ export function GoogleSignInButton({ redirectTo = "/" }: GoogleSignInButtonProps
           return;
         }
 
-        // نجاح تسجيل الدخول — تحويل للصفحة المطلوبة
-        window.location.href = redirectTo;
+        // نجاح تسجيل الدخول
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          window.location.href = redirectTo;
+        }
       } catch (err) {
         if (isMounted) {
           setError(err instanceof Error ? err.message : "حدث خطأ غير متوقع");
@@ -79,9 +84,6 @@ export function GoogleSignInButton({ redirectTo = "/" }: GoogleSignInButtonProps
         width: 320,
         locale: "ar",
       });
-
-      // إظهار نافذة One-Tap التلقائية للمستخدم
-      window.google.accounts.id.prompt();
     }
 
     const existingScript = document.getElementById("google-gsi-script");
@@ -104,7 +106,7 @@ export function GoogleSignInButton({ redirectTo = "/" }: GoogleSignInButtonProps
 
   if (!clientId) {
     return (
-      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-center text-sm text-amber-700 dark:text-amber-300">
+      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-center text-sm text-amber-700">
         يرجى إضافة <code className="font-mono font-bold">NEXT_PUBLIC_GOOGLE_CLIENT_ID</code> في ملف{" "}
         <code className="font-mono font-bold">.env.local</code> لتفعيل تسجيل الدخول المباشر.
       </div>

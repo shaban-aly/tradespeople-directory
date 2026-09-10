@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getCategoryBySlug, getCraftsmanBySlug, getCraftsmen, getCraftsmenByCategory, getCategories, getRelatedByCoEngagement } from "@/lib/db/queries";
+import {
+  getCategoryBySlug,
+  getCraftsmanBySlug,
+  getCraftsmen,
+  getCraftsmenByCategory,
+  getRelatedByCoEngagement,
+} from "@/lib/db/queries";
 import { JsonLd } from "@/components/shared/seo/JsonLd";
 import { CraftsmanDetail } from "@/components/craftsman/CraftsmanDetail";
-import { CraftsmanGrid } from "@/components/shared/ui/CraftsmanGrid";
-import { SectionHeader } from "@/components/shared/ui/SectionHeader";
+import { RelatedCraftsmen } from "@/components/craftsman/RelatedCraftsmen";
+import { IconTrendingUp } from "@/components/shared/icons";
 import { breadcrumbSchema, craftsmanSchema } from "@/lib/seo/schema";
+import { rankRelatedCraftsmen } from "@/lib/recommendations";
 import { siteUrl } from "@/lib/data/site";
 
 export const revalidate = 3600;
@@ -37,7 +44,7 @@ export async function generateMetadata({
       type: "profile",
       images: [
         {
-          url: craftsman.image || "/og.png",
+          url: craftsman.image || "/og.webp",
           ...(craftsman.image ? {} : { width: 1200, height: 630 }),
         },
       ],
@@ -54,70 +61,53 @@ export default async function CraftsmanPage({
   const craftsman = await getCraftsmanBySlug(slug);
   if (!craftsman) notFound();
 
-  const [category, categoryCraftsmen, relatedByCo, categories] =
-    await Promise.all([
-      getCategoryBySlug(craftsman.category),
-      getCraftsmenByCategory(craftsman.category),
-      getRelatedByCoEngagement(craftsman.id),
-      getCategories(),
-    ]);
+  const [category, categoryCraftsmen, relatedByCo] = await Promise.all([
+    getCategoryBySlug(craftsman.category),
+    getCraftsmenByCategory(craftsman.category),
+    getRelatedByCoEngagement(craftsman.id),
+  ]);
 
-  // استبعاد من شاهدوا هذا الصنايعي من قائمة نفس التخصص — لا تكرار بين القسمين
-  const coViewedSlugs = new Set(relatedByCo.map((c) => c.slug));
-  const relatedCraftsmen = categoryCraftsmen
-    .filter((c) => c.slug !== craftsman.slug && !coViewedSlugs.has(c.slug))
-    .slice(0, 3);
+  // القسم الذكي «شاهد أيضاً»: نفس التخصص مرتباً بالأكثر تواصلاً/ظهوراً،
+  // مع دفعة لمن شاهدهم المشاهدون معاً (انظر `rankRelatedCraftsmen`)
+  const relatedCraftsmen = rankRelatedCraftsmen(
+    categoryCraftsmen,
+    relatedByCo.map((c) => c.slug),
+    { count: 6, excludeId: craftsman.id },
+  );
 
   return (
     <>
-      <div className="mx-auto w-full max-w-2xl px-4 pb-8 pt-4">
+      <div className="mx-auto w-full max-w-4xl px-4 pb-8 pt-4">
         <JsonLd
           data={breadcrumbSchema([
             { name: "الرئيسية", url: `${siteUrl}/` },
             ...(category
-              ? [{ name: category.name, url: `${siteUrl}/category/${category.slug}` }]
+              ? [
+                  {
+                    name: category.name,
+                    url: `${siteUrl}/category/${category.slug}`,
+                  },
+                ]
               : []),
-            { name: craftsman.name, url: `${siteUrl}/craftsman/${craftsman.slug}` },
+            {
+              name: craftsman.name,
+              url: `${siteUrl}/craftsman/${craftsman.slug}`,
+            },
           ])}
         />
-        <JsonLd
-          data={craftsmanSchema(craftsman, category?.name ?? "صنايعي")}
-        />
+        <JsonLd data={craftsmanSchema(craftsman, category?.name ?? "صنايعي")} />
         <CraftsmanDetail craftsman={craftsman} category={category} />
       </div>
 
-      {relatedByCo.length > 0 && (
-        <section className="border-t border-border bg-card/40 py-16">
-          <div className="mx-auto w-full max-w-5xl px-4">
-            <SectionHeader
-              eyebrow="مقترحات من الزوار"
-              title="صنايعية تانية"
-              description="صنايعية تانية زوّار كتير تواصلوا معاهم جرّبهم."
-            />
-            <div className="mt-8">
-              <CraftsmanGrid craftsmen={relatedByCo} categories={categories} />
-            </div>
-          </div>
-        </section>
-      )}
-
-      {relatedCraftsmen.length > 0 && (
-        <section className="border-t border-border bg-card/40 py-16">
-          <div className="mx-auto w-full max-w-5xl px-4">
-            <SectionHeader
-              eyebrow="أكثر صنايعية"
-              title={`صنايعية ${category?.name ?? "نفس التخصص"} آخرون`}
-              description="صنايعية آخرون في نفس التخصص — تواصل معهم مباشرة بدون وسيط."
-            />
-            <div className="mt-8">
-              <CraftsmanGrid
-                craftsmen={relatedCraftsmen}
-                categories={category ? [category] : []}
-              />
-            </div>
-          </div>
-        </section>
-      )}
+      <RelatedCraftsmen
+        id="related"
+        eyebrow="صنايعية مقترحة"
+        title="شاهد أيضاً"
+        description="من نفس التخصص — الأكثر تواصلاً وطلباً بين أهالي السويس."
+        icon={<IconTrendingUp className="h-4 w-4" />}
+        craftsmen={relatedCraftsmen}
+        categories={category ? [category] : []}
+      />
     </>
   );
 }

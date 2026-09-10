@@ -1,8 +1,14 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Cairo, Tajawal } from "next/font/google";
 import "./globals.css";
 import { PwaRegister } from "@/components/shared/layout/PwaRegister";
-import { siteName, siteTagline, siteUrl, siteDescription } from "@/lib/data/site";
+import {
+  siteName,
+  siteTagline,
+  siteUrl,
+  siteDescription,
+} from "@/lib/data/site";
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -41,15 +47,13 @@ export const metadata: Metadata = {
     siteName,
     title: siteTagline,
     description: siteDescription,
-    images: [
-      { url: "/og.png", width: 1200, height: 630, alt: siteTagline },
-    ],
+    images: [{ url: "/og.webp", width: 1200, height: 630, alt: siteTagline }],
   },
   twitter: {
     card: "summary_large_image",
     title: siteTagline,
     description: siteDescription,
-    images: ["/og.png"],
+    images: ["/og.webp"],
   },
   robots: {
     index: true,
@@ -67,7 +71,11 @@ export const metadata: Metadata = {
       { url: "/favicon.svg", type: "image/svg+xml" },
     ],
     shortcut: "/favicon.ico",
-    apple: { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    apple: {
+      url: "/apple-touch-icon.png",
+      sizes: "180x180",
+      type: "image/png",
+    },
   },
   manifest: "/site.webmanifest",
 };
@@ -100,7 +108,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl" data-scroll-behavior="smooth">
+    <html
+      lang="ar"
+      dir="rtl"
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <meta name="theme-color" content="#3b5fe3" />
@@ -108,18 +121,24 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="دليل الصنايعية" />
-        <script
-          async
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`}
-          crossOrigin="anonymous"
-        />
+        {process.env.NODE_ENV === "production" && (
+          <script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`}
+            crossOrigin="anonymous"
+          />
+        )}
         {gaId ? (
           <>
-            <script
-              async
+            <Script
+              strategy="afterInteractive"
               src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
             />
-            <script dangerouslySetInnerHTML={{ __html: gaInitScript }} />
+            <Script
+              id="google-analytics"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{ __html: gaInitScript }}
+            />
           </>
         ) : null}
       </head>

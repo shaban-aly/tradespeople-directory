@@ -2,13 +2,17 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export function useAdminQuery<T>(fetcher: () => Promise<T>) {
+export function useAdminQuery<T>(
+  fetcher: () => Promise<T>,
+  initialData?: T,
+) {
+  const hasInitialData = initialData !== undefined;
   const fetcherRef = useRef(fetcher);
   useEffect(() => {
     fetcherRef.current = fetcher;
   });
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<T | null>(initialData ?? null);
+  const [loading, setLoading] = useState(!hasInitialData);
   const [error, setError] = useState("");
 
   const refresh = useCallback(async () => {
@@ -24,11 +28,13 @@ export function useAdminQuery<T>(fetcher: () => Promise<T>) {
   }, []);
 
   useEffect(() => {
+    // البيانات تأتي من السيرفر عند تمرير initialData — لا حاجة لجلب من المتصفح
+    if (hasInitialData) return;
     const loadTimer = window.setTimeout(() => {
       void refresh();
     }, 0);
     return () => window.clearTimeout(loadTimer);
-  }, [refresh]);
+  }, [refresh, hasInitialData]);
 
   return { data, loading, error, refresh };
 }

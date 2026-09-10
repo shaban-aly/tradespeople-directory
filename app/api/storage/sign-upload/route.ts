@@ -72,13 +72,9 @@ export async function POST(request: NextRequest) {
   }
 
   const base = sanitizeBaseName(body.fileName);
-  const uuid = crypto.randomUUID();
-  const path =
-    folder === "requests"
-      ? `requests/${uuid}-${base}.${ext}`
-      : `craftsmen/${uuid}/${crypto.randomUUID()}-${base}.${ext}`;
 
   let supabase;
+  let dir: string;
   if (folder === "craftsmen") {
     const cookieStore = await cookies();
     supabase = createServerClient(
@@ -102,15 +98,27 @@ export async function POST(request: NextRequest) {
     }
     const { data: profile } = await supabase
       .from("profiles")
-      .select("is_admin")
+      .select("role, craftsman_id")
       .eq("id", userData.user.id)
       .maybeSingle();
-    if (!profile?.is_admin) {
+
+    // المشرف يرفع لأي صنايعي، والفني يرفع في مجلد ملفه فقط
+    const isAdmin = profile?.role === "admin";
+    const isOwner = profile?.role === "craftsman" && !!profile.craftsman_id;
+    if (!isAdmin && !isOwner) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
     }
+    dir = isOwner ? (profile?.craftsman_id ?? crypto.randomUUID()) : crypto.randomUUID();
   } else {
     supabase = createServerReadClient();
+    dir = crypto.randomUUID();
   }
+
+  const uuid = crypto.randomUUID();
+  const path =
+    folder === "requests"
+      ? `requests/${uuid}-${base}.${ext}`
+      : `craftsmen/${dir}/${uuid}-${base}.${ext}`;
 
   try {
     const { data, error } = await supabase.storage

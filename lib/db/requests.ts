@@ -72,7 +72,18 @@ export async function submitRegisterRequest(
     throw new Error(socialLinksError);
   }
 
+  if (!payload.image) {
+    throw new Error("صورة الصنايعي مطلوبة");
+  }
+
   const supabase = createSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error("سجّل دخولك الأول عشان تقدر تضيف صنايعي");
+  }
+
   const [categoryId, areaId] = await Promise.all([
     getCategoryId(payload.category),
     getAreaId(payload.area),
@@ -86,6 +97,7 @@ export async function submitRegisterRequest(
 
   const { error } = await supabase.from("join_requests").insert({
     type: "register",
+    user_id: user.id,
     name: cleanText(payload.name),
     category_id: categoryId,
     area_id: areaId,

@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { ButtonLink } from "@/components/shared/ui/Button";
-import { MobileNav } from "@/components/shared/layout/MobileNav";
 import { SiteNavLinks } from "@/components/shared/layout/SiteNavLinks";
 import { ThemeToggle } from "@/components/shared/ui/ThemeToggle";
 import { UserMenu } from "@/components/shared/layout/UserMenu";
@@ -33,9 +32,8 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <UserMenu />
             <ThemeToggle />
-            <MobileNav />
+            <UserMenu />
           </div>
         </div>
       </div>

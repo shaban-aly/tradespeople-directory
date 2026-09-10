@@ -1,19 +1,12 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { fetchAnalyticsOverview } from "@/lib/db/analytics";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export type AnalyticsOverview = {
-  todayUsers: number;
-  weekUsers: number;
-  todayPageviews: number;
-  weekPageviews: number;
-  viewSessions: number;
-  contactSessions: number;
-  conversionRate: number;
-};
+export type { AnalyticsOverview } from "@/lib/db/analytics";
 
 export async function GET() {
   const cookieStore = await cookies();
@@ -39,24 +32,25 @@ export async function GET() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("is_admin")
+    .select("role")
     .eq("id", data.user.id)
     .maybeSingle();
 
-  if (!profile?.is_admin) {
+  if (profile?.role !== "admin") {
     return NextResponse.json(
       { error: "غير مصرح — تحتاج صلاحيات مشرف" },
       { status: 403 },
     );
   }
 
-  const { data: overview, error: rpcError } = await supabase.rpc(
-    "get_analytics_overview",
+  const { data: overview, error: rpcError } = await fetchAnalyticsOverview(supabase).then(
+    (data) => ({ data, error: null }),
+    (err: unknown) => ({ data: null, error: err }),
   );
   if (rpcError) {
     console.error("[analytics] فشل جلب البيانات:", rpcError);
     return NextResponse.json({ error: "فشل جلب البيانات" }, { status: 500 });
   }
 
-  return NextResponse.json({ overview: overview as AnalyticsOverview });
+  return NextResponse.json({ overview });
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import type { AnalyticsOverview } from "@/app/api/analytics/route";
+import { useCallback, useState } from "react";
+import type { AnalyticsOverview } from "@/lib/db/analytics";
 
 type AnalyticsState = {
   overview: AnalyticsOverview | null;
@@ -9,10 +9,10 @@ type AnalyticsState = {
   error: string;
 };
 
-export function useAnalytics() {
+export function useAnalytics(initialOverview?: AnalyticsOverview) {
   const [state, setState] = useState<AnalyticsState>({
-    overview: null,
-    loading: true,
+    overview: initialOverview ?? null,
+    loading: initialOverview === undefined,
     error: "",
   });
 
@@ -41,13 +41,6 @@ export function useAnalytics() {
       }));
     }
   }, []);
-
-  useEffect(() => {
-    const loadTimer = window.setTimeout(() => {
-      void load();
-    }, 0);
-    return () => window.clearTimeout(loadTimer);
-  }, [load]);
 
   return { ...state, refresh: load };
 }

@@ -15,7 +15,7 @@ export async function Footer() {
   return (
     <footer className="border-t border-border bg-card/40">
       <div
-        className="h-1 w-full bg-gradient-to-l from-accent via-action to-accent"
+        className="h-1 w-full bg-linear-to-l from-accent via-action to-accent"
         aria-hidden
       />
       <div className="mx-auto w-full max-w-5xl px-4 py-10">

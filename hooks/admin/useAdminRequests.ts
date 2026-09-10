@@ -10,8 +10,11 @@ import {
 import { useAdminAction } from "./useAdminAction";
 import { useAdminQuery } from "./useAdminQuery";
 
-export function useAdminRequests() {
-  const { data, loading, error: loadError, refresh } = useAdminQuery(fetchRequests);
+export function useAdminRequests(initialRequests?: JoinRequestRow[]) {
+  const { data, loading, error: loadError, refresh } = useAdminQuery(
+    fetchRequests,
+    initialRequests,
+  );
   const { busyKey, error: actionError, run } = useAdminAction();
 
   const approveRequest = (request: JoinRequestRow) =>

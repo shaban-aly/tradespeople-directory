@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { Category, Craftsman } from "@/lib/data/craftsmen";
@@ -5,12 +6,15 @@ import { CategoryBadge } from "@/components/shared/ui/CategoryBadge";
 import { VerifiedBadge } from "@/components/shared/ui/VerifiedBadge";
 import { ActionButtons } from "@/components/shared/ui/ActionButtons";
 import { CopyPhoneButton } from "@/components/shared/ui/CopyPhoneButton";
+import { ButtonLink } from "@/components/shared/ui/Button";
 import { CraftsmanAvatar } from "@/components/shared/ui/CraftsmanAvatar";
-import { IconPin, IconAlert } from "@/components/shared/icons";
+import { SectionTitle } from "@/components/shared/ui/SectionTitle";
+import { IconAlert, IconPin, IconUser } from "@/components/shared/icons";
 import { SocialLinks } from "@/components/craftsman/SocialLinks";
 import { StickyCallBar } from "@/components/craftsman/StickyCallBar";
 import { ShareButtons } from "@/components/craftsman/ShareButtons";
 import { ViewTracker } from "@/components/craftsman/ViewTracker";
+import { CraftsmanReviewsSection } from "@/components/craftsman/CraftsmanReviewsSection";
 import { categoryHref } from "@/lib/utils/url";
 
 export function CraftsmanDetail({
@@ -47,70 +51,40 @@ export function CraftsmanDetail({
       </nav>
 
       <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
-        <div className="relative h-64 sm:h-80">
-          {craftsman.image ? (
-            <>
-              <Image
-                src={craftsman.image}
-                alt={craftsman.name}
-                fill
-                priority
-                sizes="(min-width: 640px) 42rem, 100vw"
-                className="object-cover"
-              />
-              <div
-                className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"
-                aria-hidden
-              />
-            </>
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent/10 via-card to-accent/10">
-              <CraftsmanAvatar
-                name={craftsman.name}
-                className="h-28 w-28 rounded-2xl shadow-card"
-                textClassName="text-5xl"
-              />
-            </div>
-          )}
-          {craftsman.image && (
-            <div className="absolute bottom-4 right-4 left-4">
-              <h1 className="font-heading text-3xl font-extrabold text-white drop-shadow sm:text-4xl">
-                {craftsman.name}
-              </h1>
-              {category && (
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <CategoryBadge category={category} />
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1 text-sm font-bold text-white backdrop-blur">
-                    <IconPin className="h-4 w-4 shrink-0" />
-                    {craftsman.area}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-          {craftsman.verified && (
-            <div className="absolute right-4 top-4">
-              <VerifiedBadge />
-            </div>
-          )}
-        </div>
+        {craftsman.image ? (
+          <div className="relative h-64 sm:h-80">
+            <Image
+              src={craftsman.image}
+              alt={craftsman.name}
+              fill
+              priority
+              sizes="(min-width: 640px) 56rem, 100vw"
+              className="object-cover"
+            />
+          </div>
+        ) : (
+          <div className="flex h-44 items-center justify-center bg-linear-to-br from-accent/10 via-card to-accent/10 sm:h-52">
+            <CraftsmanAvatar
+              name={craftsman.name}
+              className="h-24 w-24 rounded-2xl shadow-card sm:h-28 sm:w-28"
+              textClassName="text-4xl sm:text-5xl"
+            />
+          </div>
+        )}
         <div className="p-6 sm:p-8">
-          {!craftsman.image && (
-            <div className="flex flex-wrap items-start gap-4">
-              <div className="min-w-0 flex-1">
-                <h1 className="font-heading text-3xl font-extrabold text-foreground sm:text-4xl">
-                  {craftsman.name}
-                </h1>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  {category && <CategoryBadge category={category} />}
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-background px-3 py-1 text-sm font-bold text-muted">
-                    <IconPin className="h-4 w-4 shrink-0" />
-                    {craftsman.area}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="min-w-0 flex-1 font-heading text-3xl font-extrabold text-foreground sm:text-4xl">
+              {craftsman.name}
+            </h1>
+            {craftsman.verified && <VerifiedBadge />}
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {category && <CategoryBadge category={category} />}
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-background px-3 py-1 text-sm font-bold text-muted">
+              <IconPin className="h-4 w-4 shrink-0" />
+              {craftsman.area}
+            </span>
+          </div>
 
           <div className="mt-5 hidden flex-col gap-4 border-t border-border pt-5 sm:flex">
             <p className="flex flex-wrap items-center justify-center gap-1.5 text-base text-muted">
@@ -136,28 +110,57 @@ export function CraftsmanDetail({
       </section>
 
       <section className="rounded-3xl border border-border bg-card p-6 shadow-card sm:p-8">
-        <h2 className="mb-3 font-heading text-xl font-bold text-foreground">
-          عن الصنايعي
-        </h2>
+        <SectionTitle
+          eyebrow="نبذة سريعة"
+          icon={<IconUser className="h-4 w-4" />}
+          title="عن الصنايعي وشغله"
+        />
         <p className="text-base leading-relaxed text-muted">
           {craftsman.description}
         </p>
       </section>
 
-      <section className="rounded-2xl border border-border bg-background/60 p-4 sm:p-5">
+      {/* روابط السوشيال ميديا — تجميع وسائل التواصل بجوار أزرار الاتصال */}
+      <SocialLinks socialLinks={craftsman.socialLinks} />
+
+      {/* قسم آراء وتقييمات العملاء */}
+      <Suspense
+        fallback={
+          <section className="rounded-3xl border border-border bg-card p-6 shadow-card sm:p-8">
+            <div className="h-8 w-48 animate-pulse rounded-lg bg-background border border-border" />
+            <div className="mt-6 space-y-3 animate-pulse">
+              <div className="h-20 rounded-2xl bg-background border border-border" />
+              <div className="h-20 rounded-2xl bg-background border border-border" />
+            </div>
+          </section>
+        }
+      >
+        <CraftsmanReviewsSection
+          craftsmanId={craftsman.id}
+          craftsmanName={craftsman.name}
+        />
+      </Suspense>
+
+      <section className="rounded-3xl border border-border bg-background/60 p-4 sm:p-5">
         <p className="flex items-start gap-2 text-sm text-muted">
           <IconAlert className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
-          <span>
-            الأرقام بنراجعها بنفسنا للتأكد إنها شغالة. لو لقيت رقم اتغير أو مش بيرد، اضغط على &quot;إبلاغ&quot; وهنحدّثه في نفس اليوم.
+          <span className="text-sm">
+            الأرقام بنراجعها بنفسنا للتأكد إنها شغالة.
           </span>
         </p>
+        <div className="mt-3 flex justify-start ps-7">
+          <ButtonLink
+            href={`/report?craftsman=${encodeURIComponent(craftsman.name)}`}
+            variant="ghost"
+          >
+            إبلاغ عن بيانات غلط
+          </ButtonLink>
+        </div>
       </section>
 
       <section aria-label="مشاركة" className="flex justify-center sm:hidden">
         <ShareButtons slug={craftsman.slug} name={craftsman.name} />
       </section>
-
-      <SocialLinks socialLinks={craftsman.socialLinks} />
 
       <StickyCallBar
         phone={craftsman.phone}

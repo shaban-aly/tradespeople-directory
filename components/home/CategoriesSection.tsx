@@ -5,6 +5,7 @@ import { ButtonLink } from "@/components/shared/ui/Button";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { Reveal } from "@/components/shared/ui/Reveal";
 import { SectionHeader } from "@/components/shared/ui/SectionHeader";
+import { IconGrid, IconArrow } from "@/components/shared/icons";
 
 export async function CategoriesSection() {
   const [stats, categories] = await Promise.all([
@@ -13,23 +14,29 @@ export async function CategoriesSection() {
   ]);
 
   return (
-    <section id="categories" className="mx-auto w-full max-w-5xl px-4 py-16">
+    <section id="categories" className="mx-auto w-full max-w-5xl px-4 pt-4 sm:pt-8 pb-14 sm:pb-20">
       <Reveal>
         <SectionHeader
-          eyebrow={`التصنيفات · ${toArabicDigits(stats.categories)}`}
-          title="إيه اللي محتاجه النهارده؟"
-          description="اختار التخصص و اوصّل للصنايعي المناسب في خطوتين."
+          icon={<IconGrid className="h-4 w-4" />}
+          eyebrow={`التصنيفات · ${toArabicDigits(stats.categories)} تخصص`}
+          title={
+            <>
+              إيه التخصص اللي{" "}
+              <span className="text-accent">محتاجه</span>{" "}
+              النهارده؟
+            </>
+          }
+          description="تصفح أبرز المهن والخدمات المتاحة في السويس واطلب الصنايعي الموثوق بضغطة واحدة."
+          action={{
+            label: "كل التخصصات",
+            href: "/categories",
+            count: toArabicDigits(stats.categories),
+            variant: "ghost",
+          }}
         />
       </Reveal>
+
       <CategoryGrid categories={categories} />
-      <Reveal>
-        <div className="mt-8 flex justify-center">
-          <ButtonLink href="/categories" variant="primary">
-            كل التصنيفات
-            <span className="text-on-accent/80">{toArabicDigits(stats.categories)}</span>
-          </ButtonLink>
-        </div>
-      </Reveal>
     </section>
   );
 }

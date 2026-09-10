@@ -1,39 +1,51 @@
 import {
+  Activity,
   AlertTriangle,
   ArrowLeft,
   ArrowUp,
   BarChart3,
+  Bookmark,
   Camera,
   Check,
   ChevronDown,
+  ChevronLeft,
+  Clock,
   Copy,
   ExternalLink,
   Eye,
   EyeOff,
   Globe,
+  Heart,
   HeartHandshake,
+  Home,
   Inbox,
   LayoutDashboard,
   LayoutGrid,
   Link,
-  List,
   Lock,
   LogOut,
   Mail,
   MapPin,
   Menu,
+  MessageSquare,
   Moon,
   Pencil,
   Phone,
   Plus,
   RefreshCw,
+  RotateCcw,
+  Save,
   Search,
+  Settings,
+  ShieldCheck,
   SlidersHorizontal,
   Star,
   Sun,
   Tags,
   Trash2,
   TrendingUp,
+  User,
+  UserPlus,
   Users,
   Wrench,
   X,
@@ -49,6 +61,10 @@ export function IconPhone(props: LucideProps) {
 }
 
 export function IconPin(props: LucideProps) {
+  return <MapPin {...props} />;
+}
+
+export function IconMapPin(props: LucideProps) {
   return <MapPin {...props} />;
 }
 
@@ -88,8 +104,28 @@ export function IconX(props: LucideProps) {
   return <X {...props} />;
 }
 
+export function IconClock(props: LucideProps) {
+  return <Clock {...props} />;
+}
+
 export function IconHeartHandshake(props: LucideProps) {
   return <HeartHandshake {...props} />;
+}
+
+export function IconHeart(props: LucideProps) {
+  return <Heart {...props} />;
+}
+
+export function IconSave(props: LucideProps) {
+  return <Save {...props} />;
+}
+
+export function IconMessageSquare(props: LucideProps) {
+  return <MessageSquare {...props} />;
+}
+
+export function IconUndo(props: LucideProps) {
+  return <RotateCcw {...props} />;
 }
 
 export function IconMenu(props: LucideProps) {
@@ -110,10 +146,6 @@ export function IconLayoutDashboard(props: LucideProps) {
 
 export function IconGrid(props: LucideProps) {
   return <LayoutGrid {...props} />;
-}
-
-export function IconList(props: LucideProps) {
-  return <List {...props} />;
 }
 
 export function IconInbox(props: LucideProps) {
@@ -146,6 +178,38 @@ export function IconStar(props: LucideProps) {
 
 export function IconPlus(props: LucideProps) {
   return <Plus {...props} />;
+}
+
+export function IconHome(props: LucideProps) {
+  return <Home {...props} />;
+}
+
+export function IconUser(props: LucideProps) {
+  return <User {...props} />;
+}
+
+export function IconUserPlus(props: LucideProps) {
+  return <UserPlus {...props} />;
+}
+
+export function IconActivity(props: LucideProps) {
+  return <Activity {...props} />;
+}
+
+export function IconSettings(props: LucideProps) {
+  return <Settings {...props} />;
+}
+
+export function IconShieldCheck(props: LucideProps) {
+  return <ShieldCheck {...props} />;
+}
+
+export function IconChevronLeft(props: LucideProps) {
+  return <ChevronLeft {...props} />;
+}
+
+export function IconBookmark(props: LucideProps) {
+  return <Bookmark {...props} />;
 }
 
 export function IconEdit(props: LucideProps) {

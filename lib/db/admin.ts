@@ -12,6 +12,8 @@ import {
   validateSocialLinks,
 } from "../utils/validation";
 import { createSupabase } from "./client";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "./database.types";
 import type { Json } from "./database.types";
 
 export const CATEGORY_ICON_OPTIONS = [
@@ -229,8 +231,10 @@ export async function revalidateSearchCache(): Promise<void> {
 
 // ------------------------------ جلب البيانات ------------------------------
 
-export async function fetchRequests(): Promise<JoinRequestRow[]> {
-  const { data, error } = await createSupabase()
+export async function fetchRequests(
+  client: SupabaseClient<Database> = createSupabase(),
+): Promise<JoinRequestRow[]> {
+  const { data, error } = await client
     .from("join_requests")
     .select(REQUESTS_SELECT)
     .order("created_at", { ascending: false });
@@ -238,8 +242,10 @@ export async function fetchRequests(): Promise<JoinRequestRow[]> {
   return (data ?? []).map(mapSocialLinks);
 }
 
-export async function fetchCategories(): Promise<CategoryRow[]> {
-  const { data, error } = await createSupabase()
+export async function fetchCategories(
+  client: SupabaseClient<Database> = createSupabase(),
+): Promise<CategoryRow[]> {
+  const { data, error } = await client
     .from("categories")
     .select("id, slug, name, icon, sort_order, is_active")
     .order("sort_order");
@@ -247,8 +253,10 @@ export async function fetchCategories(): Promise<CategoryRow[]> {
   return data ?? [];
 }
 
-export async function fetchAreas(): Promise<AreaRow[]> {
-  const { data, error } = await createSupabase()
+export async function fetchAreas(
+  client: SupabaseClient<Database> = createSupabase(),
+): Promise<AreaRow[]> {
+  const { data, error } = await client
     .from("areas")
     .select("id, name, sort_order, is_active")
     .order("sort_order");
@@ -256,8 +264,10 @@ export async function fetchAreas(): Promise<AreaRow[]> {
   return data ?? [];
 }
 
-export async function fetchCraftsmen(): Promise<CraftsmanRow[]> {
-  const { data, error } = await createSupabase()
+export async function fetchCraftsmen(
+  client: SupabaseClient<Database> = createSupabase(),
+): Promise<CraftsmanRow[]> {
+  const { data, error } = await client
     .from("craftsmen")
     .select(CRAFTSMEN_ADMIN_SELECT)
     .order("created_at", { ascending: false });
@@ -265,8 +275,10 @@ export async function fetchCraftsmen(): Promise<CraftsmanRow[]> {
   return (data ?? []).map(mapCraftsmanSocialLinks);
 }
 
-export async function fetchMessages(): Promise<ContactMessageRow[]> {
-  const { data, error } = await createSupabase()
+export async function fetchMessages(
+  client: SupabaseClient<Database> = createSupabase(),
+): Promise<ContactMessageRow[]> {
+  const { data, error } = await client
     .from("contact_messages")
     .select("id, name, phone, message, is_read, created_at")
     .order("created_at", { ascending: false });
@@ -274,8 +286,10 @@ export async function fetchMessages(): Promise<ContactMessageRow[]> {
   return data ?? [];
 }
 
-export async function fetchCounts(): Promise<CountRow[]> {
-  const { data, error } = await createSupabase()
+export async function fetchCounts(
+  client: SupabaseClient<Database> = createSupabase(),
+): Promise<CountRow[]> {
+  const { data, error } = await client
     .from("craftsmen")
     .select(COUNTS_SELECT);
   if (error) throw new Error("مقدرناش نحمّل بيانات لوحة التحكم");
@@ -590,4 +604,25 @@ export async function deleteContactMessage(messageId: string): Promise<void> {
     .delete()
     .eq("id", messageId);
   assertNoError(error, "مقدرناش نحذف الرسالة");
+}
+
+// ------------------------------ ربط حساب الفني ------------------------------
+
+export async function linkCraftsmanAccount(
+  craftsmanId: string,
+  email: string
+): Promise<void> {
+  const cleanEmail = email.trim().toLowerCase();
+  if (!cleanEmail || !cleanEmail.includes("@")) {
+    throw new Error("يرجى إدخال بريد إلكتروني صحيح");
+  }
+
+  const { error } = await (createSupabase().rpc as any)("link_craftsman_user", {
+    craftsman_id_input: craftsmanId,
+    user_email_input: cleanEmail,
+  });
+
+  if (error) {
+    throw new Error(error.message || "تعذر ربط الحساب — تأكد من أن المستخدم قد سجل دخوله بالموقع أولاً");
+  }
 }

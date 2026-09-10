@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     title: "كل التصنيفات — دليل الصنايعية في السويس",
     description: "تصفح كل تخصصات دليل الصنايعية في السويس واختار الأنسب لك.",
     type: "website",
-    images: [{ url: "/og.png", width: 1200, height: 630 }],
+    images: [{ url: "/og.webp", width: 1200, height: 630 }],
   },
 };
 
@@ -30,12 +30,15 @@ export default async function CategoriesPage() {
       <JsonLd data={allCategoriesSchema(categories)} />
       <section className="border-b border-border bg-card">
         <div className="mx-auto w-full max-w-5xl px-4 py-8">
-          <p className="text-sm font-bold text-muted">دليل الصنايعية · السويس</p>
+          <p className="text-sm font-bold text-muted">
+            دليل الصنايعية · السويس
+          </p>
           <h1 className="mt-1 font-heading text-3xl font-extrabold sm:text-4xl">
             كل التصنيفات
           </h1>
           <p className="mt-2 max-w-xl text-base text-muted">
-            {toArabicDigits(stats.categories)} تخصص — اختار اللي يناسبك واوصل للصنايعي المناسب.
+            {toArabicDigits(stats.categories)} تخصص — اختار اللي يناسبك واوصل
+            للصنايعي المناسب.
           </p>
         </div>
       </section>

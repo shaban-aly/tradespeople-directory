@@ -5,18 +5,20 @@ import { useEffect, useRef, useState } from "react";
 // عدّ متحرّك من 0 إلى القيمة النهائية عندما يظهر العنصر في الشاشة.
 // يستهتر بـ prefers-reduced-motion لأغراض الوصول.
 export function useAnimatedNumber(target: number, duration = 1200) {
-  const [value, setValue] = useState(() =>
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      ? target
-      : 0,
-  );
+  const [value, setValue] = useState(0);
   const ref = useRef<HTMLSpanElement | null>(null);
   const started = useRef(false);
 
   useEffect(() => {
     const el = ref.current;
     if (!el || value === target) return;
+
+    // احترام prefers-reduced-motion: القيمة النهائية فوراً داخل useEffect
+    // (ولا نقرأ matchMedia في الـ render حتى لا يحدث hydration mismatch)
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      requestAnimationFrame(() => setValue(target));
+      return;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {

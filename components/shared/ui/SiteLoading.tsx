@@ -6,7 +6,7 @@ export function SiteLoading() {
     <div
       role="status"
       aria-label="جاري التحميل"
-      className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gradient-to-b from-background to-card px-4"
+      className="flex min-h-screen flex-col items-center justify-center gap-6 bg-linear-to-b from-background to-card px-4"
     >
       <div className="relative flex h-24 w-24 items-center justify-center">
         <span

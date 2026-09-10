@@ -3,6 +3,7 @@
 import { useMemo, useSyncExternalStore } from "react";
 import {
   hasBehaviorHistory,
+  hasPersonalizedHistory,
   rankRecommendations,
   readBehaviorEventsCached,
   subscribeBehavior,
@@ -30,6 +31,10 @@ export function useRecommendations(
     () => hasBehaviorHistory(events),
     [events],
   );
+  const isPersonalized = useMemo(
+    () => hasPersonalizedHistory(events),
+    [events],
+  );
 
-  return { ranked, hasHistory };
+  return { ranked, hasHistory, isPersonalized };
 }

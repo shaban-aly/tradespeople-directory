@@ -21,11 +21,16 @@ export type CategoryPayload = {
   icon: CategoryIcon;
 };
 
-export function useAdminCategories() {
+export interface AdminCategoriesData {
+  categories: CategoryRow[];
+  counts: Awaited<ReturnType<typeof fetchCounts>>;
+}
+
+export function useAdminCategories(initialData?: AdminCategoriesData) {
   const { data, loading, error: loadError, refresh } = useAdminQuery(async () => {
     const [categories, counts] = await Promise.all([fetchCategories(), fetchCounts()]);
     return { categories, counts };
-  });
+  }, initialData);
   const { busyKey, error: actionError, run } = useAdminAction();
 
   const categoryCounts = useMemo(

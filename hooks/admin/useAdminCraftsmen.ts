@@ -11,11 +11,19 @@ import {
   updateCraftsman,
   type CraftsmanInput,
   type CraftsmanRow,
+  type CategoryRow,
+  type AreaRow,
 } from "@/lib/db/admin";
 import { useAdminAction } from "./useAdminAction";
 import { useAdminQuery } from "./useAdminQuery";
 
-export function useAdminCraftsmen() {
+export interface AdminCraftsmenData {
+  categories: CategoryRow[];
+  areas: AreaRow[];
+  craftsmen: CraftsmanRow[];
+}
+
+export function useAdminCraftsmen(initialData?: AdminCraftsmenData) {
   const { data, loading, error: loadError, refresh } = useAdminQuery(async () => {
     const [categories, areas, craftsmen] = await Promise.all([
       fetchCategories(),
@@ -23,7 +31,7 @@ export function useAdminCraftsmen() {
       fetchCraftsmen(),
     ]);
     return { categories, areas, craftsmen };
-  });
+  }, initialData);
   const { busyKey, error: actionError, run } = useAdminAction();
 
   const createCraftsmanItem = (payload: CraftsmanInput) =>

@@ -57,6 +57,8 @@ export function useAdminSession() {
     const admin = await getAdminFlag(nextUser.id);
     if (!admin) {
       await createSupabase().auth.signOut();
+      setUser(null);
+      setIsAdmin(false);
       return "الحساب ده مش مخوّل كـ مشرف";
     }
 
