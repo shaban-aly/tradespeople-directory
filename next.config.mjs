@@ -43,17 +43,17 @@ const nextConfig = {
 
     const csp = [
       "default-src 'self'",
-      // script-src: جميع مصادر السكريبتات
-      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}${gaHost ? ` ${gaHost}` : ""} ${adsenseScriptHosts}`,
+      // script-src: جميع مصادر السكريبتات بما فيها Google Identity Services
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://accounts.google.com/gsi/client${gaHost ? ` ${gaHost}` : ""} ${adsenseScriptHosts}`,
       // script-src-elem صريح لتجنب أخطاء الـ fallback من المتصفح
-      `script-src-elem 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}${gaHost ? ` ${gaHost}` : ""} ${adsenseScriptHosts}`,
+      `script-src-elem 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://accounts.google.com/gsi/client${gaHost ? ` ${gaHost}` : ""} ${adsenseScriptHosts}`,
       "style-src 'self' 'unsafe-inline'",
       "font-src 'self' data:",
-      `img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com${supabaseHost ? ` https://${supabaseHost}` : ""}${gaHost ? ` ${gaHost}` : ""} ${adsenseHosts}`,
+      `img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com https://*.googleusercontent.com${supabaseHost ? ` https://${supabaseHost}` : ""}${gaHost ? ` ${gaHost}` : ""} ${adsenseHosts}`,
       "media-src 'self' blob:",
-      // connect-src: تشمل GA POST requests وكل دومينات Ads
-      `connect-src 'self'${supabaseUrl ? ` ${supabaseUrl}` : ""} ${gaConnectHosts} ${adsenseHosts}`,
-      `frame-src 'self' ${adsenseFrameHosts}`,
+      // connect-src: تشمل GA POST requests وكل دومينات Ads و Google Auth
+      `connect-src 'self' https://accounts.google.com${supabaseUrl ? ` ${supabaseUrl}` : ""} ${gaConnectHosts} ${adsenseHosts}`,
+      `frame-src 'self' https://accounts.google.com ${adsenseFrameHosts}`,
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'",

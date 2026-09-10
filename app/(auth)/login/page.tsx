@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SocialLoginButton } from "@/components/shared/SocialLoginButton";
+import { GoogleSignInButton } from "@/components/shared/GoogleSignInButton";
 
 export const metadata = {
   title: "تسجيل الدخول | دليل الصنايعية",
@@ -48,9 +48,7 @@ export default async function LoginPage({ searchParams }: Props) {
 
       {/* زراير تسجيل الدخول */}
       <div className="flex flex-col gap-3">
-        <SocialLoginButton provider="google" redirectTo={next} />
-        {/* سيتم إعادة تفعيل فيسبوك بعد اكتمال التحقق من محفظة الأعمال */}
-        {/* <SocialLoginButton provider="facebook" redirectTo={next} /> */}
+        <GoogleSignInButton redirectTo={next} />
       </div>
 
       {/* ملاحظة الخصوصية */}
