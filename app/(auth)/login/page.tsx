@@ -49,7 +49,8 @@ export default async function LoginPage({ searchParams }: Props) {
       {/* زراير تسجيل الدخول */}
       <div className="flex flex-col gap-3">
         <SocialLoginButton provider="google" redirectTo={next} />
-        <SocialLoginButton provider="facebook" redirectTo={next} />
+        {/* سيتم إعادة تفعيل فيسبوك بعد اكتمال التحقق من محفظة الأعمال */}
+        {/* <SocialLoginButton provider="facebook" redirectTo={next} /> */}
       </div>
 
       {/* ملاحظة الخصوصية */}
