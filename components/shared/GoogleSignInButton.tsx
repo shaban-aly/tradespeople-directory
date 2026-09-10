@@ -3,20 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createSupabase } from "@/lib/db/client";
 import { useTheme } from "@/hooks/ui/useTheme";
-
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: Record<string, unknown>) => void;
-          renderButton: (parent: HTMLElement, options: Record<string, unknown>) => void;
-          prompt: (notification?: (notification: unknown) => void) => void;
-        };
-      };
-    };
-  }
-}
+import { generateNonce } from "@/lib/utils/nonce";
 
 interface GoogleSignInButtonProps {
   redirectTo?: string;
@@ -26,6 +13,7 @@ export function GoogleSignInButton({ redirectTo = "/" }: GoogleSignInButtonProps
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const rawNonceRef = useRef<string | null>(null);
   const { theme } = useTheme();
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
@@ -43,6 +31,7 @@ export function GoogleSignInButton({ redirectTo = "/" }: GoogleSignInButtonProps
         const { error: signInError } = await supabase.auth.signInWithIdToken({
           provider: "google",
           token: response.credential,
+          nonce: rawNonceRef.current ?? undefined,
         });
 
         if (signInError) {
@@ -63,14 +52,19 @@ export function GoogleSignInButton({ redirectTo = "/" }: GoogleSignInButtonProps
       }
     }
 
-    function initGsi() {
+    async function initGsi() {
       if (!window.google?.accounts?.id || !containerRef.current) return;
+
+      const { rawNonce, hashedNonce } = await generateNonce();
+      rawNonceRef.current = rawNonce;
 
       window.google.accounts.id.initialize({
         client_id: clientId,
         callback: handleCredentialResponse,
         context: "signin",
         ux_mode: "popup",
+        use_fedcm_for_prompt: true,
+        nonce: hashedNonce,
       });
 
       // مسح المحتوى القديم للـ container وإعادة رسم الزر

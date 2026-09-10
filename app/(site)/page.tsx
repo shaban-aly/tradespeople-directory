@@ -6,12 +6,14 @@ import { ContactSection } from "@/components/home/ContactSection";
 import { CtaSection } from "@/components/home/CtaSection";
 import { FaqSection } from "@/components/home/FaqSection";
 import { faqSchema, homeSchema } from "@/lib/seo/schema";
+import { GoogleOneTap } from "@/components/shared/auth/GoogleOneTap";
 
 export const revalidate = 3600;
 
 export default function Home() {
   return (
     <>
+      <GoogleOneTap />
       <JsonLd data={homeSchema()} />
       <JsonLd data={faqSchema()} />
       <Hero />
