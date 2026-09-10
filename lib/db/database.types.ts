@@ -298,19 +298,33 @@ export type Database = {
         Row: {
           id: string;
           is_admin: boolean;
+          role: 'client' | 'craftsman' | 'admin';
+          craftsman_id: string | null;
           created_at: string;
         };
         Insert: {
           id: string;
           is_admin?: boolean;
+          role?: 'client' | 'craftsman' | 'admin';
+          craftsman_id?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           is_admin?: boolean;
+          role?: 'client' | 'craftsman' | 'admin';
+          craftsman_id?: string | null;
           created_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "profiles_craftsman_id_fkey";
+            columns: ["craftsman_id"];
+            isOneToOne: true;
+            referencedRelation: "craftsmen";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       rate_limits: {
         Row: {
@@ -398,6 +412,14 @@ export type Database = {
           area_name: string;
           co_count: number;
         }[];
+      };
+      get_my_craftsman_id: {
+        Args: Record<PropertyKey, never>;
+        Returns: string | null;
+      };
+      get_my_role: {
+        Args: Record<PropertyKey, never>;
+        Returns: 'client' | 'craftsman' | 'admin' | null;
       };
       is_admin: {
         Args: Record<PropertyKey, never>;

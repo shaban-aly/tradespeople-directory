@@ -7,10 +7,10 @@ import { createSupabase } from "@/lib/db/client";
 async function getAdminFlag(userId: string): Promise<boolean> {
   const { data } = await createSupabase()
     .from("profiles")
-    .select("is_admin")
+    .select("role")
     .eq("id", userId)
     .maybeSingle();
-  return Boolean(data?.is_admin);
+  return data?.role === "admin";
 }
 
 export function useAdminSession() {

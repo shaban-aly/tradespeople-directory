@@ -75,7 +75,8 @@ const nextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
           },
-          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          // same-origin-allow-popups مطلوب لـ OAuth popup (Google / Facebook)
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
           { key: "Content-Security-Policy", value: csp },
         ],
       },

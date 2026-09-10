@@ -5,6 +5,7 @@ import { ButtonLink } from "@/components/shared/ui/Button";
 import { MobileNav } from "@/components/shared/layout/MobileNav";
 import { SiteNavLinks } from "@/components/shared/layout/SiteNavLinks";
 import { ThemeToggle } from "@/components/shared/ui/ThemeToggle";
+import { UserMenu } from "@/components/shared/layout/UserMenu";
 
 export function Header() {
   return (
@@ -31,8 +32,8 @@ export function Header() {
             <SiteNavLinks variant="desktop" />
           </nav>
 
-
           <div className="flex items-center gap-2">
+            <UserMenu />
             <ThemeToggle />
             <MobileNav />
           </div>
@@ -41,3 +42,4 @@ export function Header() {
     </header>
   );
 }
+
