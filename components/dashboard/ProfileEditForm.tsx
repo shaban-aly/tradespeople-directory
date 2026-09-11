@@ -11,6 +11,7 @@ import { CraftsmanAvatar } from "@/components/shared/ui/CraftsmanAvatar";
 import { Button } from "@/components/shared/ui/Button";
 import { IconCamera, IconCheck, IconSave, IconTrash, IconUndo } from "@/components/shared/icons";
 import type { CraftsmanSelfProfile } from "@/lib/db/craftsman-dashboard";
+import { ACCEPTED_IMAGE_TYPES } from "@/lib/storage/images";
 
 interface ProfileEditFormProps {
   profile: CraftsmanSelfProfile;
@@ -28,6 +29,7 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
     removeRequested,
     saving,
     error,
+    warning,
     success,
     handleImageChange,
     handleImageRemove,
@@ -57,6 +59,15 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
         >
           <IconCheck className="h-5 w-5 shrink-0" />
           <span>تم حفظ بياناتك وتحديثها بنجاح في الدليل!</span>
+        </div>
+      )}
+
+      {warning && (
+        <div
+          role="status"
+          className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm font-semibold text-amber-600"
+        >
+          {warning}
         </div>
       )}
 
@@ -90,11 +101,11 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept={ACCEPTED_IMAGE_TYPES.join(",")}
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file) handleImageChange(file);
+              if (file) void handleImageChange(file);
             }}
           />
 

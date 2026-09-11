@@ -192,7 +192,7 @@ export async function getCraftsmanDashboardData(
 export async function updateCraftsmanSelfProfile(
   craftsmanId: string,
   payload: UpdateCraftsmanSelfInput
-): Promise<void> {
+): Promise<{ warning?: string }> {
   const supabase = createSupabase();
 
   // التحقق من صحة المدخلات
@@ -209,6 +209,9 @@ export async function updateCraftsmanSelfProfile(
     throw new Error(errors[0] as string);
   }
 
+  // تنظيف الملفات القديمة أمر ثانوي — فشله لا يُسقط الحفظ بل يُبلَّغ كتحذير
+  const warnings: string[] = [];
+
   // معالجة رفع الصورة إذا وجدت جديدة
   let imageUrl = payload.existingImageUrl ?? null;
   if (payload.image) {
@@ -217,13 +220,19 @@ export async function updateCraftsmanSelfProfile(
 
     // حذف الصورة القديمة إذا تغيرت
     if (payload.existingImageUrl && payload.existingImageUrl !== uploaded.url) {
-      await deleteImageByUrl(payload.existingImageUrl);
+      const removed = await deleteImageByUrl(payload.existingImageUrl);
+      if (removed && !removed.ok) {
+        warnings.push("الصورة القديمة مكانتش اتشالت من التخزين.");
+      }
     }
   } else if (payload.removeImage) {
     // حذف مؤجل اتحجز من الفورم واتأكد عليه — بينفذ فعلياً هنا
     imageUrl = null;
     if (payload.existingImageUrl) {
-      await deleteImageByUrl(payload.existingImageUrl);
+      const removed = await deleteImageByUrl(payload.existingImageUrl);
+      if (removed && !removed.ok) {
+        warnings.push("الصورة مكانتش اتشالت من التخزين بشكل نهائي.");
+      }
     }
   }
 
@@ -243,21 +252,47 @@ export async function updateCraftsmanSelfProfile(
     throw new Error("حدث خطأ أثناء حفظ البيانات: " + updateError.message);
   }
 
-  // تحديث روابط السوشيال
-  const { error: deleteLinksError } = await supabase
-    .from("social_links")
-    .delete()
-    .eq("craftsman_id", craftsmanId);
+  // ترتيب آمن لروابط السوشيال: upsert الجديد أولاً (لو فشل تفضل الروابط
+  // القديمة كما هي)، ثم حذف الروابط التي لم تعد في القائمة.
+  if (payload.socialLinks.length === 0) {
+    const { error: clearLinksError } = await supabase
+      .from("social_links")
+      .delete()
+      .eq("craftsman_id", craftsmanId);
+    if (clearLinksError) {
+      throw new Error("حدث خطأ أثناء تحديث روابط التواصل");
+    }
+  } else {
+    const linksQuery = supabase
+      .from("social_links")
+      .upsert(
+        payload.socialLinks.map((l) => ({
+          craftsman_id: craftsmanId,
+          platform: l.platform as "facebook" | "instagram" | "tiktok" | "other",
+          url: l.url.trim(),
+        })),
+        { onConflict: "craftsman_id,platform" }
+      );
+    const { error: saveLinksError } = await linksQuery;
+    if (saveLinksError) {
+      throw new Error("حدث خطأ أثناء حفظ روابط التواصل");
+    }
 
-  if (!deleteLinksError && payload.socialLinks.length > 0) {
-    await supabase.from("social_links").insert(
-      payload.socialLinks.map((l) => ({
-        craftsman_id: craftsmanId,
-        platform: l.platform as "facebook" | "instagram" | "tiktok" | "other",
-        url: l.url.trim(),
-      }))
-    );
+    const stalePlatforms = payload.socialLinks.map((l) => l.platform);
+    let staleQuery = supabase
+      .from("social_links")
+      .delete()
+      .eq("craftsman_id", craftsmanId);
+    if (stalePlatforms.length > 0) {
+      staleQuery = staleQuery.not("platform", "in", stalePlatforms);
+    }
+    const { error: deleteStaleError } = await staleQuery;
+    if (deleteStaleError) {
+      throw new Error("حدث خطأ أثناء تحديث روابط التواصل");
+    }
   }
+
+  return warnings.length > 0 ? { warning: warnings.join(" ") } : {};
 }
 
 /**

@@ -3,11 +3,7 @@ import Image from "next/image";
 import { siteContact, siteNavLinks } from "@/lib/data/site";
 import { toArabicDigits } from "@/lib/utils/format";
 import { mailtoHref, telHref, whatsappHref } from "@/lib/utils/url";
-import {
-  IconMail,
-  IconPhone,
-  IconWhatsApp,
-} from "@/components/shared/icons";
+import { IconMail, IconPhone, IconWhatsApp } from "@/components/shared/icons";
 
 export async function Footer() {
   const year = toArabicDigits(new Date().getFullYear());
@@ -19,7 +15,7 @@ export async function Footer() {
         aria-hidden
       />
       <div className="mx-auto w-full max-w-5xl px-4 py-10">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <Link href="/" className="flex w-fit items-center gap-2">
               <Image
@@ -64,6 +60,30 @@ export async function Footer() {
             </ul>
           </nav>
 
+          <nav aria-label="روابط قانونية">
+            <h3 className="font-heading text-base font-bold text-foreground">
+              قانوني
+            </h3>
+            <ul className="mt-3 space-y-2">
+              <li>
+                <Link
+                  href="/privacy"
+                  className="text-base text-muted transition-colors hover:text-accent"
+                >
+                  سياسة الخصوصية
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/terms"
+                  className="text-base text-muted transition-colors hover:text-accent"
+                >
+                  الشروط والأحكام
+                </Link>
+              </li>
+            </ul>
+          </nav>
+
           <div>
             <h3 className="font-heading text-base font-bold text-foreground">
               تواصل معنا
@@ -102,10 +122,10 @@ export async function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 border-t border-border pt-4">
+        <div className="mt-8 border-t border-border pt-4 pb-4">
           <p className="text-center text-sm text-muted">
-            دليل الصنايعية — كل الأرقام تُراجع يدوياً قبل النشر ودورياً .
-            © {year} تم التطوير بواسطة{" "}
+            دليل الصنايعية — كل الأرقام تُراجع يدوياً قبل النشر ودورياً . ©{" "}
+            {year} تم التطوير بواسطة{" "}
             <a
               className="font-semibold text-accent hover:underline"
               target="_blank"

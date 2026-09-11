@@ -122,10 +122,16 @@ export function extractImagePathFromUrl(
   return url.slice(index + marker.length);
 }
 
-export async function deleteImageByUrl(url: string): Promise<void> {
+export async function deleteImageByUrl(
+  url: string,
+): Promise<{ ok: boolean; error?: string }> {
   const path = extractImagePathFromUrl(url);
-  if (!path) return;
-  await createSupabase().storage.from(IMAGE_BUCKET).remove([path]);
+  if (!path) return { ok: true };
+  const { error } = await createSupabase()
+    .storage.from(IMAGE_BUCKET)
+    .remove([path]);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
 }
 
 export async function copyImageToCraftsman(

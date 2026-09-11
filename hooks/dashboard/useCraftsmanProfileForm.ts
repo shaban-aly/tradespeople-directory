@@ -2,7 +2,12 @@
 
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { revokeImagePreview } from "@/lib/storage/images";
+import {
+  revokeImagePreview,
+  validateImage,
+  convertToWebP,
+} from "@/lib/storage/images";
+import { revalidateProfileAfterSave } from "@/app/dashboard/actions";
 import {
   updateCraftsmanSelfProfile,
   type CraftsmanSelfProfile,
@@ -48,6 +53,7 @@ export function useCraftsmanProfileForm(
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [warning, setWarning] = useState<string | null>(null);
   const router = useRouter();
 
   // عند تغير البروفايل (بعد الحفظ والريفريش) بيعمل page.tsx إعادة بناء
@@ -74,17 +80,31 @@ export function useCraftsmanProfileForm(
     };
   }, [initialAreas]);
 
-  function handleImageChange(file: File) {
+  async function handleImageChange(file: File) {
+    setError(null);
+    const validationError = validateImage(file);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    let converted = file;
+    try {
+      converted = await convertToWebP(file);
+    } catch {
+      setError("مقدرناش نحوّل الصورة لـ WebP — جرّب صورة تانية");
+      return;
+    }
     if (objUrlRef.current) revokeImagePreview(objUrlRef.current);
     objUrlRef.current = null;
-    setNewImageFile(file);
+    setNewImageFile(converted);
     setRemoveRequested(false);
-    const url = URL.createObjectURL(file);
+    const url = URL.createObjectURL(converted);
     objUrlRef.current = url;
     setPreviewUrl(url);
   }
 
   function handleImageRemove() {
+    setError(null);
     if (objUrlRef.current) revokeImagePreview(objUrlRef.current);
     objUrlRef.current = null;
     setNewImageFile(null);
@@ -93,6 +113,7 @@ export function useCraftsmanProfileForm(
   }
 
   function handleImageUndo() {
+    setError(null);
     if (objUrlRef.current) revokeImagePreview(objUrlRef.current);
     objUrlRef.current = null;
     setNewImageFile(null);
@@ -116,9 +137,10 @@ export function useCraftsmanProfileForm(
     setSaving(true);
     setError(null);
     setSuccess(false);
+    setWarning(null);
 
     try {
-      await updateCraftsmanSelfProfile(initialProfile.id, {
+      const result = await updateCraftsmanSelfProfile(initialProfile.id, {
         phone: formData.phone,
         whatsapp: formData.whatsapp || undefined,
         description: formData.description || undefined,
@@ -129,8 +151,16 @@ export function useCraftsmanProfileForm(
         existingImageUrl: initialProfile.imageUrl,
       });
 
+      if (result.warning) setWarning(result.warning);
+
       setSuccess(true);
       if (onSaved) onSaved();
+      // إبطال كاش الموقع العام حتى تظهر التعديلات فوراً في الصفحة العامة
+      try {
+        await revalidateProfileAfterSave();
+      } catch {
+        // فشل إبطال الكاش لا يمنع إتمام الحفظ
+      }
       // تحديث بيانات صفحة السيرفر (الهيدر) بعد الحفظ
       router.refresh();
     } catch (err) {
@@ -148,6 +178,7 @@ export function useCraftsmanProfileForm(
     removeRequested,
     saving,
     error,
+    warning,
     success,
     handleImageChange,
     handleImageRemove,
