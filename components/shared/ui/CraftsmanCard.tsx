@@ -5,6 +5,7 @@ import { ActionButtons } from "@/components/shared/ui/ActionButtons";
 import { CategoryBadge } from "@/components/shared/ui/CategoryBadge";
 import { FavoriteButton } from "@/components/shared/ui/FavoriteButton";
 import { RecentBadge } from "@/components/shared/ui/RecentBadge";
+import { RatingBadge } from "@/components/shared/ui/RatingBadge";
 import { VerifiedBadge } from "@/components/shared/ui/VerifiedBadge";
 import { CraftsmanAvatar } from "@/components/shared/ui/CraftsmanAvatar";
 import { craftsmanHref } from "@/lib/utils/url";
@@ -61,9 +62,13 @@ export function CraftsmanCard({
           <h3 className="truncate font-heading text-base font-bold text-foreground">
             {craftsman.name}
           </h3>
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            {category && <CategoryBadge category={category} />}
-          </div>
+           <div className="mt-2 flex flex-wrap items-center gap-1.5">
+             {category && <CategoryBadge category={category} />}
+             <RatingBadge
+               average={craftsman.rating.average}
+               count={craftsman.rating.totalReviews}
+             />
+           </div>
           {reason && (
             <div className="mt-2 flex items-center gap-1.5 text-[11px] font-medium text-accent">
               <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />

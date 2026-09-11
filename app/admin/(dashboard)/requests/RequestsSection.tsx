@@ -17,7 +17,6 @@ import {
 import {
   filterRequests,
   type RequestStatusFilter,
-  type RequestTypeTab,
 } from "@/lib/db/admin-selectors";
 import { useAdminRequests } from "@/hooks/admin/useAdminRequests";
 import { useToast } from "@/hooks/ui/useToast";
@@ -39,7 +38,6 @@ export function RequestsSection({
     deleteRequest,
     refresh,
   } = useAdminRequests(initialRequests);
-  const [typeTab, setTypeTab] = useState<RequestTypeTab>("register");
   const [statusFilter, setStatusFilter] = useState<RequestStatusFilter>("pending");
   const [approveTarget, setApproveTarget] = useState<JoinRequestRow | null>(null);
   const [rejectTarget, setRejectTarget] = useState<JoinRequestRow | null>(null);
@@ -50,13 +48,13 @@ export function RequestsSection({
     if (error) toast("error", error);
   }, [error, toast]);
 
-  const registerCount = requests.filter((item) => item.type === "register").length;
-  const reportCount = requests.filter((item) => item.type === "report").length;
   const pendingCount = requests.filter((item) => item.status === "pending").length;
+  const approvedCount = requests.filter((item) => item.status === "approved").length;
+  const rejectedCount = requests.filter((item) => item.status === "rejected").length;
 
   const filteredRequests = useMemo(
-    () => filterRequests(requests, typeTab, statusFilter),
-    [requests, typeTab, statusFilter],
+    () => filterRequests(requests, statusFilter),
+    [requests, statusFilter],
   );
 
   if (loading) return <DashboardLoading />;
@@ -98,10 +96,13 @@ export function RequestsSection({
 
       <section className="grid gap-4 rounded-2xl border border-border bg-card p-6 shadow-card">
         <RequestFilters
-          typeTab={typeTab}
           statusFilter={statusFilter}
-          counts={{ all: requests.length, register: registerCount, report: reportCount }}
-          onTypeChange={setTypeTab}
+          counts={{
+            all: requests.length,
+            pending: pendingCount,
+            approved: approvedCount,
+            rejected: rejectedCount,
+          }}
           onStatusChange={setStatusFilter}
         />
 

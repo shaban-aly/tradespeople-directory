@@ -96,7 +96,6 @@ export async function submitRegisterRequest(
   }
 
   const { error } = await supabase.from("join_requests").insert({
-    type: "register",
     user_id: user.id,
     name: cleanText(payload.name),
     category_id: categoryId,
@@ -112,6 +111,9 @@ export async function submitRegisterRequest(
   });
 
   if (error) {
+    if (error.code === "23505") {
+      throw new Error("عندك طلب تسجيل قيد المراجعة بالفعل — هيظهر بعد ما المشرف يوافق");
+    }
     throw new Error("مقدرناش نستقبل البيانات دلوقتي — جرّب تاني بعد شوية");
   }
 }
@@ -124,11 +126,14 @@ export async function submitReportRequest(
     throw new Error(firstError(errors) ?? "البيانات غير صحيحة");
   }
 
-  const { error } = await createSupabase().from("join_requests").insert({
-    type: "report",
+  const supabase = createSupabase();
+  const { data } = await supabase.auth.getUser();
+
+  const { error } = await supabase.from("reports").insert({
     craftsman_name: cleanText(payload.craftsmanName),
     phone: cleanText(payload.phone),
-    report_message: cleanText(payload.message),
+    message: cleanText(payload.message),
+    reporter_user_id: data.user?.id ?? null,
   });
 
   if (error) {

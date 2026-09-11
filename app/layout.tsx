@@ -4,6 +4,7 @@ import { Cairo, Tajawal } from "next/font/google";
 import "./globals.css";
 import { PwaInstallBanner } from "@/components/shared/PwaInstallBanner";
 import { PwaRegister } from "@/components/shared/layout/PwaRegister";
+import { SessionProvider } from "@/hooks/auth/SessionProvider";
 import {
   siteName,
   siteTagline,
@@ -146,9 +147,11 @@ export default function RootLayout({
       <body
         className={`${cairo.variable} ${tajawal.variable} bg-background font-body text-foreground antialiased`}
       >
-        <PwaRegister />
-        <PwaInstallBanner />
-        {children}
+        <SessionProvider>
+          <PwaRegister />
+          <PwaInstallBanner />
+          {children}
+        </SessionProvider>
       </body>
     </html>
   );

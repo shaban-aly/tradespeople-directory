@@ -16,6 +16,10 @@ export type Craftsman = {
   area: string; // اسم المنطقة
   description: string;
   verified: boolean;
+  rating: {
+    average: number;
+    totalReviews: number;
+  };
   addedAt: string; // تاريخ الإضافة بصيغة ISO
   socialLinks?: SocialLink[]; // روابط سوشيال اختيارية
 };

@@ -1,67 +1,69 @@
 import { AdminSection } from "@/components/admin/AdminSection";
 import { EmptyState } from "@/components/admin/EmptyState";
-import { IconInbox } from "@/components/shared/icons";
-import type { JoinRequestRow } from "@/lib/db/admin";
+import { IconAlert } from "@/components/shared/icons";
+import type { ReportRow } from "@/lib/db/admin";
 import { toArabicDigits } from "@/lib/utils/format";
 
-export function PendingRequestsList({
-  requests,
+export function PendingReportsList({
+  reports,
   busyKey,
-  onApprove,
-  onReject,
+  onReview,
+  onDismiss,
   action,
 }: {
-  requests: JoinRequestRow[];
+  reports: ReportRow[];
   busyKey: string;
-  onApprove: (request: JoinRequestRow) => void;
-  onReject: (requestId: string) => void;
+  onReview: (report: ReportRow) => void;
+  onDismiss: (reportId: string) => void;
   action?: React.ReactNode;
 }) {
   return (
     <AdminSection
-      title="الطلبات المعلقة"
+      title="البلاغات المعلّقة"
       description="بانتظار مراجعتك"
-      icon={<IconInbox className="h-6 w-6" />}
+      icon={<IconAlert className="h-6 w-6" />}
       action={action}
     >
-      {requests.length === 0 ? (
-        <EmptyState title="لا توجد طلبات معلقة" />
+      {reports.length === 0 ? (
+        <EmptyState title="لا توجد بلاغات معلّقة" />
       ) : (
         <div className="grid gap-3">
-          {requests.map((request) => (
+          {reports.map((report) => (
             <div
-              key={request.id}
+              key={report.id}
               className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3 sm:p-4"
             >
               <div className="grid min-w-0 gap-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-sm font-bold text-accent">
-                    طلب تسجيل
+                  <span className="rounded-full bg-danger/10 px-2.5 py-0.5 text-sm font-bold text-danger">
+                    بلاغ
                   </span>
                   <span className="text-sm text-muted">
-                    {toArabicDigits(request.created_at.slice(0, 10))}
+                    {toArabicDigits(report.created_at.slice(0, 10))}
                   </span>
                 </div>
                 <p className="truncate text-base font-bold text-foreground">
-                  {request.name}
+                  {report.craftsman_name}
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
-                  disabled={busyKey === `approve-${request.id}`}
-                  onClick={() => onApprove(request)}
+                  disabled={busyKey === `report-review-${report.id}`}
+                  onClick={() => onReview(report)}
                   className="min-h-12 rounded-xl bg-action px-4 text-base font-bold text-on-action disabled:opacity-50"
                 >
-                  {busyKey === `approve-${request.id}` ? "جاري..." : "موافقة"}
+                  {busyKey === `report-review-${report.id}`
+                    ? "جاري..."
+                    : "تمت المراجعة"}
                 </button>
                 <button
                   type="button"
-                  disabled={busyKey === `reject-${request.id}`}
-                  onClick={() => onReject(request.id)}
+                  disabled={busyKey === `report-dismiss-${report.id}`}
+                  onClick={() => onDismiss(report.id)}
                   className="min-h-12 rounded-xl border border-danger/40 px-4 text-base font-bold text-danger disabled:opacity-50"
                 >
-                  {busyKey === `reject-${request.id}` ? "جاري..." : "رفض"}
+                  {busyKey === `report-dismiss-${report.id}` ? "جاري..." : "إغلاق"}
                 </button>
               </div>
             </div>

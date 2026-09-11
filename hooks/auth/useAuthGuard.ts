@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { useSession } from "@/hooks/auth/useSession";
 
 export interface AuthGuardOptions {
@@ -11,38 +11,53 @@ export interface AuthGuardOptions {
 
 export function useAuthGuard() {
   const { isLoggedIn, loading } = useSession();
-  const [isOpen, setIsOpen] = useState(false);
   const [guardOptions, setGuardOptions] = useState<AuthGuardOptions>({});
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [modalDismissed, setModalDismissed] = useState(false);
+  const [, startTransition] = useTransition();
 
   const requireAuth = useCallback(
     (action: () => void, options?: AuthGuardOptions): boolean => {
-      if (loading) return false;
+      setGuardOptions(options ?? {});
+
+      if (loading) {
+        setPendingAction(() => action);
+        return false;
+      }
 
       if (isLoggedIn) {
         action();
         return true;
       }
 
-      setGuardOptions(options ?? {});
       setPendingAction(() => action);
-      setIsOpen(true);
+      setModalDismissed(false);
       return false;
     },
-    [isLoggedIn, loading]
+    [isLoggedIn, loading],
   );
 
-  const handleSuccess = useCallback(() => {
-    setIsOpen(false);
-    if (pendingAction) {
-      pendingAction();
+  // بعد اكتمال الجلسة: مسجّل → يُنفَّذ الإجراء المحجوز تلقائياً
+  useEffect(() => {
+    if (loading || !pendingAction || !isLoggedIn) return;
+    const next = pendingAction;
+    startTransition(() => {
       setPendingAction(null);
-    }
-  }, [pendingAction]);
+    });
+    next();
+  }, [loading, isLoggedIn, pendingAction, startTransition]);
+
+  // المودال مفتوح فقط: إجراء معلّق + جلسة زائر + لم يُرفض من المستخدم
+  const isOpen =
+    !loading && !isLoggedIn && pendingAction !== null && !modalDismissed;
+
+  const handleSuccess = useCallback(() => {
+    setModalDismissed(true);
+  }, []);
 
   const handleClose = useCallback(() => {
-    setIsOpen(false);
     setPendingAction(null);
+    setModalDismissed(true);
   }, []);
 
   return {

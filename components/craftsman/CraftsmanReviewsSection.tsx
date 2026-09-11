@@ -80,11 +80,6 @@ export function CraftsmanReviewsSection({
   };
 
   const visibleReviews = reviews.slice(0, 3);
-  const userName =
-    user?.user_metadata?.full_name ||
-    user?.user_metadata?.name ||
-    user?.email?.split("@")[0] ||
-    "عميل";
 
   return (
     <section className="rounded-3xl border border-border bg-card p-6 shadow-card sm:p-8">
@@ -227,7 +222,6 @@ export function CraftsmanReviewsSection({
           craftsmanId={craftsmanId}
           craftsmanName={craftsmanName}
           userId={user.id}
-          userName={userName}
           existingReview={userReview}
           onSuccess={handleReviewSuccess}
         />

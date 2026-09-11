@@ -12,7 +12,6 @@ interface ReviewModalProps {
   craftsmanId: string;
   craftsmanName: string;
   userId: string;
-  userName: string;
   existingReview?: ReviewItem | null;
   onSuccess: () => void;
 }
@@ -23,7 +22,6 @@ export function ReviewModal({
   craftsmanId,
   craftsmanName,
   userId,
-  userName,
   existingReview,
   onSuccess,
 }: ReviewModalProps) {
@@ -59,7 +57,6 @@ export function ReviewModal({
       craftsmanId,
       rating,
       comment,
-      userName,
     });
 
     setLoading(false);

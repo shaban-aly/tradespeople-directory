@@ -43,12 +43,6 @@ export default async function MyReviewsPage() {
     );
   }
 
-  const userName =
-    user.user_metadata?.full_name ||
-    user.user_metadata?.name ||
-    user.email?.split("@")[0] ||
-    "مستخدم";
-
   const reviews = await getUserAllReviews(user.id, supabase);
 
   return (
@@ -81,7 +75,7 @@ export default async function MyReviewsPage() {
       </div>
 
       {/* قسم التقييمات */}
-      <MyReviewsSection userId={user.id} userName={userName} initialReviews={reviews} />
+      <MyReviewsSection userId={user.id} initialReviews={reviews} />
     </div>
   );
 }

@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import {
   readFavoritesCached,
+  setFavorite,
   subscribeFavorites,
   toggleFavorite as toggleLocalFavorite,
   writeFavorites,
 } from "@/lib/recommendations";
 import { useSession } from "@/hooks/auth/useSession";
+import { useAuthGuard } from "@/hooks/auth/useAuthGuard";
 import {
   addFavorite,
   getUserFavorites,
@@ -16,10 +18,9 @@ import {
 
 const EMPTY_FAVORITES: string[] = [];
 
-// TODO: دمج "مودال الحارس" (Auth Guard Modal) هنا مستقبلاً عند الرغبة في توجيه الزائر غير المسجل لتسجيل الدخول قبل حفظ المفضلة
-
 export function useFavorites() {
   const { user, isLoggedIn } = useSession();
+  const authGuard = useAuthGuard();
 
   const favorites = useSyncExternalStore(
     subscribeFavorites,
@@ -48,28 +49,60 @@ export function useFavorites() {
 
   const favoriteSet = useMemo(() => new Set(favorites), [favorites]);
 
-  const handleToggleFavorite = useCallback(
+  const performToggle = useCallback(
     (slug: string) => {
+      const wasFavorite = favoriteSet.has(slug);
       const willBeFavorite = toggleLocalFavorite(slug);
 
-      // إذا كان المستخدم مسجلاً، نرسل التحديث لـ Supabase مع التحديث التفاؤلي
+      // المستخدم مسجّل — نزامن مع Supabase (التحديث التفاؤلي أولاً)
       if (user?.id) {
-        if (willBeFavorite) {
-          void addFavorite(user.id, slug);
-        } else {
-          void removeFavorite(user.id, slug);
-        }
+        const operation = willBeFavorite ? addFavorite : removeFavorite;
+        void operation(user.id, slug).then((ok) => {
+          if (!ok) {
+            // فشل في القاعدة — تراجُع عن الحالة التفاؤلية كي لا تبقى
+            // «مفضلة»/«غير مفضلة» خلافاً للـ DB. setFavorite لا يغيّر شيئاً
+            // إن كان المستخدم قد نقر مجدداً (الحالة عادت لـ wasFavorite)،
+            // فسهل النقر السريع لا يُفسد الحالة.
+            setFavorite(slug, wasFavorite);
+          }
+        });
       }
 
       return willBeFavorite;
     },
-    [user?.id],
+    [user, favoriteSet],
+  );
+
+  const toggleFavorite = useCallback(
+    (slug: string): boolean => {
+      if (isLoggedIn) {
+        return performToggle(slug);
+      }
+
+      // أثناء تحميل الجلسة يُحجز الإجراء وتُقرَّر حالته بعدها:
+      // مسجّل → يُنفَّذ؛ زائر → مودال تسجيل الدخول ثم يُنفَّذ بعد الدخول
+      authGuard.requireAuth(
+        () => void performToggle(slug),
+        {
+          title: "سجّل دخولك لحفظ المحفوظات",
+          message:
+            "احفظ الصنايعية المفضلين لديك وسيتم مزامنتهم مع حسابك على كل أجهزتك.",
+          actionDescription: "ستُحفظ الصنايعي في قائمة المحفوظات فور تسجيل الدخول.",
+        },
+      );
+      return false;
+    },
+    [isLoggedIn, performToggle, authGuard],
   );
 
   return {
     favorites,
     count: favorites.length,
     isFavorite: (slug: string) => favoriteSet.has(slug),
-    toggleFavorite: handleToggleFavorite,
+    toggleFavorite,
+    authOpen: authGuard.isOpen,
+    authOptions: authGuard.guardOptions,
+    onAuthClose: authGuard.handleClose,
+    onAuthSuccess: authGuard.handleSuccess,
   };
 }

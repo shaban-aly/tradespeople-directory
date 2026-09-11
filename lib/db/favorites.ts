@@ -74,14 +74,6 @@ export async function getUserFavorites(userId: string): Promise<string[]> {
  * إضافة فني إلى مفضلة المستخدم في Supabase وتحديث الكاش
  */
 export async function addFavorite(userId: string, craftsmanSlug: string): Promise<boolean> {
-  // تحديث تفاؤلي في الكاش اللحظي
-  const cached = userFavoritesCache.get(userId);
-  if (cached && !cached.slugs.includes(craftsmanSlug)) {
-    cached.slugs = [...cached.slugs, craftsmanSlug];
-  } else if (!cached) {
-    userFavoritesCache.set(userId, { slugs: [craftsmanSlug], timestamp: Date.now() });
-  }
-
   const craftsmanId = await getCraftsmanIdBySlug(craftsmanSlug);
   if (!craftsmanId) {
     return false;
@@ -90,27 +82,39 @@ export async function addFavorite(userId: string, craftsmanSlug: string): Promis
   const supabase = createSupabase();
   const { error } = await supabase
     .from("favorites")
-    .upsert(
-      {
-        user_id: userId,
-        craftsman_id: craftsmanId,
-      },
-      { onConflict: "user_id,craftsman_id" }
-    );
+    .insert({
+      user_id: userId,
+      craftsman_id: craftsmanId,
+    });
 
-  return !error;
+  // المفضلة تُنشأ أو تُحذف ولا تُحدَّث. قيد الفريد (user_id, craftsman_id)
+  // يرفض التكرار بـ 23505 — يُعامَل كنجاح (idempotent) بدل فشل الـ upsert
+  // الذي كان ينفّذ UPDATE ويرتد بـ 42501 لعدم وجود سياسة UPDATE.
+  if (!error || error.code === "23505") {
+    updateCacheOnAdd(userId, craftsmanSlug);
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * تحديث كاش المفضلة عند نجاح الإضافة فقط — لا يُلوَّث الكاش عند الفشل
+ */
+function updateCacheOnAdd(userId: string, craftsmanSlug: string): void {
+  const cached = userFavoritesCache.get(userId);
+  if (cached && !cached.slugs.includes(craftsmanSlug)) {
+    cached.slugs = [...cached.slugs, craftsmanSlug];
+    cached.timestamp = Date.now();
+  } else if (!cached) {
+    userFavoritesCache.set(userId, { slugs: [craftsmanSlug], timestamp: Date.now() });
+  }
 }
 
 /**
  * حذف فني من مفضلة المستخدم في Supabase وتحديث الكاش
  */
 export async function removeFavorite(userId: string, craftsmanSlug: string): Promise<boolean> {
-  // تحديث تفاؤلي في الكاش اللحظي
-  const cached = userFavoritesCache.get(userId);
-  if (cached) {
-    cached.slugs = cached.slugs.filter((s) => s !== craftsmanSlug);
-  }
-
   const craftsmanId = await getCraftsmanIdBySlug(craftsmanSlug);
   if (!craftsmanId) {
     return false;
@@ -123,7 +127,17 @@ export async function removeFavorite(userId: string, craftsmanSlug: string): Pro
     .eq("user_id", userId)
     .eq("craftsman_id", craftsmanId);
 
-  return !error;
+  if (error) {
+    return false;
+  }
+
+  // تحديث كاش المفضلة عند نجاح الحذف فقط — لا يُلوَّث الكاش عند الفشل
+  const cached = userFavoritesCache.get(userId);
+  if (cached) {
+    cached.slugs = cached.slugs.filter((s) => s !== craftsmanSlug);
+    cached.timestamp = Date.now();
+  }
+  return true;
 }
 
 /**

@@ -19,6 +19,11 @@ const CRAFTSMAN_BY_CATEGORY_SELECT =
 
 type CategoryRow = { slug: string; name: string; icon: string };
 type AreaRow = { name: string };
+type RatingSummaryRow = {
+  craftsman_id: string;
+  average_rating: number;
+  total_reviews: number;
+};
 
 type CraftsmanRow = {
   id: string;
@@ -46,8 +51,47 @@ function mapCraftsman(row: CraftsmanRow): Craftsman {
     area: row.area?.name ?? "",
     description: row.description ?? "",
     verified: row.verified,
+    rating: { average: 0, totalReviews: 0 },
     addedAt: row.added_at,
   };
+}
+
+/**
+ * التمييز بين «نجاح الاستعلام مع صفر صفوف» (حالة فارغة مشروعة) و«فشل الاستعلام».
+ * خطأ Supabase لا يُبلع أبداً — يُرمى Error عربي، حتى لا تبدو أعطال RLS
+ * كأنها «لا بيانات» أمام الزائر.
+ */
+function assertSelectOk(from: string, error: unknown): void {
+  if (error) {
+    throw new Error(`فشل تحميل ${from} — جرّب تاني بعد شوية`);
+  }
+}
+
+async function attachRatings<T extends Craftsman>(craftsmen: T[]): Promise<T[]> {
+  if (craftsmen.length === 0) return craftsmen;
+
+  const { data, error } = await createServerReadClient()
+    .from("craftsman_rating_summaries")
+    .select("craftsman_id, average_rating, total_reviews")
+    .in(
+      "craftsman_id",
+      craftsmen.map((craftsman) => craftsman.id),
+    );
+  assertSelectOk("ملخصات التقييم", error);
+  const ratings = new Map(
+    ((data ?? []) as RatingSummaryRow[]).map((row) => [
+      row.craftsman_id,
+      {
+        average: Number(row.average_rating) || 0,
+        totalReviews: Number(row.total_reviews) || 0,
+      },
+    ]),
+  );
+
+  return craftsmen.map((craftsman) => ({
+    ...craftsman,
+    rating: ratings.get(craftsman.id) ?? craftsman.rating,
+  }));
 }
 
 function mapCategory(row: CategoryRow): Category {
@@ -55,11 +99,12 @@ function mapCategory(row: CategoryRow): Category {
 }
 
 async function getSocialLinksImpl(craftsmanId: string): Promise<SocialLink[]> {
-  const { data } = await createServerReadClient()
+  const { data, error } = await createServerReadClient()
     .from("social_links")
     .select("platform, url")
     .eq("craftsman_id", craftsmanId)
     .order("created_at");
+  assertSelectOk("روابط السوشيال", error);
   return (data ?? []).map((r) => ({ platform: r.platform as SocialPlatform, url: r.url }));
 }
 
@@ -68,11 +113,12 @@ const getSocialLinks = unstable_cache(getSocialLinksImpl, [
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
 
 async function getCategoriesImpl(): Promise<Category[]> {
-  const { data } = await createServerReadClient()
+  const { data, error } = await createServerReadClient()
     .from("categories")
     .select("slug, name, icon")
     .eq("is_active", true)
     .order("sort_order");
+  assertSelectOk("التخصصات", error);
   return (data ?? []).map(mapCategory);
 }
 
@@ -81,12 +127,13 @@ export const getCategories = unstable_cache(getCategoriesImpl, [
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
 
 async function getCategoryBySlugImpl(slug: string): Promise<Category | undefined> {
-  const { data } = await createServerReadClient()
+  const { data, error } = await createServerReadClient()
     .from("categories")
     .select("slug, name, icon")
     .eq("slug", slug)
     .eq("is_active", true)
     .maybeSingle();
+  assertSelectOk("التخصص", error);
   return data ? mapCategory(data) : undefined;
 }
 
@@ -95,12 +142,13 @@ export const getCategoryBySlug = unstable_cache(getCategoryBySlugImpl, [
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
 
 async function getCraftsmenImpl(): Promise<Craftsman[]> {
-  const { data } = await createServerReadClient()
+  const { data, error } = await createServerReadClient()
     .from("craftsmen")
     .select(CRAFTSMAN_SELECT)
     .eq("is_published", true)
     .order("added_at", { ascending: false });
-  return (data ?? []).map(mapCraftsman);
+  assertSelectOk("الصنايعية", error);
+  return attachRatings((data ?? []).map(mapCraftsman));
 }
 
 export const getCraftsmen = unstable_cache(getCraftsmenImpl, [
@@ -108,12 +156,13 @@ export const getCraftsmen = unstable_cache(getCraftsmenImpl, [
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
 
 async function getCraftsmanBySlugImpl(slug: string): Promise<Craftsman | undefined> {
-  const { data } = await createServerReadClient()
+  const { data, error } = await createServerReadClient()
     .from("craftsmen")
     .select(CRAFTSMAN_SELECT)
     .eq("slug", slug)
     .eq("is_published", true)
     .maybeSingle();
+  assertSelectOk("بيانات الصنايعي", error);
   if (!data) return undefined;
   const socialLinks = await getSocialLinks(data.id);
   return { ...mapCraftsman(data), socialLinks };
@@ -124,16 +173,18 @@ export const getCraftsmanBySlug = unstable_cache(getCraftsmanBySlugImpl, [
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
 
 async function getCraftsmenByCategoryImpl(slug: string): Promise<CraftsmanWithStats[]> {
-  const { data } = await createServerReadClient()
+  const { data, error } = await createServerReadClient()
     .from("craftsmen")
     .select(CRAFTSMAN_BY_CATEGORY_SELECT)
     .eq("is_published", true)
     .eq("category.slug", slug)
     .order("added_at", { ascending: false });
-  return (data ?? []).map((row) => ({
+  assertSelectOk("صنايعية التخصص", error);
+  const craftsmen = (data ?? []).map((row) => ({
     ...mapCraftsman(row),
     stats: row.stats ?? { views: 0, calls: 0, whatsapp: 0 },
   }));
+  return attachRatings(craftsmen);
 }
 
 export const getCraftsmenByCategory = unstable_cache(getCraftsmenByCategoryImpl, [
@@ -155,11 +206,12 @@ export async function getHomeCategories(limit: number): Promise<CategoryWithCoun
 }
 
 async function getAreasImpl(): Promise<string[]> {
-  const { data } = await createServerReadClient()
+  const { data, error } = await createServerReadClient()
     .from("areas")
     .select("name")
     .eq("is_active", true)
     .order("sort_order");
+  assertSelectOk("المناطق", error);
   return (data ?? []).map((r) => r.name);
 }
 
@@ -231,15 +283,18 @@ async function getFeaturedCraftsmenImpl(
   count: number,
   seed?: number,
 ): Promise<Craftsman[]> {
-  const { data } = await createServerReadClient()
+  const { data, error } = await createServerReadClient()
     .from("craftsmen")
     .select(`${CRAFTSMAN_SELECT}, stats:craftsman_stats(views, calls, whatsapp)`)
     .eq("is_published", true);
 
-  const ranked: RankedCraftsman[] = (data ?? []).map((row) => ({
-    id: row.id,
-    craftsman: mapCraftsman(row),
-    stats: row.stats ?? { views: 0, calls: 0, whatsapp: 0 },
+  assertSelectOk("الصنايعية المميزة", error);
+  const rows = data ?? [];
+  const craftsmen = await attachRatings(rows.map(mapCraftsman));
+  const ranked: RankedCraftsman[] = craftsmen.map((craftsman, index) => ({
+    id: craftsman.id,
+    craftsman,
+    stats: rows[index]?.stats ?? { views: 0, calls: 0, whatsapp: 0 },
   }));
 
   const hasEngagement = ranked.some((item) => engagement(item) > 0);
@@ -267,16 +322,18 @@ export type CraftsmanWithStats = Craftsman & {
 async function getRecommendationPoolImpl(
   limit = 40,
 ): Promise<CraftsmanWithStats[]> {
-  const { data } = await createServerReadClient()
+  const { data, error } = await createServerReadClient()
     .from("craftsmen")
     .select(`${CRAFTSMAN_SELECT}, stats:craftsman_stats(views, calls, whatsapp)`)
     .eq("is_published", true)
     .limit(limit);
 
-  return (data ?? []).map((row) => ({
+  assertSelectOk("مقترحات الصنايعية", error);
+  const craftsmen = (data ?? []).map((row) => ({
     ...mapCraftsman(row),
     stats: row.stats ?? { views: 0, calls: 0, whatsapp: 0 },
   }));
+  return attachRatings(craftsmen);
 }
 
 export const getRecommendationPool = unstable_cache(getRecommendationPoolImpl, [
@@ -313,6 +370,7 @@ function mapRelatedRow(row: RelatedCraftsmanRow): Craftsman {
     area: row.area_name ?? "",
     description: row.description ?? "",
     verified: row.verified,
+    rating: { average: 0, totalReviews: 0 },
     addedAt: row.added_at,
   };
 }
@@ -331,7 +389,7 @@ async function getRelatedByCoEngagementImpl(
     p_limit: limit,
   });
   if (error || !data || data.length === 0) return [];
-  return data.map(mapRelatedRow);
+  return attachRatings(data.map(mapRelatedRow));
 }
 
 export const getRelatedByCoEngagement = unstable_cache(

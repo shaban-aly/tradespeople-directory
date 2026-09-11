@@ -13,7 +13,8 @@ import {
 } from "@/components/shared/icons";
 
 export function UserMenu() {
-  const { user, isLoggedIn, isAdmin, isCraftsman, loading, signOut } = useSession();
+  const { user, profile, isLoggedIn, isAdmin, isCraftsman, loading, signOut } =
+    useSession();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -47,16 +48,15 @@ export function UserMenu() {
   }
 
   const displayName =
-    user?.user_metadata?.full_name ??
-    user?.user_metadata?.name ??
+    profile?.displayName ??
     user?.email ??
     "أنا";
   const initial = String(displayName).charAt(0).toUpperCase();
 
-  const avatarContent = user?.user_metadata?.avatar_url ? (
+  const avatarContent = profile?.avatarUrl ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={user.user_metadata.avatar_url as string}
+      src={profile.avatarUrl}
       alt={displayName}
       className="h-full w-full rounded-full object-cover"
     />
@@ -106,10 +106,10 @@ export function UserMenu() {
             className="flex items-center gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-muted/10 group"
           >
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-on-accent overflow-hidden">
-              {user?.user_metadata?.avatar_url ? (
+              {profile?.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={user.user_metadata.avatar_url as string}
+                  src={profile.avatarUrl}
                   alt={displayName}
                   className="h-full w-full object-cover"
                 />

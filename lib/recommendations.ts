@@ -196,22 +196,33 @@ export function writeFavorites(slugs: string[]): void {
   window.dispatchEvent(new Event(CHANGED_EVENT));
 }
 
-/** تبديل حالة المفضلة لصنايعي — مع تسجيل إشارة «إعجاب» للتوصية. */
-export function toggleFavorite(slug: string): boolean {
-  if (typeof window === "undefined") return false;
+/** تعيين حالة المفضلة لصنايعي صراحةً — بلا أثر سلوكي (يُستخدم للتراجع عند فشل المزامنة). */
+export function setFavorite(slug: string, value: boolean): boolean {
+  if (typeof window === "undefined") return value;
+  const has = readFavorites().includes(slug);
+  if (has === value) return value;
+
   const favorites = readFavorites();
-  const has = favorites.includes(slug);
-  const next = has
-    ? favorites.filter((favorite) => favorite !== slug)
-    : [...favorites, slug];
+  const next = value
+    ? [...favorites, slug]
+    : favorites.filter((favorite) => favorite !== slug);
   try {
     window.localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(next));
   } catch {
     // تجاهل فشل التخزين
   }
-  if (!has) recordBehaviorEvent({ type: "like", craftsmanSlug: slug, ts: Date.now() });
+  cachedFavorites = next;
   window.dispatchEvent(new Event(CHANGED_EVENT));
-  return !has;
+  return value;
+}
+
+/** تبديل حالة المفضلة لصنايعي — مع تسجيل إشارة «إعجاب» للتوصية. */
+export function toggleFavorite(slug: string): boolean {
+  if (typeof window === "undefined") return false;
+  const willBeFavorite = !readFavorites().includes(slug);
+  setFavorite(slug, willBeFavorite);
+  if (willBeFavorite) recordBehaviorEvent({ type: "like", craftsmanSlug: slug, ts: Date.now() });
+  return willBeFavorite;
 }
 
 /** اشتراك في تغييرات المفضلة. */

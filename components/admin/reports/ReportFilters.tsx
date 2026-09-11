@@ -1,21 +1,21 @@
-import { type RequestStatusFilter } from "@/lib/db/admin-selectors";
+import { type ReportStatusFilter } from "@/lib/db/admin-selectors";
 import { toArabicDigits } from "@/lib/utils/format";
 
-const STATUS_FILTERS: { value: RequestStatusFilter; label: string }[] = [
+const STATUS_FILTERS: { value: ReportStatusFilter; label: string }[] = [
   { value: "all", label: "الكل" },
   { value: "pending", label: "معلق" },
-  { value: "approved", label: "مقبول" },
-  { value: "rejected", label: "مرفوض" },
+  { value: "reviewed", label: "تمت المراجعة" },
+  { value: "dismissed", label: "مغلق" },
 ];
 
-export function RequestFilters({
+export function ReportFilters({
   statusFilter,
   counts,
   onStatusChange,
 }: {
-  statusFilter: RequestStatusFilter;
-  counts: { all: number; pending: number; approved: number; rejected: number };
-  onStatusChange: (filter: RequestStatusFilter) => void;
+  statusFilter: ReportStatusFilter;
+  counts: { all: number; pending: number; reviewed: number; dismissed: number };
+  onStatusChange: (filter: ReportStatusFilter) => void;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">

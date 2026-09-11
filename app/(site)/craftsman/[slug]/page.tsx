@@ -13,6 +13,7 @@ import { RelatedCraftsmen } from "@/components/craftsman/RelatedCraftsmen";
 import { IconTrendingUp } from "@/components/shared/icons";
 import { breadcrumbSchema, craftsmanSchema } from "@/lib/seo/schema";
 import { rankRelatedCraftsmen } from "@/lib/recommendations";
+import { getCraftsmanRatingSummary } from "@/lib/db/reviews";
 import { siteUrl } from "@/lib/data/site";
 
 export const revalidate = 3600;
@@ -61,11 +62,13 @@ export default async function CraftsmanPage({
   const craftsman = await getCraftsmanBySlug(slug);
   if (!craftsman) notFound();
 
-  const [category, categoryCraftsmen, relatedByCo] = await Promise.all([
-    getCategoryBySlug(craftsman.category),
-    getCraftsmenByCategory(craftsman.category),
-    getRelatedByCoEngagement(craftsman.id),
-  ]);
+  const [category, categoryCraftsmen, relatedByCo, ratingSummary] =
+    await Promise.all([
+      getCategoryBySlug(craftsman.category),
+      getCraftsmenByCategory(craftsman.category),
+      getRelatedByCoEngagement(craftsman.id),
+      getCraftsmanRatingSummary(craftsman.id),
+    ]);
 
   // القسم الذكي «شاهد أيضاً»: نفس التخصص مرتباً بالأكثر تواصلاً/ظهوراً،
   // مع دفعة لمن شاهدهم المشاهدون معاً (انظر `rankRelatedCraftsmen`)
@@ -96,7 +99,11 @@ export default async function CraftsmanPage({
           ])}
         />
         <JsonLd data={craftsmanSchema(craftsman, category?.name ?? "صنايعي")} />
-        <CraftsmanDetail craftsman={craftsman} category={category} />
+        <CraftsmanDetail
+          craftsman={craftsman}
+          category={category}
+          ratingSummary={ratingSummary}
+        />
       </div>
 
       <RelatedCraftsmen

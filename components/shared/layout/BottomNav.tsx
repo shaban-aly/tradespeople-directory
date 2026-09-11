@@ -17,7 +17,7 @@ import { toArabicDigits } from "@/lib/utils/format";
 export function BottomNav() {
   const pathname = usePathname();
   const { count: favoritesCount } = useFavorites();
-  const { user, isLoggedIn } = useSession();
+  const { profile, isLoggedIn } = useSession();
   const { isOpen: isSearchOpen, openSearch } = useSearchModal();
 
   // عدم إظهار الشريط السفلي داخل لوحة تحكم المشرف أو شاشة تسجيل الدخول
@@ -65,8 +65,8 @@ export function BottomNav() {
         pathname === "/profile" ||
         pathname?.startsWith("/dashboard") ||
         pathname?.startsWith("/activity"),
-      isUser: isLoggedIn && Boolean(user?.user_metadata?.avatar_url),
-      avatarUrl: user?.user_metadata?.avatar_url as string | undefined,
+      isUser: isLoggedIn && Boolean(profile?.avatarUrl),
+      avatarUrl: profile?.avatarUrl ?? undefined,
     },
   ];
 

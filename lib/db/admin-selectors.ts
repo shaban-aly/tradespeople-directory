@@ -5,10 +5,11 @@ import type {
   CountRow,
   CraftsmanRow,
   JoinRequestRow,
+  ReportRow,
 } from "./admin";
 
-export type RequestTypeTab = "all" | "register" | "report";
 export type RequestStatusFilter = "all" | "pending" | "approved" | "rejected";
+export type ReportStatusFilter = "all" | "pending" | "reviewed" | "dismissed";
 
 export type CraftsmanFilter = {
   search: string;
@@ -25,6 +26,7 @@ export type OverviewMetrics = {
   publishedCraftsmen: number;
   totalCraftsmen: number;
   pendingRequests: JoinRequestRow[];
+  pendingReports: ReportRow[];
   activeCategories: number;
   totalCategories: number;
   activeAreas: number;
@@ -59,13 +61,19 @@ export function buildAreaCounts(counts: CountRow[]): Record<string, number> {
 
 export function filterRequests(
   requests: JoinRequestRow[],
-  typeTab: RequestTypeTab,
   statusFilter: RequestStatusFilter,
 ): JoinRequestRow[] {
   return requests.filter(
-    (request) =>
-      (typeTab === "all" || request.type === typeTab) &&
-      (statusFilter === "all" || request.status === statusFilter),
+    (request) => statusFilter === "all" || request.status === statusFilter,
+  );
+}
+
+export function filterReports(
+  reports: ReportRow[],
+  statusFilter: ReportStatusFilter,
+): ReportRow[] {
+  return reports.filter(
+    (report) => statusFilter === "all" || report.status === statusFilter,
   );
 }
 
@@ -124,9 +132,10 @@ export function buildOverviewMetrics(input: {
   categories: CategoryRow[];
   areas: AreaRow[];
   requests: JoinRequestRow[];
+  reports: ReportRow[];
   messages: ContactMessageRow[];
 }): OverviewMetrics {
-  const { craftsmen, categories, areas, requests, messages } = input;
+  const { craftsmen, categories, areas, requests, reports, messages } = input;
 
   const categoryChart = categories
     .filter((item) => item.is_active)
@@ -165,6 +174,7 @@ export function buildOverviewMetrics(input: {
     publishedCraftsmen: craftsmen.filter((item) => item.is_published).length,
     totalCraftsmen: craftsmen.length,
     pendingRequests: requests.filter((item) => item.status === "pending"),
+    pendingReports: reports.filter((item) => item.status === "pending"),
     activeCategories: categories.filter((item) => item.is_active).length,
     totalCategories: categories.length,
     activeAreas: areas.filter((item) => item.is_active).length,

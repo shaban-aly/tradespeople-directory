@@ -19,10 +19,11 @@ interface ReviewsSectionProps {
 }
 
 export function ReviewsSection({
-  rating = { average: 5.0, totalReviews: 0 },
+  rating = { average: 0, totalReviews: 0 },
   reviews = [],
 }: ReviewsSectionProps) {
   const hasReviews = reviews.length > 0;
+  const hasRating = rating.totalReviews > 0;
 
   return (
     <section className="rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6">
@@ -43,19 +44,25 @@ export function ReviewsSection({
           </p>
         </div>
 
-        {/* ملخص النجوم */}
+        {/* ملخص النجوم — يظهر فقط عند وجود تقييمات مسجلة */}
         <div className="flex items-center gap-2.5 rounded-xl bg-background px-4 py-2 border border-border w-fit">
-          <div className="flex text-amber-500">
-            <IconStar className="h-5 w-5 fill-current" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-foreground leading-none">
-              {toArabicDigits(rating.average.toFixed(1))} / {toArabicDigits(5)}
-            </p>
-            <p className="text-[11px] text-muted leading-none mt-1">
-              {toArabicDigits(rating.totalReviews)} تقييم مسجل
-            </p>
-          </div>
+          {hasRating ? (
+            <div className="flex items-center gap-2.5">
+              <div className="flex text-amber-500">
+                <IconStar className="h-5 w-5 fill-current" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-foreground leading-none">
+                  {toArabicDigits(rating.average.toFixed(1))} / {toArabicDigits(5)}
+                </p>
+                <p className="text-[11px] text-muted leading-none mt-1">
+                  {toArabicDigits(rating.totalReviews)} تقييم مسجل
+                </p>
+              </div>
+            </div>
+          ) : (
+            <span className="text-sm font-bold text-accent">جديد</span>
+          )}
         </div>
       </div>
 

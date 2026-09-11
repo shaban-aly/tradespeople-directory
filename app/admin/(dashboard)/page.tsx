@@ -5,6 +5,7 @@ import {
   fetchCategories,
   fetchCraftsmen,
   fetchMessages,
+  fetchReports,
   fetchRequests,
 } from "@/lib/db/admin";
 import { fetchAnalyticsOverview } from "@/lib/db/analytics";
@@ -14,9 +15,10 @@ export default async function OverviewPage() {
   const { supabase, user } = await getServerSession();
   if (!user) notFound();
 
-  const [requests, categories, areas, craftsmen, messages, analytics] =
+  const [requests, reports, categories, areas, craftsmen, messages, analytics] =
     await Promise.all([
       fetchRequests(supabase),
+      fetchReports(supabase),
       fetchCategories(supabase),
       fetchAreas(supabase),
       fetchCraftsmen(supabase),
@@ -26,7 +28,7 @@ export default async function OverviewPage() {
 
   return (
     <OverviewSection
-      initialData={{ requests, categories, areas, craftsmen, messages }}
+      initialData={{ requests, reports, categories, areas, craftsmen, messages }}
       initialAnalytics={analytics}
     />
   );

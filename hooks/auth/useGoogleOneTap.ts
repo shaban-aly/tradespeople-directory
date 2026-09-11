@@ -60,8 +60,18 @@ export function useGoogleOneTap(options: UseGoogleOneTapOptions = {}) {
     async function triggerPrompt() {
       if (!window.google?.accounts?.id || !isMounted) return;
 
-      // توليد الـ nonce وحسابه
-      const { rawNonce, hashedNonce } = await generateNonce();
+      let rawNonce: string;
+      let hashedNonce: string;
+      try {
+        // توليد الـ nonce وحسابه
+        const nonce = await generateNonce();
+        rawNonce = nonce.rawNonce;
+        hashedNonce = nonce.hashedNonce;
+      } catch (err) {
+        // عدم توفّر `crypto.subtle`/بيئة غير آمنة — لا نعطّل الصفحة، فقط نتخطى One-Tap
+        console.error("Nonce generation failed, skipping One-Tap:", err);
+        return;
+      }
       rawNonceRef.current = rawNonce;
 
       window.google.accounts.id.initialize({

@@ -36,9 +36,7 @@ export function RequestCard({
                 ? "مقبول"
                 : "مرفوض"}
           </StatusBadge>
-          <span className="text-base font-bold text-foreground">
-            {request.type === "register" ? "طلب تسجيل" : "بلاغ"}
-          </span>
+          <span className="text-base font-bold text-foreground">طلب تسجيل</span>
         </div>
         <span className="text-base text-muted">
           {toArabicDigits(request.created_at.slice(0, 10))}
@@ -46,37 +44,22 @@ export function RequestCard({
       </div>
 
       <div className="grid gap-2 text-base text-muted sm:grid-cols-2">
-        {request.type === "register" ? (
-          <>
-            <p>
-              <span className="font-bold text-foreground">الاسم: </span>
-              {request.name}
-            </p>
-            <p>
-              <span className="font-bold text-foreground">التخصص: </span>
-              {request.category?.name}
-            </p>
-            <p>
-              <span className="font-bold text-foreground">المنطقة: </span>
-              {request.area?.name}
-            </p>
-            <p dir="ltr" className="text-right">
-              <span className="font-bold text-foreground">الهاتف: </span>
-              {request.phone}
-            </p>
-          </>
-        ) : (
-          <>
-            <p>
-              <span className="font-bold text-foreground">الصنايعي: </span>
-              {request.craftsman_name}
-            </p>
-            <p dir="ltr" className="text-right">
-              <span className="font-bold text-foreground">رقم المبلغ: </span>
-              {request.phone}
-            </p>
-          </>
-        )}
+        <p>
+          <span className="font-bold text-foreground">الاسم: </span>
+          {request.name}
+        </p>
+        <p>
+          <span className="font-bold text-foreground">التخصص: </span>
+          {request.category?.name}
+        </p>
+        <p>
+          <span className="font-bold text-foreground">المنطقة: </span>
+          {request.area?.name}
+        </p>
+        <p dir="ltr" className="text-right">
+          <span className="font-bold text-foreground">الهاتف: </span>
+          {request.phone}
+        </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">

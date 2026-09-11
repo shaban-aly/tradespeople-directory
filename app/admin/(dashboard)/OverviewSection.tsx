@@ -9,6 +9,7 @@ import { AnalyticsStats } from "@/components/admin/overview/AnalyticsStats";
 import { CategoryChart } from "@/components/admin/overview/CategoryChart";
 import { MostContactedList } from "@/components/admin/overview/MostContactedList";
 import { OverviewKPIs } from "@/components/admin/overview/OverviewKPIs";
+import { PendingReportsList } from "@/components/admin/overview/PendingReportsList";
 import { PendingRequestsList } from "@/components/admin/overview/PendingRequestsList";
 import { RecentCraftsmenList } from "@/components/admin/overview/RecentCraftsmenList";
 import {
@@ -34,6 +35,8 @@ export function OverviewSection({
     busyKey,
     approveRequest,
     rejectRequest,
+    reviewReport,
+    dismissReport,
     refresh,
   } = useAdminOverview(initialData);
 
@@ -85,11 +88,26 @@ export function OverviewSection({
             </Link>
           }
         />
-        <CategoryChart
-          items={metrics.categoryChart}
-          maxCount={metrics.maxCount}
+        <PendingReportsList
+          reports={metrics.pendingReports}
+          busyKey={busyKey}
+          onReview={(report) => void reviewReport(report)}
+          onDismiss={(reportId) => void dismissReport(reportId)}
+          action={
+            <Link
+              href="/admin/reports"
+              className="flex min-h-12 w-full items-center justify-center rounded-xl border border-border px-4 text-base font-bold text-accent transition-colors hover:bg-accent/10 sm:w-auto"
+            >
+              الكل
+            </Link>
+          }
         />
       </section>
+
+      <CategoryChart
+        items={metrics.categoryChart}
+        maxCount={metrics.maxCount}
+      />
 
       <MostContactedList items={metrics.mostContacted} />
 

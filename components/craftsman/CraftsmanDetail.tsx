@@ -2,10 +2,12 @@ import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { Category, Craftsman } from "@/lib/data/craftsmen";
+import type { RatingSummary } from "@/lib/db/reviews";
 import { CategoryBadge } from "@/components/shared/ui/CategoryBadge";
 import { VerifiedBadge } from "@/components/shared/ui/VerifiedBadge";
 import { ActionButtons } from "@/components/shared/ui/ActionButtons";
 import { CopyPhoneButton } from "@/components/shared/ui/CopyPhoneButton";
+import { RatingBadge } from "@/components/shared/ui/RatingBadge";
 import { ButtonLink } from "@/components/shared/ui/Button";
 import { CraftsmanAvatar } from "@/components/shared/ui/CraftsmanAvatar";
 import { SectionTitle } from "@/components/shared/ui/SectionTitle";
@@ -20,9 +22,11 @@ import { categoryHref } from "@/lib/utils/url";
 export function CraftsmanDetail({
   craftsman,
   category,
+  ratingSummary,
 }: {
   craftsman: Craftsman;
   category?: Category;
+  ratingSummary?: RatingSummary;
 }) {
   return (
     <div className="flex flex-col gap-6">
@@ -94,6 +98,12 @@ export function CraftsmanDetail({
               </bdi>
               <CopyPhoneButton phone={craftsman.phone} iconOnly />
             </p>
+            <div className="flex justify-center">
+              <RatingBadge
+                average={ratingSummary?.average ?? 0}
+                count={ratingSummary?.totalReviews ?? 0}
+              />
+            </div>
             <ActionButtons
               phone={craftsman.phone}
               whatsapp={craftsman.whatsapp}

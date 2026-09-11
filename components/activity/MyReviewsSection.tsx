@@ -19,13 +19,11 @@ import { ReviewModal } from "@/components/craftsman/ReviewModal";
 
 interface MyReviewsSectionProps {
   userId: string;
-  userName: string;
   initialReviews: UserReviewDetail[];
 }
 
 export function MyReviewsSection({
   userId,
-  userName,
   initialReviews,
 }: MyReviewsSectionProps) {
   const [reviews, setReviews] = useState<UserReviewDetail[]>(initialReviews);
@@ -194,7 +192,6 @@ export function MyReviewsSection({
           craftsmanId={editingReview.craftsmanId}
           craftsmanName={editingReview.craftsmanName}
           userId={userId}
-          userName={userName}
           existingReview={editingReview as unknown as ReviewItem}
           onSuccess={() => {
             setEditingReview(null);

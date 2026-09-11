@@ -86,18 +86,21 @@ export async function getCraftsmanRatingSummary(
     return cached.summary;
   }
 
-  const { data, error } = await client.rpc("get_craftsman_rating_summary", {
-    p_craftsman_id: craftsmanId,
-  });
+  // مصدر واحد للحقيقة: عرض craftsman_rating_summaries (المتوسط NULL عند
+  // غياب التقييمات) بدل RPC قديم كان يُرجع 5.0 وهمية قبل وجود أي تقييم.
+  const { data, error } = await client
+    .from("craftsman_rating_summaries")
+    .select("average_rating, total_reviews")
+    .eq("craftsman_id", craftsmanId)
+    .maybeSingle();
 
-  if (error || !data || data.length === 0) {
+  if (error || !data) {
     return cached?.summary ?? { average: 0, totalReviews: 0 };
   }
 
-  const row = data[0];
   const summary: RatingSummary = {
-    average: Number(row.average_rating) || 0,
-    totalReviews: Number(row.total_reviews) || 0,
+    average: Number(data.average_rating) || 0,
+    totalReviews: Number(data.total_reviews) || 0,
   };
 
   summaryCache.set(craftsmanId, { summary, timestamp: now });
@@ -137,15 +140,17 @@ export async function getUserReviewForCraftsman(
 
 /**
  * إضافة أو تحديث تقييم
+ *
+ * ملاحظة أمنية: اسم المقيّم لا يُستقبل من العميل إطلاقًا — يُشتق من
+ * profiles.display_name على مستوى قاعدة البيانات (حارس guard_review_write).
  */
 export async function upsertReview(params: {
   userId: string;
   craftsmanId: string;
   rating: number;
   comment?: string;
-  userName?: string;
 }): Promise<{ success: boolean; error?: string }> {
-  const { userId, craftsmanId, rating, comment, userName } = params;
+  const { userId, craftsmanId, rating, comment } = params;
 
   if (rating < 1 || rating > 5) {
     return { success: false, error: "التقييم يجب أن يكون بين 1 و 5 نجوم" };
@@ -162,13 +167,18 @@ export async function upsertReview(params: {
       craftsman_id: craftsmanId,
       rating,
       comment: comment?.trim() || null,
-      user_name: userName?.trim() || "عميل",
-      updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id,craftsman_id" }
   );
 
   if (error) {
+    // التقييم من نفس المستخدم لنفس الصانع موجود مسبقًا
+    if (error.code === "23505") {
+      return {
+        success: false,
+        error: "لقد قيّمت هذا الصنايعي من قبل — التقييم الواحد لكل عميل وصانع",
+      };
+    }
     return { success: false, error: error.message || "فشل حفظ التقييم" };
   }
 

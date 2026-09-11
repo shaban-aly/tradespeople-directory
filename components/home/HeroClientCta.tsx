@@ -10,7 +10,7 @@ export function HeroClientCta() {
         <div className="pointer-events-none absolute -left-10 -bottom-14 h-56 w-56 rounded-full bg-accent/10 sm:h-80 sm:w-80" />
         <IconHome className="pointer-events-none absolute left-5 top-5 h-12 w-12 text-accent/25 sm:left-10 sm:top-8 sm:h-20 sm:w-20" />
 
-        <div className="relative z-10 grid min-h-27.5 grid-cols-[1fr_38%] items-center py-4 pr-4 sm:min-h-36.25 sm:grid-cols-[1fr_30%] sm:px-8 sm:py-6 md:grid-cols-[1fr_250px]">
+        <div className="relative z-9 grid min-h-27.5 grid-cols-[1fr_38%] items-center py-4 pr-4 sm:min-h-36.25 sm:grid-cols-[1fr_30%] sm:px-8 sm:py-6 md:grid-cols-[1fr_250px]">
           <div>
             <h2 className="font-heading text-lg font-extrabold leading-tight text-foreground sm:text-2xl">
               محتاج <span className="text-accent">صنايعي؟</span>

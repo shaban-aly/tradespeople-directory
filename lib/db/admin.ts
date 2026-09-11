@@ -65,7 +65,6 @@ export type SocialLinkRow = {
 
 export type JoinRequestRow = {
   id: string;
-  type: "register" | "report";
   name: string | null;
   category_id: string | null;
   area_id: string | null;
@@ -73,13 +72,22 @@ export type JoinRequestRow = {
   whatsapp: string | null;
   description: string | null;
   image_url: string | null;
-  craftsman_name: string | null;
-  report_message: string | null;
   status: "pending" | "approved" | "rejected";
   created_at: string;
   category: CategoryJoin | null;
   area: AreaJoin | null;
   socialLinks?: SocialLinkRow[];
+};
+
+export type ReportRow = {
+  id: string;
+  craftsman_name: string;
+  phone: string | null;
+  message: string;
+  status: "pending" | "reviewed" | "dismissed";
+  reporter_user_id: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 export type CategoryRow = {
@@ -155,7 +163,6 @@ export type CountRow = {
 
 type RequestSelectRow = {
   id: string;
-  type: string;
   name: string | null;
   category_id: string | null;
   area_id: string | null;
@@ -163,8 +170,6 @@ type RequestSelectRow = {
   whatsapp: string | null;
   description: string | null;
   image_url: string | null;
-  craftsman_name: string | null;
-  report_message: string | null;
   status: string;
   created_at: string;
   category: CategoryJoin | null;
@@ -177,7 +182,7 @@ type CraftsmanSelectRow = Omit<CraftsmanRow, "socialLinks"> & {
 };
 
 const REQUESTS_SELECT =
-  "id, type, name, category_id, area_id, phone, whatsapp, description, image_url, craftsman_name, report_message, status, created_at, category:categories(slug, name), area:areas(name), social_links";
+  "id, name, category_id, area_id, phone, whatsapp, description, image_url, status, created_at, category:categories(slug, name), area:areas(name), social_links";
 
 const CRAFTSMEN_ADMIN_SELECT =
   "id, slug, name, category_id, area_id, phone, whatsapp, description, image_url, verified, is_published, added_at, created_at, category:categories(slug, name), area:areas(name), stats:craftsman_stats(views, calls, whatsapp), social_links:social_links(platform, url)";
@@ -187,7 +192,6 @@ const COUNTS_SELECT = "id, category:categories(slug), area:areas(name)";
 function mapSocialLinks(row: RequestSelectRow): JoinRequestRow {
   return {
     id: row.id,
-    type: row.type as JoinRequestRow["type"],
     name: row.name,
     category_id: row.category_id,
     area_id: row.area_id,
@@ -195,8 +199,6 @@ function mapSocialLinks(row: RequestSelectRow): JoinRequestRow {
     whatsapp: row.whatsapp,
     description: row.description,
     image_url: row.image_url,
-    craftsman_name: row.craftsman_name,
-    report_message: row.report_message,
     status: row.status as JoinRequestRow["status"],
     created_at: row.created_at,
     category: row.category,
@@ -524,15 +526,6 @@ export async function deleteCraftsman(
 export async function approveJoinRequest(
   request: JoinRequestRow,
 ): Promise<void> {
-  if (request.type === "report") {
-    const { error } = await createSupabase()
-      .from("join_requests")
-      .update({ status: "approved" })
-      .eq("id", request.id);
-    assertNoError(error, "مقدرناش نوافق على البلاغ");
-    return;
-  }
-
   if (!request.name || !request.category_id || !request.area_id || !request.phone) {
     throw new Error("طلب التسجيل ناقص ومحتاج مراجعة يدوية");
   }
@@ -542,8 +535,12 @@ export async function approveJoinRequest(
       p_request_id: request.id,
     });
   if (rpcError) {
-    if ((rpcError.message ?? "").includes("قبل")) {
+    const message = rpcError.message ?? "";
+    if (message.includes("قبل")) {
       throw new Error("الطلب اتوافق عليه أو اترفض من قبل");
+    }
+    if (message.includes("يمتلك صنايعي بالفعل")) {
+      throw new Error("المقدم يمتلك صنايعي بالفعل — فُك الربط القديم أو اربط بحساب مختلف");
     }
     throw new Error("مقدرناش نوافق على الطلب");
   }
@@ -588,6 +585,44 @@ export async function deleteJoinRequest(
   assertNoError(error, "مقدرناش نحذف الطلب");
 }
 
+// ------------------------------ عمليات البلاغات ------------------------------
+
+const REPORTS_SELECT =
+  "id, craftsman_name, phone, message, status, reporter_user_id, created_at, updated_at";
+
+export async function fetchReports(
+  client: SupabaseClient<Database> = createSupabase(),
+): Promise<ReportRow[]> {
+  const { data, error } = await client
+    .from("reports")
+    .select(REPORTS_SELECT)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error("مقدرناش نحمّل بيانات لوحة التحكم");
+  return (data ?? []).map((row) => ({
+    ...row,
+    status: row.status as ReportRow["status"],
+  }));
+}
+
+export async function updateReportStatus(
+  reportId: string,
+  status: ReportRow["status"],
+): Promise<void> {
+  const { error } = await createSupabase()
+    .from("reports")
+    .update({ status })
+    .eq("id", reportId);
+  assertNoError(error, "مقدرناش نحدّث حالة البلاغ");
+}
+
+export async function deleteReport(reportId: string): Promise<void> {
+  const { error } = await createSupabase()
+    .from("reports")
+    .delete()
+    .eq("id", reportId);
+  assertNoError(error, "مقدرناش نحذف البلاغ");
+}
+
 // ------------------------------ عمليات الرسائل ------------------------------
 
 export async function toggleMessageRead(message: ContactMessageRow): Promise<void> {
@@ -617,7 +652,7 @@ export async function linkCraftsmanAccount(
     throw new Error("يرجى إدخال بريد إلكتروني صحيح");
   }
 
-  const { error } = await (createSupabase().rpc as any)("link_craftsman_user", {
+  const { error } = await createSupabase().rpc("link_craftsman_user", {
     craftsman_id_input: craftsmanId,
     user_email_input: cleanEmail,
   });

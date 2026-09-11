@@ -52,12 +52,17 @@ export default async function ProfilePage() {
 
   const { data } = await supabase
     .from("profiles")
-    .select("role, craftsman_id")
+    .select("role, craftsman_id, display_name, avatar_url")
     .eq("id", user.id)
     .maybeSingle();
 
   const profile: SessionProfile | null = data
-    ? { role: data.role as SessionProfile["role"], craftsmanId: data.craftsman_id ?? null }
+    ? {
+        role: data.role as SessionProfile["role"],
+        craftsmanId: data.craftsman_id ?? null,
+        displayName: data.display_name ?? null,
+        avatarUrl: data.avatar_url ?? null,
+      }
     : null;
 
   const isCraftsman = profile?.role === "craftsman";

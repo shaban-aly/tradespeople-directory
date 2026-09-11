@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { StatCard } from "@/components/admin/StatCard";
 import {
+  IconAlert,
   IconInbox,
   IconMail,
   IconPin,
@@ -12,7 +13,7 @@ import { toArabicDigits } from "@/lib/utils/format";
 
 export function OverviewKPIs({ metrics }: { metrics: OverviewMetrics }) {
   return (
-    <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
+    <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
       <StatCard
         icon={<IconUsers className="h-6 w-6" />}
         label="صنايعية منشورين"
@@ -25,6 +26,14 @@ export function OverviewKPIs({ metrics }: { metrics: OverviewMetrics }) {
         value={toArabicDigits(metrics.pendingRequests.length)}
         hint="بانتظار المراجعة"
       />
+      <Link href="/admin/reports" className="block">
+        <StatCard
+          icon={<IconAlert className="h-6 w-6" />}
+          label="بلاغات معلّقة"
+          value={toArabicDigits(metrics.pendingReports.length)}
+          hint="بانتظار المراجعة"
+        />
+      </Link>
       <StatCard
         icon={<IconTags className="h-6 w-6" />}
         label="تصنيفات نشطة"

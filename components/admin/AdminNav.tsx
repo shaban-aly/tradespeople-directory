@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { LucideProps } from "lucide-react";
 import {
+  IconAlert,
   IconInbox,
   IconLayoutDashboard,
   IconMail,
@@ -21,6 +22,7 @@ type NavItem = {
 export const ADMIN_NAV_ITEMS: NavItem[] = [
   { href: "/admin", label: "نظرة عامة", icon: IconLayoutDashboard },
   { href: "/admin/requests", label: "الطلبات", icon: IconInbox },
+  { href: "/admin/reports", label: "البلاغات", icon: IconAlert },
   { href: "/admin/messages", label: "الرسائل", icon: IconMail },
   { href: "/admin/craftsmen", label: "الصنايعية", icon: IconUsers },
   { href: "/admin/categories", label: "التصنيفات", icon: IconTags },

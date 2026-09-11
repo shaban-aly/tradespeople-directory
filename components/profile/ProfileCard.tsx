@@ -17,12 +17,11 @@ interface ProfileCardProps {
 
 export function ProfileCard({ user, profile }: ProfileCardProps) {
   const displayName =
-    user.user_metadata?.full_name ||
-    user.user_metadata?.name ||
+    profile?.displayName ||
     user.email?.split("@")[0] ||
     "مستخدم";
 
-  const avatarUrl = user.user_metadata?.avatar_url as string | undefined;
+  const avatarUrl = profile?.avatarUrl ?? undefined;
   const initial = displayName.charAt(0).toUpperCase();
 
   const role = profile?.role || "client";

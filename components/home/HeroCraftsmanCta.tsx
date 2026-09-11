@@ -17,7 +17,7 @@ export function HeroCraftsmanCta() {
         </div>
 
         {/* grid عمودين RTL: النص يمين، الفراغ للصورة يسار */}
-        <div className="relative z-10 grid grid-cols-[1fr_38%] sm:grid-cols-[1fr_30%] md:grid-cols-[1fr_250px] items-center min-h-27.5 sm:min-h-36.25 pr-4 sm:pr-8 py-4 sm:py-6">
+        <div className="relative z-9 grid grid-cols-[1fr_38%] sm:grid-cols-[1fr_30%] md:grid-cols-[1fr_250px] items-center min-h-27.5 sm:min-h-36.25 pr-4 sm:pr-8 py-4 sm:py-6">
           {/* النصوص — العمود الأيمن في RTL */}
           <div>
             <h2 className="font-heading text-lg sm:text-2xl font-extrabold text-[#0f172a] leading-tight">

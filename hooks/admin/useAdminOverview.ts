@@ -7,9 +7,13 @@ import {
   fetchCategories,
   fetchCraftsmen,
   fetchMessages,
+  fetchReports,
   fetchRequests,
   rejectJoinRequest,
+  deleteReport,
+  updateReportStatus,
   type JoinRequestRow,
+  type ReportRow,
 } from "@/lib/db/admin";
 import { buildOverviewMetrics, type OverviewMetrics } from "@/lib/db/admin-selectors";
 import { useAdminAction } from "./useAdminAction";
@@ -17,6 +21,7 @@ import { useAdminQuery } from "./useAdminQuery";
 
 export interface AdminOverviewData {
   requests: JoinRequestRow[];
+  reports: ReportRow[];
   categories: Awaited<ReturnType<typeof fetchCategories>>;
   areas: Awaited<ReturnType<typeof fetchAreas>>;
   craftsmen: Awaited<ReturnType<typeof fetchCraftsmen>>;
@@ -25,14 +30,16 @@ export interface AdminOverviewData {
 
 export function useAdminOverview(initialData?: AdminOverviewData) {
   const { data, loading, error: loadError, refresh } = useAdminQuery(async () => {
-    const [requests, categories, areas, craftsmen, messages] = await Promise.all([
-      fetchRequests(),
-      fetchCategories(),
-      fetchAreas(),
-      fetchCraftsmen(),
-      fetchMessages(),
-    ]);
-    return { requests, categories, areas, craftsmen, messages };
+    const [requests, reports, categories, areas, craftsmen, messages] =
+      await Promise.all([
+        fetchRequests(),
+        fetchReports(),
+        fetchCategories(),
+        fetchAreas(),
+        fetchCraftsmen(),
+        fetchMessages(),
+      ]);
+    return { requests, reports, categories, areas, craftsmen, messages };
   }, initialData);
   const { busyKey, error: actionError, run } = useAdminAction();
 
@@ -47,6 +54,15 @@ export function useAdminOverview(initialData?: AdminOverviewData) {
   const rejectRequest = (requestId: string) =>
     run(`reject-${requestId}`, () => rejectJoinRequest(requestId), refresh);
 
+  const reviewReport = (report: ReportRow) =>
+    run(`report-review-${report.id}`, () => updateReportStatus(report.id, "reviewed"), refresh);
+
+  const dismissReport = (reportId: string) =>
+    run(`report-dismiss-${reportId}`, () => updateReportStatus(reportId, "dismissed"), refresh);
+
+  const removeReport = (reportId: string) =>
+    run(`report-delete-${reportId}`, () => deleteReport(reportId), refresh);
+
   return {
     metrics,
     loading,
@@ -54,6 +70,9 @@ export function useAdminOverview(initialData?: AdminOverviewData) {
     busyKey,
     approveRequest,
     rejectRequest,
+    reviewReport,
+    dismissReport,
+    removeReport,
     refresh,
   };
 }
