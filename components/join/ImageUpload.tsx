@@ -28,12 +28,12 @@ export function ImageUpload({
   return (
     <div>
       <label className="mb-1 block text-base font-bold">
-        صورة الصنايعي
+        <span>صورة الصنايعي</span>
         {required ? (
-          <>
-            <span className="text-danger"> *</span>{" "}
-            <span className="font-normal text-muted">(مطلوبة)</span>
-          </>
+          <span>
+            <span className="text-danger"> *</span>
+            <span className="font-normal text-muted"> (مطلوبة)</span>
+          </span>
         ) : (
           <span className="font-normal text-muted"> (اختياري)</span>
         )}
