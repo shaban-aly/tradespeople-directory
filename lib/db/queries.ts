@@ -219,29 +219,31 @@ type CategoryCountRow = { slug: string; craftsman_count: number };
 /**
  * أعداد الصنايعية المنشورين لكل تصنيف من view التجميع في القاعدة
  * (`craftsman_counts_by_category`) — لا يجلب كل الصنايعية لحساب العدادات.
+ * تُرجع كائنًا صريحًا لا `Map` (قيمة unstable_cache قابلة للتسلسل)
+ * لأن Data Cache في Next.js لا يحافظ على الـ Map عند التخزين/الاسترجاع.
  */
-async function getCategoryCountsImpl(): Promise<Map<string, number>> {
+async function getCategoryCountsImpl(): Promise<Record<string, number>> {
   const { data, error } = await createServerReadClient()
     .from("craftsman_counts_by_category")
     .select("slug, craftsman_count");
   assertSelectOk("أعداد الصنايعية بالتصنيف", error);
-  return new Map(
-    ((data ?? []) as CategoryCountRow[]).map((row) => [
-      row.slug,
-      Number(row.craftsman_count) || 0,
-    ]),
-  );
+
+  const counts: Record<string, number> = {};
+  for (const row of (data ?? []) as CategoryCountRow[]) {
+    counts[row.slug] = Number(row.craftsman_count) || 0;
+  }
+  return counts;
 }
 
 export const getCategoryCounts = unstable_cache(getCategoryCountsImpl, [
-  "data-category-counts",
+  "data-category-counts-v2",
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.categories, SEARCH_TAG] });
 
 export async function getCategoriesWithCounts(): Promise<CategoryWithCount[]> {
   const [categories, counts] = await Promise.all([getCategories(), getCategoryCounts()]);
   return categories.map((category) => ({
     ...category,
-    count: counts.get(category.slug) ?? 0,
+    count: counts[category.slug] ?? 0,
   }));
 }
 
