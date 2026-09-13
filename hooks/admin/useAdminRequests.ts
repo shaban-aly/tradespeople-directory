@@ -26,7 +26,7 @@ export function useAdminRequests(initialRequests?: JoinRequestRow[]) {
   const deleteRequest = (requestId: string) =>
     run(
       `delete-request-${requestId}`,
-      () => deleteJoinRequest(requestId, data ?? []),
+      () => deleteJoinRequest(requestId),
       refresh,
     );
 

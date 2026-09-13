@@ -11,3 +11,11 @@ export const DATA_CACHE_KEYS = {
   craftsmen: "data-craftsmen",
   areas: "data-areas",
 } as const;
+
+export const CACHE_TAGS = {
+  craftsmenList: "craftsmen:list",
+  craftsmanSlug: (slug: string) => `craftsman:slug:${slug}`,
+  categories: "categories",
+  areas: "areas",
+  stats: "stats",
+} as const;

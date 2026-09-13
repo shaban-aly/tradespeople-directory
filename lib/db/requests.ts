@@ -53,7 +53,11 @@ async function getAreaId(name: string): Promise<string> {
   return data.id;
 }
 
-export async function submitRegisterRequest(
+/**
+ * يقدّم طلب انضمام كصنايعي — يُدرَج مباشرة في جدول `craftsmen` بحالة pending.
+ * يظهر في الدليل بعد موافقة المشرف ( يولّد slug ويربط حساب المستخدم ).
+ */
+export async function submitCraftsmanApplication(
   payload: RegisterRequestPayload,
 ): Promise<void> {
   const errors = validateRegisterFields({
@@ -84,6 +88,16 @@ export async function submitRegisterRequest(
     throw new Error("سجّل دخولك الأول عشان تقدر تضيف صنايعي");
   }
 
+  const { data: existingPending } = await supabase
+    .from("craftsmen")
+    .select("id")
+    .eq("submitted_by", user.id)
+    .eq("status", "pending")
+    .maybeSingle();
+  if (existingPending) {
+    throw new Error("عندك طلب تسجيل قيد المراجعة بالفعل. تواصل معنا إذا كنت تريد تعديله.");
+  }
+
   const [categoryId, areaId] = await Promise.all([
     getCategoryId(payload.category),
     getAreaId(payload.area),
@@ -95,8 +109,8 @@ export async function submitRegisterRequest(
     imageUrl = uploaded.url;
   }
 
-  const { error } = await supabase.from("join_requests").insert({
-    user_id: user.id,
+  const { error } = await supabase.from("craftsmen").insert({
+    slug: null,
     name: cleanText(payload.name),
     category_id: categoryId,
     area_id: areaId,
@@ -104,6 +118,10 @@ export async function submitRegisterRequest(
     whatsapp: payload.whatsapp ? cleanText(payload.whatsapp) : null,
     description: payload.description ? cleanText(payload.description) : null,
     image_url: imageUrl,
+    status: "pending",
+    is_published: false,
+    verified: false,
+    submitted_by: user.id,
     social_links: payload.socialLinks.map((link) => ({
       platform: link.platform,
       url: link.url.trim(),

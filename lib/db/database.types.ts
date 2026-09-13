@@ -1,10 +1,3 @@
-// ============================================================
-// أنواع قاعدة بيانات Supabase — مولدّة مباشرة من قاعدة البيانات
-// الحية عبر `supabase gen types typescript` (بعد مهاجرة السكيمة
-// النظيفة 20260922 — فصل البلاغات عن طلبات الانضمام).
-// لا تعدّل يدوياً؛ عند تغيير المخطط أعد التوليد.
-// ============================================================
-
 export type Json =
   | string
   | number
@@ -184,7 +177,10 @@ export type Database = {
           is_published: boolean
           name: string
           phone: string
-          slug: string
+          slug: string | null
+          social_links: Json
+          status: string
+          submitted_by: string | null
           verified: boolean
           whatsapp: string | null
         }
@@ -199,7 +195,10 @@ export type Database = {
           is_published?: boolean
           name: string
           phone: string
-          slug: string
+          slug?: string | null
+          social_links?: Json
+          status?: string
+          submitted_by?: string | null
           verified?: boolean
           whatsapp?: string | null
         }
@@ -214,7 +213,10 @@ export type Database = {
           is_published?: boolean
           name?: string
           phone?: string
-          slug?: string
+          slug?: string | null
+          social_links?: Json
+          status?: string
+          submitted_by?: string | null
           verified?: boolean
           whatsapp?: string | null
         }
@@ -232,6 +234,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "craftsmen_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "craftsman_counts_by_category"
+            referencedColumns: ["category_id"]
           },
         ]
       }
@@ -260,69 +269,6 @@ export type Database = {
             columns: ["craftsman_id"]
             isOneToOne: false
             referencedRelation: "craftsmen"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      join_requests: {
-        Row: {
-          area_id: string | null
-          category_id: string | null
-          created_at: string
-          description: string | null
-          id: string
-          image_url: string | null
-          name: string | null
-          phone: string | null
-          social_links: Json
-          status: string
-          updated_at: string
-          user_id: string | null
-          whatsapp: string | null
-        }
-        Insert: {
-          area_id?: string | null
-          category_id?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name?: string | null
-          phone?: string | null
-          social_links?: Json
-          status?: string
-          updated_at?: string
-          user_id?: string | null
-          whatsapp?: string | null
-        }
-        Update: {
-          area_id?: string | null
-          category_id?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name?: string | null
-          phone?: string | null
-          social_links?: Json
-          status?: string
-          updated_at?: string
-          user_id?: string | null
-          whatsapp?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "join_requests_area_id_fkey"
-            columns: ["area_id"]
-            isOneToOne: false
-            referencedRelation: "areas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "join_requests_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
         ]
@@ -436,40 +382,16 @@ export type Database = {
           },
         ]
       }
-      social_links: {
-        Row: {
-          craftsman_id: string
-          created_at: string
-          id: string
-          platform: string
-          url: string
-        }
-        Insert: {
-          craftsman_id: string
-          created_at?: string
-          id?: string
-          platform: string
-          url: string
-        }
-        Update: {
-          craftsman_id?: string
-          created_at?: string
-          id?: string
-          platform?: string
-          url?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "social_links_craftsman_id_fkey"
-            columns: ["craftsman_id"]
-            isOneToOne: false
-            referencedRelation: "craftsmen"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
+      craftsman_counts_by_category: {
+        Row: {
+          category_id: string | null
+          craftsman_count: number | null
+          slug: string | null
+        }
+        Relationships: []
+      }
       craftsman_rating_summaries: {
         Row: {
           average_rating: number | null
@@ -488,7 +410,10 @@ export type Database = {
       }
     }
     Functions: {
-      approve_join_request: { Args: { p_request_id: string }; Returns: string }
+      approve_craftsman_application: {
+        Args: { p_craftsman_id: string }
+        Returns: string
+      }
       get_analytics_overview: { Args: never; Returns: Json }
       get_craftsman_favorites_count: {
         Args: { p_craftsman_id: string }
@@ -536,6 +461,10 @@ export type Database = {
           p_slug: string
         }
         Returns: boolean
+      }
+      reject_craftsman_application: {
+        Args: { p_craftsman_id: string }
+        Returns: undefined
       }
     }
     Enums: {

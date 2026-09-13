@@ -7,15 +7,40 @@ import type {
   Craftsman,
   CraftsmanSort,
   SocialLink,
-  SocialPlatform,
 } from "../data/craftsmen";
-import { DATA_CACHE_KEYS, SEARCH_CACHE_KEYS, SEARCH_CACHE_REVALIDATE, SEARCH_TAG } from "./cache";
+import { CACHE_TAGS, DATA_CACHE_KEYS, SEARCH_CACHE_KEYS, SEARCH_CACHE_REVALIDATE, SEARCH_TAG } from "./cache";
 import { matchScore, matchesQuery, normalizeArabic, type SearchData } from "../search";
 
 const CRAFTSMAN_SELECT =
-  "id, slug, name, image_url, phone, whatsapp, description, verified, added_at, category:categories(slug, name, icon), area:areas(name)";
+  "id, slug, name, image_url, phone, whatsapp, description, verified, added_at, social_links, category:categories(slug, name, icon), area:areas(name)";
 const CRAFTSMAN_BY_CATEGORY_SELECT =
-  "id, slug, name, image_url, phone, whatsapp, description, verified, added_at, category:categories!inner(slug, name, icon), area:areas(name), stats:craftsman_stats(views, calls, whatsapp)";
+  "id, slug, name, image_url, phone, whatsapp, description, verified, added_at, social_links, category:categories!inner(slug, name, icon), area:areas(name), stats:craftsman_stats(views, calls, whatsapp)";
+
+/**
+ * غلاف يكش لكل مماثلة (slug...) نسخة كاش منفصلة بمفتاح ووسم خاصين بها
+ * (`craftsman:slug:<slug>`)، بحيث يمكن إبطال صفحة صنايعي واحدة دون المساس
+ * بوسوم quint العامة. `unstable_cache` يثبّت الوسوم وقت الإنشاء، لذا ننشئ
+ * نسخة لكل مفتاح ونعيد استعمالها من سجل داخلي (slug universe محصور من DB).
+ */
+function keyedCache<TArgs extends unknown[], TResult>(
+  fn: (...args: TArgs) => Promise<TResult>,
+  namespace: string,
+  tagFor: (...args: TArgs) => string,
+) {
+  const registry = new Map<string, ReturnType<typeof unstable_cache<typeof fn>>>();
+  return async (...args: TArgs): Promise<TResult> => {
+    const key = JSON.stringify(args);
+    let cached = registry.get(key);
+    if (!cached) {
+      cached = unstable_cache(fn, [namespace, key], {
+        revalidate: SEARCH_CACHE_REVALIDATE,
+        tags: [tagFor(...args), CACHE_TAGS.craftsmenList, CACHE_TAGS.stats, SEARCH_TAG],
+      });
+      registry.set(key, cached);
+    }
+    return cached(...args);
+  };
+}
 
 type CategoryRow = { slug: string; name: string; icon: string };
 type AreaRow = { name: string };
@@ -27,7 +52,7 @@ type RatingSummaryRow = {
 
 type CraftsmanRow = {
   id: string;
-  slug: string;
+  slug: string | null;
   name: string;
   image_url: string | null;
   phone: string;
@@ -35,14 +60,24 @@ type CraftsmanRow = {
   description: string | null;
   verified: boolean;
   added_at: string;
+  social_links: unknown;
   category: CategoryRow | null;
   area: AreaRow | null;
 };
 
 function mapCraftsman(row: CraftsmanRow): Craftsman {
+  const rawSocialLinks = row.social_links;
+  const socialLinks: SocialLink[] = Array.isArray(rawSocialLinks)
+    ? (rawSocialLinks as Array<{ platform?: string; url?: string }>).filter(
+        (item): item is SocialLink =>
+          item != null &&
+          typeof item.platform === "string" &&
+          typeof item.url === "string",
+      )
+    : [];
   return {
     id: row.id,
-    slug: row.slug,
+    slug: row.slug ?? "",
     name: row.name,
     category: row.category?.slug ?? "",
     image: row.image_url ?? "",
@@ -53,6 +88,7 @@ function mapCraftsman(row: CraftsmanRow): Craftsman {
     verified: row.verified,
     rating: { average: 0, totalReviews: 0 },
     addedAt: row.added_at,
+    socialLinks,
   };
 }
 
@@ -98,20 +134,6 @@ function mapCategory(row: CategoryRow): Category {
   return { slug: row.slug, name: row.name, icon: row.icon };
 }
 
-async function getSocialLinksImpl(craftsmanId: string): Promise<SocialLink[]> {
-  const { data, error } = await createServerReadClient()
-    .from("social_links")
-    .select("platform, url")
-    .eq("craftsman_id", craftsmanId)
-    .order("created_at");
-  assertSelectOk("روابط السوشيال", error);
-  return (data ?? []).map((r) => ({ platform: r.platform as SocialPlatform, url: r.url }));
-}
-
-const getSocialLinks = unstable_cache(getSocialLinksImpl, [
-  "data-craftsman-social-links",
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
-
 async function getCategoriesImpl(): Promise<Category[]> {
   const { data, error } = await createServerReadClient()
     .from("categories")
@@ -124,7 +146,7 @@ async function getCategoriesImpl(): Promise<Category[]> {
 
 export const getCategories = unstable_cache(getCategoriesImpl, [
   DATA_CACHE_KEYS.categories,
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.categories, SEARCH_TAG] });
 
 async function getCategoryBySlugImpl(slug: string): Promise<Category | undefined> {
   const { data, error } = await createServerReadClient()
@@ -139,7 +161,7 @@ async function getCategoryBySlugImpl(slug: string): Promise<Category | undefined
 
 export const getCategoryBySlug = unstable_cache(getCategoryBySlugImpl, [
   "data-category-by-slug",
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.categories, SEARCH_TAG] });
 
 async function getCraftsmenImpl(): Promise<Craftsman[]> {
   const { data, error } = await createServerReadClient()
@@ -153,7 +175,7 @@ async function getCraftsmenImpl(): Promise<Craftsman[]> {
 
 export const getCraftsmen = unstable_cache(getCraftsmenImpl, [
   DATA_CACHE_KEYS.craftsmen,
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.stats, SEARCH_TAG] });
 
 async function getCraftsmanBySlugImpl(slug: string): Promise<Craftsman | undefined> {
   const { data, error } = await createServerReadClient()
@@ -164,13 +186,14 @@ async function getCraftsmanBySlugImpl(slug: string): Promise<Craftsman | undefin
     .maybeSingle();
   assertSelectOk("بيانات الصنايعي", error);
   if (!data) return undefined;
-  const socialLinks = await getSocialLinks(data.id);
-  return { ...mapCraftsman(data), socialLinks };
+  return mapCraftsman(data);
 }
 
-export const getCraftsmanBySlug = unstable_cache(getCraftsmanBySlugImpl, [
+export const getCraftsmanBySlug = keyedCache(
+  getCraftsmanBySlugImpl,
   "data-craftsman-by-slug",
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
+  (slug) => CACHE_TAGS.craftsmanSlug(slug),
+);
 
 async function getCraftsmenByCategoryImpl(slug: string): Promise<CraftsmanWithStats[]> {
   const { data, error } = await createServerReadClient()
@@ -189,13 +212,36 @@ async function getCraftsmenByCategoryImpl(slug: string): Promise<CraftsmanWithSt
 
 export const getCraftsmenByCategory = unstable_cache(getCraftsmenByCategoryImpl, [
   "data-craftsmen-by-category",
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.categories, CACHE_TAGS.stats, SEARCH_TAG] });
+
+type CategoryCountRow = { slug: string; craftsman_count: number };
+
+/**
+ * أعداد الصنايعية المنشورين لكل تصنيف من view التجميع في القاعدة
+ * (`craftsman_counts_by_category`) — لا يجلب كل الصنايعية لحساب العدادات.
+ */
+async function getCategoryCountsImpl(): Promise<Map<string, number>> {
+  const { data, error } = await createServerReadClient()
+    .from("craftsman_counts_by_category")
+    .select("slug, craftsman_count");
+  assertSelectOk("أعداد الصنايعية بالتصنيف", error);
+  return new Map(
+    ((data ?? []) as CategoryCountRow[]).map((row) => [
+      row.slug,
+      Number(row.craftsman_count) || 0,
+    ]),
+  );
+}
+
+export const getCategoryCounts = unstable_cache(getCategoryCountsImpl, [
+  "data-category-counts",
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.categories, SEARCH_TAG] });
 
 export async function getCategoriesWithCounts(): Promise<CategoryWithCount[]> {
-  const [categories, craftsmen] = await Promise.all([getCategories(), getCraftsmen()]);
+  const [categories, counts] = await Promise.all([getCategories(), getCategoryCounts()]);
   return categories.map((category) => ({
     ...category,
-    count: craftsmen.filter((c) => c.category === category.slug).length,
+    count: counts.get(category.slug) ?? 0,
   }));
 }
 
@@ -217,7 +263,7 @@ async function getAreasImpl(): Promise<string[]> {
 
 export const getAreas = unstable_cache(getAreasImpl, [
   DATA_CACHE_KEYS.areas,
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.areas, SEARCH_TAG] });
 
 export async function getStats() {
   const [craftsmen, categories, areas] = await Promise.all([
@@ -312,7 +358,7 @@ async function getFeaturedCraftsmenImpl(
 
 export const getFeaturedCraftsmen = unstable_cache(getFeaturedCraftsmenImpl, [
   "featured-craftsmen",
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.stats, SEARCH_TAG] });
 
 /** صنايعي مع إحصائياته الحقيقية — مجموعة اقتراحات «مقترحات لك». */
 export type CraftsmanWithStats = Craftsman & {
@@ -338,7 +384,7 @@ async function getRecommendationPoolImpl(
 
 export const getRecommendationPool = unstable_cache(getRecommendationPoolImpl, [
   "recommendation-pool",
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.stats, SEARCH_TAG] });
 
 /** صف نتيجة دالة `get_related_craftsmen` (توصية تعاونية من أحداث الجلسات). */
 type RelatedCraftsmanRow = {
@@ -377,8 +423,8 @@ function mapRelatedRow(row: RelatedCraftsmanRow): Craftsman {
 
 /**
  * «من شاف كمان»: صنايعية تفاعلت معهم نفس جلسات هذا الصنايعي (collaborative filtering).
- * تعتمد على دالة `get_related_craftsmen` في القاعدة — إن لم تكن مثبّتة أو
- * لم توجد بيانات بعد، ترجع قائمة فارغة بأمان.
+ * تعتمد على دالة `get_related_craftsmen` في القاعدة. فشل الاستعلام يُرمى كخطأ حقيقي
+ * (عبر assertSelectOk) — التمييز عن «لا بيانات/لا صافي» الذي يعيد [] فقط عند صفر صفوف.
  */
 async function getRelatedByCoEngagementImpl(
   craftsmanId: string,
@@ -388,14 +434,16 @@ async function getRelatedByCoEngagementImpl(
     p_craftsman_id: craftsmanId,
     p_limit: limit,
   });
-  if (error || !data || data.length === 0) return [];
-  return attachRatings(data.map(mapRelatedRow));
+  assertSelectOk("الصنايعية المتشابهين", error);
+  const rows = data as RelatedCraftsmanRow[] | null;
+  if (!rows || rows.length === 0) return [];
+  return attachRatings(rows.map(mapRelatedRow));
 }
 
 export const getRelatedByCoEngagement = unstable_cache(
   getRelatedByCoEngagementImpl,
   ["data-related-craftsmen"],
-  { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] },
+  { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.stats, SEARCH_TAG] },
 );
 
 async function getSearchDataImpl(): Promise<SearchData> {
@@ -425,7 +473,7 @@ async function getSearchDataImpl(): Promise<SearchData> {
 
 export const getSearchData = unstable_cache(getSearchDataImpl, [
   SEARCH_CACHE_KEYS.data,
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.categories, CACHE_TAGS.areas, CACHE_TAGS.craftsmenList, SEARCH_TAG] });
 
 async function searchCraftsmenImpl(
   query: string,
@@ -463,4 +511,4 @@ async function searchCraftsmenImpl(
 
 export const searchCraftsmen = unstable_cache(searchCraftsmenImpl, [
   SEARCH_CACHE_KEYS.craftsmen,
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [SEARCH_TAG] });
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, SEARCH_TAG] });

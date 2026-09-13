@@ -98,6 +98,7 @@ export async function getCraftsmanDashboardData(
       verified,
       is_published,
       area_id,
+      social_links,
       category:categories(name),
       area:areas(name)
     `)
@@ -108,18 +109,17 @@ export async function getCraftsmanDashboardData(
     return null;
   }
 
-  // 3. جلب روابط السوشيال
-  const { data: linksData } = await client
-    .from("social_links")
-    .select("platform, url")
-    .eq("craftsman_id", craftsmanId);
+  const rawSocialLinks = (craftsman as Record<string, unknown>).social_links;
+  const socialLinks: DashboardSocialLink[] = Array.isArray(rawSocialLinks)
+    ? (rawSocialLinks as Array<{ platform?: string; url?: string }>).filter(
+        (item): item is DashboardSocialLink =>
+          item != null &&
+          typeof item.platform === "string" &&
+          typeof item.url === "string",
+      )
+    : [];
 
-  const socialLinks: DashboardSocialLink[] = (linksData ?? []).map((l) => ({
-    platform: l.platform as DashboardSocialLink["platform"],
-    url: l.url,
-  }));
-
-  // 4. جلب الإحصائيات والمفضلة والتقييمات بالتوازي
+  // 3. جلب الإحصائيات والمفضلة والتقييمات بالتوازي
   const [
     { data: statsData },
     favoritesCount,
@@ -163,7 +163,7 @@ export async function getCraftsmanDashboardData(
   return {
     profile: {
       id: craftsman.id,
-      slug: craftsman.slug,
+      slug: craftsman.slug ?? "",
       name: craftsman.name,
       phone: craftsman.phone,
       whatsapp: craftsman.whatsapp,
@@ -236,6 +236,13 @@ export async function updateCraftsmanSelfProfile(
     }
   }
 
+  const socialLinksJson = Array.isArray(payload.socialLinks)
+    ? payload.socialLinks.map((link) => ({
+        platform: link.platform,
+        url: link.url,
+      }))
+    : [];
+
   // تحديث جدول craftsmen
   const { error: updateError } = await supabase
     .from("craftsmen")
@@ -245,51 +252,12 @@ export async function updateCraftsmanSelfProfile(
       description: payload.description ? payload.description.trim() : null,
       area_id: payload.areaId || undefined,
       image_url: imageUrl,
+      social_links: socialLinksJson,
     })
     .eq("id", craftsmanId);
 
   if (updateError) {
     throw new Error("حدث خطأ أثناء حفظ البيانات: " + updateError.message);
-  }
-
-  // ترتيب آمن لروابط السوشيال: upsert الجديد أولاً (لو فشل تفضل الروابط
-  // القديمة كما هي)، ثم حذف الروابط التي لم تعد في القائمة.
-  if (payload.socialLinks.length === 0) {
-    const { error: clearLinksError } = await supabase
-      .from("social_links")
-      .delete()
-      .eq("craftsman_id", craftsmanId);
-    if (clearLinksError) {
-      throw new Error("حدث خطأ أثناء تحديث روابط التواصل");
-    }
-  } else {
-    const linksQuery = supabase
-      .from("social_links")
-      .upsert(
-        payload.socialLinks.map((l) => ({
-          craftsman_id: craftsmanId,
-          platform: l.platform as "facebook" | "instagram" | "tiktok" | "other",
-          url: l.url.trim(),
-        })),
-        { onConflict: "craftsman_id,platform" }
-      );
-    const { error: saveLinksError } = await linksQuery;
-    if (saveLinksError) {
-      throw new Error("حدث خطأ أثناء حفظ روابط التواصل");
-    }
-
-    const stalePlatforms = payload.socialLinks.map((l) => l.platform);
-    let staleQuery = supabase
-      .from("social_links")
-      .delete()
-      .eq("craftsman_id", craftsmanId);
-    if (stalePlatforms.length > 0) {
-      staleQuery = staleQuery.not("platform", "in", stalePlatforms);
-    }
-    const { error: deleteStaleError } = await staleQuery;
-    if (deleteStaleError) {
-      throw new Error("حدث خطأ أثناء تحديث روابط التواصل");
-    }
   }
 
   return warnings.length > 0 ? { warning: warnings.join(" ") } : {};

@@ -65,6 +65,7 @@ export type SocialLinkRow = {
 
 export type JoinRequestRow = {
   id: string;
+  slug: string | null;
   name: string | null;
   category_id: string | null;
   area_id: string | null;
@@ -73,6 +74,7 @@ export type JoinRequestRow = {
   description: string | null;
   image_url: string | null;
   status: "pending" | "approved" | "rejected";
+  submitted_by: string | null;
   created_at: string;
   category: CategoryJoin | null;
   area: AreaJoin | null;
@@ -163,6 +165,7 @@ export type CountRow = {
 
 type RequestSelectRow = {
   id: string;
+  slug: string | null;
   name: string | null;
   category_id: string | null;
   area_id: string | null;
@@ -171,27 +174,55 @@ type RequestSelectRow = {
   description: string | null;
   image_url: string | null;
   status: string;
+  submitted_by: string | null;
   created_at: string;
   category: CategoryJoin | null;
   area: AreaJoin | null;
   social_links: Json;
 };
 
-type CraftsmanSelectRow = Omit<CraftsmanRow, "socialLinks"> & {
-  social_links: { platform: string; url: string }[] | null;
+type CraftsmanSelectRow = Omit<CraftsmanRow, "slug" | "socialLinks"> & {
+  slug: string | null;
+  social_links: Json;
 };
 
 const REQUESTS_SELECT =
-  "id, name, category_id, area_id, phone, whatsapp, description, image_url, status, created_at, category:categories(slug, name), area:areas(name), social_links";
+  "id, slug, name, category_id, area_id, phone, whatsapp, description, image_url, status, submitted_by, created_at, category:categories(slug, name), area:areas(name), social_links";
 
 const CRAFTSMEN_ADMIN_SELECT =
-  "id, slug, name, category_id, area_id, phone, whatsapp, description, image_url, verified, is_published, added_at, created_at, category:categories(slug, name), area:areas(name), stats:craftsman_stats(views, calls, whatsapp), social_links:social_links(platform, url)";
+  "id, slug, name, category_id, area_id, phone, whatsapp, description, image_url, verified, is_published, added_at, created_at, category:categories(slug, name), area:areas(name), stats:craftsman_stats(views, calls, whatsapp), social_links";
 
 const COUNTS_SELECT = "id, category:categories(slug), area:areas(name)";
 
-function mapSocialLinks(row: RequestSelectRow): JoinRequestRow {
+function mapSocialLinks(raw: unknown): SocialLinkRow[] {
+  if (!Array.isArray(raw)) return [];
+  const links: SocialLinkRow[] = [];
+  for (const item of raw) {
+    if (
+      typeof item === "object" &&
+      item !== null &&
+      typeof (item as { platform?: unknown }).platform === "string" &&
+      typeof (item as { url?: unknown }).url === "string"
+    ) {
+      const platform = (item as { platform: string }).platform;
+      const url = (item as { url: string }).url;
+      if (
+        platform === "facebook" ||
+        platform === "instagram" ||
+        platform === "tiktok" ||
+        platform === "other"
+      ) {
+        links.push({ platform, url });
+      }
+    }
+  }
+  return links;
+}
+
+function mapRequestRow(row: RequestSelectRow): JoinRequestRow {
   return {
     id: row.id,
+    slug: row.slug,
     name: row.name,
     category_id: row.category_id,
     area_id: row.area_id,
@@ -200,22 +231,19 @@ function mapSocialLinks(row: RequestSelectRow): JoinRequestRow {
     description: row.description,
     image_url: row.image_url,
     status: row.status as JoinRequestRow["status"],
+    submitted_by: row.submitted_by,
     created_at: row.created_at,
     category: row.category,
     area: row.area,
-    socialLinks: Array.isArray(row.social_links)
-      ? (row.social_links as SocialLinkRow[])
-      : undefined,
+    socialLinks: mapSocialLinks(row.social_links),
   };
 }
 
 function mapCraftsmanSocialLinks(row: CraftsmanSelectRow): CraftsmanRow {
   return {
     ...row,
-    socialLinks: row.social_links?.map((link) => ({
-      platform: link.platform as SocialLinkRow["platform"],
-      url: link.url,
-    })),
+    slug: row.slug ?? "",
+    socialLinks: mapSocialLinks(row.social_links),
   };
 }
 
@@ -237,11 +265,12 @@ export async function fetchRequests(
   client: SupabaseClient<Database> = createSupabase(),
 ): Promise<JoinRequestRow[]> {
   const { data, error } = await client
-    .from("join_requests")
+    .from("craftsmen")
     .select(REQUESTS_SELECT)
+    .or("status.eq.pending,status.eq.rejected")
     .order("created_at", { ascending: false });
   if (error) throw new Error("مقدرناش نحمّل بيانات لوحة التحكم");
-  return (data ?? []).map(mapSocialLinks);
+  return (data ?? []).map(mapRequestRow);
 }
 
 export async function fetchCategories(
@@ -272,6 +301,7 @@ export async function fetchCraftsmen(
   const { data, error } = await client
     .from("craftsmen")
     .select(CRAFTSMEN_ADMIN_SELECT)
+    .eq("status", "approved")
     .order("created_at", { ascending: false });
   if (error) throw new Error("مقدرناش نحمّل بيانات لوحة التحكم");
   return (data ?? []).map(mapCraftsmanSocialLinks);
@@ -411,21 +441,6 @@ export async function toggleCraftsmanPublished(
   assertNoError(error, "مقدرناش نحدّث حالة النشر");
 }
 
-async function saveSocialLinks(
-  craftsmanId: string,
-  links: SocialLinkRow[],
-): Promise<void> {
-  if (links.length === 0) return;
-  const { error } = await createSupabase().from("social_links").insert(
-    links.map((link) => ({
-      craftsman_id: craftsmanId,
-      platform: link.platform,
-      url: link.url.trim(),
-    })),
-  );
-  assertNoError(error, "مقدرناش نحفظ روابط السوشيال");
-}
-
 function validateCraftsmanPayload(payload: CraftsmanInput): void {
   const errors = validateCraftsmanFields({
     name: payload.name,
@@ -452,7 +467,13 @@ export async function createCraftsman(payload: CraftsmanInput): Promise<void> {
     const uploaded = await uploadCraftsmanImage(payload.image, "craftsmen");
     imageUrl = uploaded.url;
   }
-  const { data: inserted, error } = await createSupabase()
+  const socialLinks = Array.isArray(payload.socialLinks)
+    ? payload.socialLinks.map((link) => ({
+        platform: link.platform,
+        url: link.url.trim(),
+      }))
+    : [];
+  const { error } = await createSupabase()
     .from("craftsmen")
     .insert({
       slug: payload.slug,
@@ -465,11 +486,12 @@ export async function createCraftsman(payload: CraftsmanInput): Promise<void> {
       image_url: imageUrl,
       verified: payload.verified,
       is_published: payload.is_published,
+      status: "approved",
+      social_links: socialLinks,
     })
     .select("id")
     .single();
   if (error) throw new Error("مقدرناش نضيف الصنايعي");
-  await saveSocialLinks(inserted.id, payload.socialLinks ?? []);
 }
 
 export async function updateCraftsman(
@@ -498,15 +520,10 @@ export async function updateCraftsman(
       image_url: imageUrl,
       verified: payload.verified,
       is_published: payload.is_published,
+      social_links: Array.isArray(payload.socialLinks) ? payload.socialLinks : [],
     })
     .eq("id", id);
   assertNoError(error, "مقدرناش نحدّث الصنايعي");
-  const { error: linksDeleteError } = await createSupabase()
-    .from("social_links")
-    .delete()
-    .eq("craftsman_id", id);
-  assertNoError(linksDeleteError, "مقدرناش نحدّث روابط السوشيال");
-  await saveSocialLinks(id, payload.socialLinks ?? []);
 }
 
 export async function deleteCraftsman(
@@ -526,63 +543,47 @@ export async function deleteCraftsman(
 export async function approveJoinRequest(
   request: JoinRequestRow,
 ): Promise<void> {
-  if (!request.name || !request.category_id || !request.area_id || !request.phone) {
-    throw new Error("طلب التسجيل ناقص ومحتاج مراجعة يدوية");
+  const supabase = createSupabase();
+  const { error } = await supabase.rpc("approve_craftsman_application", {
+    p_craftsman_id: request.id,
+  });
+  if (error) {
+    throw new Error(error.message || "Approval failed");
   }
-
-  const { data: createdCraftsmanId, error: rpcError } =
-    await createSupabase().rpc("approve_join_request", {
-      p_request_id: request.id,
-    });
-  if (rpcError) {
-    const message = rpcError.message ?? "";
-    if (message.includes("قبل")) {
-      throw new Error("الطلب اتوافق عليه أو اترفض من قبل");
+  if (request.image_url) {
+    const newUrl = await copyImageToCraftsman(request.image_url, request.id);
+    if (newUrl && newUrl !== request.image_url) {
+      await supabase
+        .from("craftsmen")
+        .update({ image_url: newUrl })
+        .eq("id", request.id);
     }
-    if (message.includes("يمتلك صنايعي بالفعل")) {
-      throw new Error("المقدم يمتلك صنايعي بالفعل — فُك الربط القديم أو اربط بحساب مختلف");
-    }
-    throw new Error("مقدرناش نوافق على الطلب");
-  }
-
-  if (request.image_url && createdCraftsmanId) {
-    const imageUrl = await copyImageToCraftsman(request.image_url, createdCraftsmanId);
-    const { error: imageError } = await createSupabase()
-      .from("craftsmen")
-      .update({ image_url: imageUrl })
-      .eq("id", createdCraftsmanId);
-    assertNoError(imageError, "مقدرناش نحدّث صورة الصنايعي");
   }
 }
 
 export async function rejectJoinRequest(requestId: string): Promise<void> {
-  const { error } = await createSupabase()
-    .from("join_requests")
-    .update({ status: "rejected" })
-    .eq("id", requestId);
-  assertNoError(error, "مقدرناش نرفض الطلب");
+  const supabase = createSupabase();
+  const { error } = await supabase.rpc("reject_craftsman_application", {
+    p_craftsman_id: requestId,
+  });
+  if (error) {
+    throw new Error(error.message || "Rejection failed");
+  }
 }
 
-export async function deleteJoinRequest(
-  requestId: string,
-  requests: JoinRequestRow[],
-): Promise<void> {
-  const target = requests.find((request) => request.id === requestId);
-  if (target?.image_url) {
-    const { data: shared } = await createSupabase()
-      .from("craftsmen")
-      .select("id")
-      .eq("image_url", target.image_url)
-      .limit(1);
-    if (!shared?.length) {
-      await deleteImageByUrl(target.image_url);
-    }
+export async function deleteJoinRequest(requestId: string): Promise<void> {
+  const supabase = createSupabase();
+  const { data, error: fetchError } = await supabase
+    .from("craftsmen")
+    .select("image_url")
+    .eq("id", requestId)
+    .single();
+  if (fetchError || !data) return;
+  if (data.image_url) {
+    await deleteImageByUrl(data.image_url);
   }
-  const { error } = await createSupabase()
-    .from("join_requests")
-    .delete()
-    .eq("id", requestId);
-  assertNoError(error, "مقدرناش نحذف الطلب");
+  const { error } = await supabase.from("craftsmen").delete().eq("id", requestId);
+  if (error) throw new Error(error.message);
 }
 
 // ------------------------------ عمليات البلاغات ------------------------------

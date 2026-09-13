@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { submitRegisterRequest } from "@/lib/db/requests";
+import { submitCraftsmanApplication } from "@/lib/db/requests";
 import {
   anyError,
   type FieldErrors,
@@ -109,7 +109,7 @@ export function useJoinRequest(
 
     setSubmitting(true);
     try {
-      await submitRegisterRequest({
+      await submitCraftsmanApplication({
         ...register,
         image: registerImage,
         socialLinks: activeLinks,
