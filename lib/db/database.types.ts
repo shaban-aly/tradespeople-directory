@@ -183,6 +183,7 @@ export type Database = {
           submitted_by: string | null
           verified: boolean
           whatsapp: string | null
+          updated_at: string
         }
         Insert: {
           added_at?: string
@@ -201,6 +202,7 @@ export type Database = {
           submitted_by?: string | null
           verified?: boolean
           whatsapp?: string | null
+          updated_at?: string
         }
         Update: {
           added_at?: string
@@ -219,6 +221,7 @@ export type Database = {
           submitted_by?: string | null
           verified?: boolean
           whatsapp?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -281,6 +284,7 @@ export type Database = {
           display_name: string | null
           id: string
           role: string
+          updated_at: string
         }
         Insert: {
           avatar_url?: string | null
@@ -289,6 +293,7 @@ export type Database = {
           display_name?: string | null
           id: string
           role?: string
+          updated_at?: string
         }
         Update: {
           avatar_url?: string | null
@@ -297,6 +302,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           role?: string
+          updated_at?: string
         }
         Relationships: [
           {
