@@ -5,7 +5,6 @@ import {
   getCraftsmanBySlug,
   getCraftsmen,
   getCraftsmenByCategory,
-  getRelatedByCoEngagement,
 } from "@/lib/db/queries";
 import { JsonLd } from "@/components/shared/seo/JsonLd";
 import { CraftsmanDetail } from "@/components/craftsman/CraftsmanDetail";
@@ -62,19 +61,16 @@ export default async function CraftsmanPage({
   const craftsman = await getCraftsmanBySlug(slug);
   if (!craftsman) notFound();
 
-  const [category, categoryCraftsmen, relatedByCo, ratingSummary] =
+  const [category, categoryCraftsmen, ratingSummary] =
     await Promise.all([
       getCategoryBySlug(craftsman.category),
       getCraftsmenByCategory(craftsman.category),
-      getRelatedByCoEngagement(craftsman.id),
       getCraftsmanRatingSummary(craftsman.id),
     ]);
 
-  // القسم الذكي «شاهد أيضاً»: نفس التخصص مرتباً بالأكثر تواصلاً/ظهوراً،
-  // مع دفعة لمن شاهدهم المشاهدون معاً (انظر `rankRelatedCraftsmen`)
+  // القسم الذكي «شاهد أيضاً»: نفس التخصص مرتباً بالأكثر تواصلاً/ظهوراً
   const relatedCraftsmen = rankRelatedCraftsmen(
     categoryCraftsmen,
-    relatedByCo.map((c) => c.slug),
     { count: 6, excludeId: craftsman.id },
   );
 

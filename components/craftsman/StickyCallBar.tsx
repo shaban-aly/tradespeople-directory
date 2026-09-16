@@ -3,6 +3,7 @@
 import { IconPhone, IconWhatsApp } from "@/components/shared/icons";
 import { ButtonAnchor } from "@/components/shared/ui/Button";
 import { useStats } from "@/hooks/useStats";
+import { track } from "@/lib/analytics/track";
 import {
   craftsmanWhatsappMessage,
   telHref,
@@ -22,7 +23,7 @@ export function StickyCallBar({
   craftsmanName?: string;
   categoryName?: string;
 }) {
-  const { track } = useStats();
+  const { track: counterTrack } = useStats();
   const hasWhatsapp = Boolean(whatsapp);
   const waUrl = whatsappHref(
     whatsapp,
@@ -40,7 +41,10 @@ export function StickyCallBar({
           <ButtonAnchor
             href={telHref(phone)}
             onClick={() => {
-              if (craftsmanSlug) track(craftsmanSlug, "call");
+              if (craftsmanSlug) {
+                counterTrack(craftsmanSlug, "call");
+                track("click_phone", { craftsman_slug: craftsmanSlug, category: categoryName });
+              }
             }}
             variant="primary"
             size="md"
@@ -54,7 +58,10 @@ export function StickyCallBar({
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => {
-                if (craftsmanSlug) track(craftsmanSlug, "whatsapp");
+                if (craftsmanSlug) {
+                  counterTrack(craftsmanSlug, "whatsapp");
+                  track("click_whatsapp", { craftsman_slug: craftsmanSlug, category: categoryName });
+                }
               }}
               variant="action"
               size="md"

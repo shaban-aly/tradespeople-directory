@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   ArrowUp,
   BarChart3,
+  Bell,
   Bookmark,
   Camera,
   Check,
@@ -263,6 +264,10 @@ export function IconMail(props: LucideProps) {
 
 export function IconLink(props: LucideProps) {
   return <Link {...props} />;
+}
+
+export function IconBell(props: LucideProps) {
+  return <Bell {...props} />;
 }
 
 export function IconWhatsApp({ className }: IconProps) {

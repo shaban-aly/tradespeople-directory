@@ -95,44 +95,6 @@ export type Database = {
         }
         Relationships: []
       }
-      craftsman_events: {
-        Row: {
-          craftsman_id: string
-          created_at: string
-          device_key: string
-          event_type: string
-          id: number
-          path: string
-          session_id: string
-        }
-        Insert: {
-          craftsman_id: string
-          created_at?: string
-          device_key: string
-          event_type: string
-          id?: never
-          path?: string
-          session_id: string
-        }
-        Update: {
-          craftsman_id?: string
-          created_at?: string
-          device_key?: string
-          event_type?: string
-          id?: never
-          path?: string
-          session_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "craftsman_events_craftsman_id_fkey"
-            columns: ["craftsman_id"]
-            isOneToOne: false
-            referencedRelation: "craftsmen"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       craftsman_stats: {
         Row: {
           calls: number
@@ -160,6 +122,38 @@ export type Database = {
             foreignKeyName: "craftsman_stats_craftsman_id_fkey"
             columns: ["craftsman_id"]
             isOneToOne: true
+            referencedRelation: "craftsmen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      craftsman_stats_daily: {
+        Row: {
+          calls: number
+          craftsman_id: string
+          day: string
+          views: number
+          whatsapp: number
+        }
+        Insert: {
+          calls?: number
+          craftsman_id: string
+          day: string
+          views?: number
+          whatsapp?: number
+        }
+        Update: {
+          calls?: number
+          craftsman_id?: string
+          day?: string
+          views?: number
+          whatsapp?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "craftsman_stats_daily_craftsman_id_fkey"
+            columns: ["craftsman_id"]
+            isOneToOne: false
             referencedRelation: "craftsmen"
             referencedColumns: ["id"]
           },
@@ -276,6 +270,42 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          key: string
+          metadata: Json
+          read_at: string | null
+          recipient_id: string
+          title: string
+          type: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          key: string
+          metadata?: Json
+          read_at?: string | null
+          recipient_id: string
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          key?: string
+          metadata?: Json
+          read_at?: string | null
+          recipient_id?: string
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -313,6 +343,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rate_limits: {
+        Row: {
+          count: number
+          key: string
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          key: string
+          updated_at?: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          key?: string
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
       }
       reports: {
         Row: {
@@ -420,7 +471,6 @@ export type Database = {
         Args: { p_craftsman_id: string }
         Returns: string
       }
-      get_analytics_overview: { Args: never; Returns: Json }
       get_craftsman_favorites_count: {
         Args: { p_craftsman_id: string }
         Returns: number
@@ -434,39 +484,27 @@ export type Database = {
       }
       get_my_craftsman_id: { Args: never; Returns: string }
       get_my_role: { Args: never; Returns: string }
-      get_related_craftsmen: {
-        Args: { p_craftsman_id: string; p_limit?: number }
-        Returns: {
-          added_at: string
-          area_name: string
-          category_icon: string
-          category_name: string
-          category_slug: string
-          co_count: number
-          description: string
-          id: string
-          image_url: string
-          name: string
-          phone: string
-          slug: string
-          verified: boolean
-          whatsapp: string
-        }[]
+      get_site_stats: { Args: never; Returns: Json }
+      increment_craftsman_stats: {
+        Args: { p_action: string; p_ip?: string; p_slug: string }
+        Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
       link_craftsman_user: {
         Args: { craftsman_id_input: string; user_email_input: string }
         Returns: boolean
       }
-      record_craftsman_event: {
+      mark_notifications_read: {
+        Args: { p_ids: string[] }
+        Returns: number
+      }
+      rate_limit_consume: {
         Args: {
-          p_device_key: string
-          p_metric: string
-          p_path?: string
-          p_session_id: string
-          p_slug: string
+          p_key: string
+          p_limit: number
+          p_window_seconds: number
         }
-        Returns: boolean
+        Returns: Json
       }
       reject_craftsman_application: {
         Args: { p_craftsman_id: string }

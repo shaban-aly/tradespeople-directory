@@ -15,7 +15,7 @@ export function SearchResults({
 }) {
   return (
     <div className="mt-6">
-      <SearchTracker query={query} />
+      <SearchTracker query={query} resultsCount={craftsmen.length} />
       {craftsmen.length === 0 ? (
         <EmptyState
           title="لا توجد نتائج"

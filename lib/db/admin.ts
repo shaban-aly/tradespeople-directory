@@ -1,6 +1,6 @@
 import {
-  copyImageToCraftsman,
   deleteImageByUrl,
+  moveImageToCraftsman,
   uploadCraftsmanImage,
 } from "../storage/images";
 import {
@@ -551,12 +551,15 @@ export async function approveJoinRequest(
     throw new Error(error.message || "Approval failed");
   }
   if (request.image_url) {
-    const newUrl = await copyImageToCraftsman(request.image_url, request.id);
-    if (newUrl && newUrl !== request.image_url) {
-      await supabase
+    const movedUrl = await moveImageToCraftsman(request.image_url, request.id);
+    if (movedUrl && movedUrl !== request.image_url) {
+      const { error: updateError } = await supabase
         .from("craftsmen")
-        .update({ image_url: newUrl })
+        .update({ image_url: movedUrl })
         .eq("id", request.id);
+      if (updateError) {
+        throw new Error(updateError.message || "Approval failed");
+      }
     }
   }
 }

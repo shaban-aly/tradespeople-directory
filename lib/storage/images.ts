@@ -113,6 +113,25 @@ export async function uploadCraftsmanImage(
   return { url: data.publicUrl };
 }
 
+export async function moveImageToCraftsman(
+  sourceUrl: string,
+  craftsmanId: string,
+): Promise<string> {
+  const sourcePath = extractImagePathFromUrl(sourceUrl);
+  if (!sourcePath) return sourceUrl;
+  const ext = (sourcePath.split(".").pop() ?? "").toLowerCase();
+  const safeExt = ["jpg", "jpeg", "png", "webp"].includes(ext) ? ext : "webp";
+  const targetPath = `craftsmen/${craftsmanId}/${crypto.randomUUID()}-approved.${safeExt}`;
+  const { error } = await createSupabase()
+    .storage.from(IMAGE_BUCKET)
+    .move(sourcePath, targetPath);
+  if (error) return sourceUrl;
+  const { data } = createSupabase().storage
+    .from(IMAGE_BUCKET)
+    .getPublicUrl(targetPath);
+  return data.publicUrl;
+}
+
 export function extractImagePathFromUrl(
   url: string,
 ): string | null {
@@ -132,21 +151,4 @@ export async function deleteImageByUrl(
     .remove([path]);
   if (error) return { ok: false, error: error.message };
   return { ok: true };
-}
-
-export async function copyImageToCraftsman(
-  sourceUrl: string,
-  craftsmanId: string,
-): Promise<string> {
-  const sourcePath = extractImagePathFromUrl(sourceUrl);
-  if (!sourcePath) return sourceUrl;
-  const ext = (sourcePath.split(".").pop() ?? "webp").toLowerCase();
-  const targetPath = `craftsmen/${craftsmanId}/${crypto.randomUUID()}-approved.${ext}`;
-  const supabase = createSupabase();
-  const { error } = await supabase.storage
-    .from(IMAGE_BUCKET)
-    .copy(sourcePath, targetPath);
-  if (error) return sourceUrl;
-  const { data } = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(targetPath);
-  return data.publicUrl;
 }

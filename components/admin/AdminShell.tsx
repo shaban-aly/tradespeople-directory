@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ADMIN_NAV_ITEMS, AdminNav } from "@/components/admin/AdminNav";
 import { ToastProvider } from "@/components/admin/ToastProvider";
+import { NotificationsToast } from "@/components/shared/ui/NotificationsToast";
 import { IconLogOut, IconMenu, IconX } from "@/components/shared/icons";
 import { ThemeToggle } from "@/components/shared/ui/ThemeToggle";
 import { useAdminSession } from "@/hooks/auth/useAdminSession";
@@ -207,6 +208,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </main>
         </div>
       </div>
+      <NotificationsToast />
     </ToastProvider>
   );
 }

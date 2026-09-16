@@ -5,6 +5,7 @@ import { ButtonLink } from "@/components/shared/ui/Button";
 import { SiteNavLinks } from "@/components/shared/layout/SiteNavLinks";
 import { ThemeToggle } from "@/components/shared/ui/ThemeToggle";
 import { UserMenu } from "@/components/shared/layout/UserMenu";
+import { NotificationsBell } from "@/components/shared/layout/NotificationsBell";
 
 export function Header() {
   return (
@@ -33,6 +34,7 @@ export function Header() {
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
+            <NotificationsBell />
             <UserMenu />
           </div>
         </div>

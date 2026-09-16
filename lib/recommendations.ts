@@ -405,17 +405,14 @@ export function rankRecommendations(
 /**
  * خوارزمية قسم «شاهد أيضاً» الذكي أسفل صفحة التفاصيل — ترتيب مترشحي نفس التخصص:
  * 1) التفاعل الحقيقي: الاتصال والواتساب بوزن 6 مقابل 1 للظهور («الأكثر تواصلاً»).
- * 2) دفعة قوية لمن شاهدهم المشاهدون معاً (co-engagement) — إشارة سلوكية شخصية.
- * 3) الصنايعي الموثّق كسر للتعادل، ثم الأحدث إضافة.
+ * 2) الصنايعي الموثّق كسر للتعادل، ثم الأحدث إضافة.
  * ويُستبعد الصنايعي نفسه، ويُقصّ الطول إلى `count`.
  */
 export function rankRelatedCraftsmen(
   candidates: RecommendableCraftsman[],
-  coViewedSlugs: ReadonlySet<string> | readonly string[],
   options: { count?: number; excludeId?: string } = {},
 ): RecommendableCraftsman[] {
   const { count = 6, excludeId } = options;
-  const coViewed = new Set(coViewedSlugs);
 
   const scored = candidates
     .filter((craftsman) => craftsman.id !== excludeId)
@@ -424,13 +421,12 @@ export function rankRelatedCraftsmen(
       const popularity = Math.log1p(
         (stats.calls + stats.whatsapp) * 6 + stats.views,
       );
-      const coBoost = coViewed.has(craftsman.slug) ? 3 : 0;
       const verifiedBoost = craftsman.verified ? 0.5 : 0;
       const recency =
         new Date(craftsman.addedAt).getTime() / 1_000_000_000_000_000;
       return {
         craftsman,
-        score: popularity + coBoost + verifiedBoost + recency,
+        score: popularity + verifiedBoost + recency,
       };
     });
 

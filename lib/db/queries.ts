@@ -388,66 +388,6 @@ export const getRecommendationPool = unstable_cache(getRecommendationPoolImpl, [
   "recommendation-pool",
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.stats, SEARCH_TAG] });
 
-/** صف نتيجة دالة `get_related_craftsmen` (توصية تعاونية من أحداث الجلسات). */
-type RelatedCraftsmanRow = {
-  id: string;
-  slug: string;
-  name: string;
-  image_url: string | null;
-  phone: string;
-  whatsapp: string | null;
-  description: string | null;
-  verified: boolean;
-  added_at: string;
-  category_slug: string;
-  category_name: string;
-  category_icon: string;
-  area_name: string;
-  co_count: number;
-};
-
-function mapRelatedRow(row: RelatedCraftsmanRow): Craftsman {
-  return {
-    id: row.id,
-    slug: row.slug,
-    name: row.name,
-    category: row.category_slug,
-    image: row.image_url ?? "",
-    phone: row.phone,
-    whatsapp: row.whatsapp ?? "",
-    area: row.area_name ?? "",
-    description: row.description ?? "",
-    verified: row.verified,
-    rating: { average: 0, totalReviews: 0 },
-    addedAt: row.added_at,
-  };
-}
-
-/**
- * «من شاف كمان»: صنايعية تفاعلت معهم نفس جلسات هذا الصنايعي (collaborative filtering).
- * تعتمد على دالة `get_related_craftsmen` في القاعدة. فشل الاستعلام يُرمى كخطأ حقيقي
- * (عبر assertSelectOk) — التمييز عن «لا بيانات/لا صافي» الذي يعيد [] فقط عند صفر صفوف.
- */
-async function getRelatedByCoEngagementImpl(
-  craftsmanId: string,
-  limit = 6,
-): Promise<Craftsman[]> {
-  const { data, error } = await createServerReadClient().rpc("get_related_craftsmen", {
-    p_craftsman_id: craftsmanId,
-    p_limit: limit,
-  });
-  assertSelectOk("الصنايعية المتشابهين", error);
-  const rows = data as RelatedCraftsmanRow[] | null;
-  if (!rows || rows.length === 0) return [];
-  return attachRatings(rows.map(mapRelatedRow));
-}
-
-export const getRelatedByCoEngagement = unstable_cache(
-  getRelatedByCoEngagementImpl,
-  ["data-related-craftsmen"],
-  { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.stats, SEARCH_TAG] },
-);
-
 async function getSearchDataImpl(): Promise<SearchData> {
   const [categories, areas, craftsmen] = await Promise.all([
     getCategoriesWithCounts(),

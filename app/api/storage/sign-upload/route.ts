@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { createServerReadClient } from "@/lib/db/client";
+import { consumeRateLimit } from "@/lib/db/rate-limit";
+import { getClientIpFromRequest } from "@/lib/utils/rate-limit";
 import { IMAGE_BUCKET, MAX_IMAGE_SIZE_MB } from "@/lib/storage/images";
-import { getClientIpFromRequest, rateLimitConsume } from "@/lib/utils/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,10 +54,14 @@ export async function POST(request: NextRequest) {
 
   const ip = getClientIpFromRequest(request);
   const rateLimitKey = `sign:${ip}:${folder}`;
-  const { allowed, remaining, retryAfter } = await rateLimitConsume(rateLimitKey, {
-    limit: folder === "craftsmen" ? CRAFTSMEN_RATE : REQUESTS_RATE,
-    windowMs: WINDOW_MS,
-  });
+  const { allowed, remaining, retryAfter } = await consumeRateLimit(
+    createServerReadClient(),
+    rateLimitKey,
+    {
+      limit: folder === "craftsmen" ? CRAFTSMEN_RATE : REQUESTS_RATE,
+      windowMs: WINDOW_MS,
+    },
+  );
 
   const headers = {
     "x-ratelimit-limit": String(folder === "craftsmen" ? CRAFTSMEN_RATE : REQUESTS_RATE),

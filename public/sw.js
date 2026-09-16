@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v2"; // رُفع الإصدار لإجبار تحديث SW عند كل المستخدمين
+const CACHE_VERSION = "v3"; // رُفع الإصدار لإجبار تحديث SW عند كل المستخدمين
 const PRECACHE_NAME = `shell-${CACHE_VERSION}`;
 const RUNTIME_NAME = `runtime-${CACHE_VERSION}`;
 
@@ -90,6 +90,24 @@ self.addEventListener("fetch", (event) => {
 
   // باقي الموارد من نفس الأصل: cache أولاً ثم شبكة
   if (url.origin !== self.location.origin) return;
+
+  // موارد Next.js (_next/static/chunks): شبكة أولاً ثم كاش كاحتياطي
+  // لضمان تحميل آخر نسخة bundles في كل مرة ((Content-hashed files)).
+  // هذا يمنع بطش Service Worker لملفات bundle متغيرة.
+  if (url.pathname.startsWith("/_next/")) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.status === 200) {
+            const copy = response.clone();
+            caches.open(RUNTIME_NAME).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request)),
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(request).then(
