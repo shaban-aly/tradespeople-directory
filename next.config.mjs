@@ -52,7 +52,8 @@ const nextConfig = {
       `img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com https://*.googleusercontent.com${supabaseHost ? ` https://${supabaseHost}` : ""}${gaHost ? ` ${gaHost}` : ""} ${adsenseHosts}`,
       "media-src 'self' blob:",
       // connect-src: تشمل GA POST requests وكل دومينات Ads و Google Auth
-      `connect-src 'self' https://accounts.google.com${supabaseUrl ? ` ${supabaseUrl}` : ""} ${gaConnectHosts} ${adsenseHosts}`,
+      // + wss:// لنفس host الـ Supabase — إلزامي لاتصال Realtime WebSocket
+      `connect-src 'self' https://accounts.google.com${supabaseUrl ? ` ${supabaseUrl}` : ""}${supabaseHost ? ` wss://${supabaseHost}` : ""} ${gaConnectHosts} ${adsenseHosts}`,
       `frame-src 'self' https://accounts.google.com ${adsenseFrameHosts}`,
       "base-uri 'self'",
       "form-action 'self'",

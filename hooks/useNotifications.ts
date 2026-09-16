@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSession } from "@/hooks/auth/useSession";
+import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
 import {
   getUnreadNotificationsCount,
   getUserNotifications,
@@ -21,6 +22,17 @@ export function useNotifications() {
   // إبطال أي ردود قديمة عند تبديل المستخدم أو تسجيل الخروج
   const userIdRef = useRef<string | null>(null);
   const requestSeq = useRef(0);
+
+  // دمج الإشعار الوارد لحظياً في القائمة والعدّاد دون انتظار الـ poll
+  useRealtimeNotifications(
+    useCallback((row: NotificationRow) => {
+      setItems((prev) => {
+        if (prev.some((n) => n.id === row.id)) return prev;
+        return [row, ...prev].slice(0, 50);
+      });
+      setUnreadCount((c) => c + 1);
+    }, []),
+  );
 
   useEffect(() => {
     if (!activeUser) {

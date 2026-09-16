@@ -1,15 +1,21 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { createSupabase } from "@/lib/db/client";
-import { type NotificationRow } from "@/lib/db/notifications";
 import { useSession } from "@/hooks/auth/useSession";
+import {
+  subscribeToNotifications,
+  type NotificationRow,
+} from "@/lib/db/notificationsRealtime";
 
 /**
- * اشتراك Realtime على جدول `notifications` حسب صاحب الجلسة (RLS يمنع رؤية
- * صفوف الغير). عند كل إدراج جديد يصل صف للمستخدم يُستدعى onNew.
+ * اشتراك Realtime على جدول `notifications` حسب صاحب الجلسة.
  *
- * ملاحظة: الجدول مُضاف لنشر `supabase_realtime` في migration 0013 (idempotent).
+ * يشترك مع الناقل المشترك (`subscribeToNotifications`) بدل إنشاء قناة
+ * مستقلة — لأن `createSupabase()` عائد client واحد لنفس الاسم، وإنشاء
+ * قناتين من مكوّنين (جرس الـ header + Toast) يكسر الثاني عند `subscribe`.
+ *
+ * عند كل إدراج جديد يصل صف للمستخدم يُستدعى onNew. الجدول مُضاف لنشر
+ * `supabase_realtime` في migration 0013 (idempotent).
  */
 export function useRealtimeNotifications(onNew: (row: NotificationRow) => void) {
   const { user, isLoggedIn } = useSession();
@@ -22,28 +28,8 @@ export function useRealtimeNotifications(onNew: (row: NotificationRow) => void) 
   useEffect(() => {
     if (!isLoggedIn || !user?.id) return;
 
-    const supabase = createSupabase();
-    const channel = supabase
-      .channel(`notifications:${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `recipient_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const row = payload.new as NotificationRow;
-          if (row && typeof row.id === "string") {
-            onNewRef.current(row);
-          }
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(channel);
-    };
+    return subscribeToNotifications(user.id, (row) => {
+      onNewRef.current(row);
+    });
   }, [isLoggedIn, user?.id]);
 }
