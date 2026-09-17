@@ -181,7 +181,7 @@ export async function subscribeUserInterest(categorySlug: string): Promise<boole
       user_id: user.id,
       category_slug: categorySlug,
     },
-    { onConflict: "user_id,category_slug" },
+    { onConflict: "user_id,category_slug", ignoreDuplicates: true },
   );
   return !error;
 }

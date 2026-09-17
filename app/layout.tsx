@@ -81,6 +81,14 @@ export const metadata: Metadata = {
     },
   },
   manifest: "/site.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "دليل الصنايعية",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export const viewport: Viewport = {
@@ -119,14 +127,10 @@ export default function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        <meta name="theme-color" content="#3b5fe3" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="دليل الصنايعية" />
         {process.env.NODE_ENV === "production" && (
-          <script
-            async
+          <Script
+            id="adsbygoogle-init"
+            strategy="afterInteractive"
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`}
             crossOrigin="anonymous"
           />
