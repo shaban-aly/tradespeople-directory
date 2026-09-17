@@ -12,7 +12,10 @@ export type AnalyticsEventName =
   | "search"
   | "search_no_results"
   | "click_phone"
-  | "click_whatsapp";
+  | "click_whatsapp"
+  | "login"
+  | "sign_up"
+  | "in_app_browser_notice";
 
 type AnalyticsEventParams = Record<string, string | number | boolean | null | undefined>;
 

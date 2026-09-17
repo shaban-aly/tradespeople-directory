@@ -1,5 +1,13 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { GoogleSignInButton } from "@/components/shared/GoogleSignInButton";
+import { InAppBrowserNotice } from "@/components/shared/auth/InAppBrowserNotice";
+import {
+  buildExternalBrowserOpenHref,
+  detectInAppBrowser,
+  detectTrafficSource,
+} from "@/lib/auth/detectBrowser";
+import { siteUrl } from "@/lib/data/site";
 
 export const metadata = {
   title: "تسجيل الدخول | دليل الصنايعية",
@@ -20,6 +28,18 @@ const REASON_MESSAGES: Record<string, string> = {
 
 export default async function LoginPage({ searchParams }: Props) {
   const params = await searchParams;
+  const headerStore = await headers();
+  const ua = headerStore.get("user-agent") ?? "";
+  const browser = detectInAppBrowser(ua);
+  const referrer = headerStore.get("referer");
+  const source = detectTrafficSource(params, referrer);
+
+  const query = new URLSearchParams();
+  if (params.reason) query.set("reason", params.reason);
+  if (params.next) query.set("next", params.next);
+  const qs = query.size > 0 ? `?${query.toString()}` : "";
+  const open = buildExternalBrowserOpenHref(`${siteUrl}/login${qs}`, ua);
+
   const reason = params.reason;
   const next = params.next ?? "/";
   const message = reason ? REASON_MESSAGES[reason] : null;
@@ -51,6 +71,9 @@ export default async function LoginPage({ searchParams }: Props) {
 
       {/* زراير تسجيل الدخول */}
       <div className="flex flex-col gap-3">
+        {browser && (
+          <InAppBrowserNotice browser={browser} source={source} open={open} />
+        )}
         <GoogleSignInButton redirectTo={next} />
       </div>
 
