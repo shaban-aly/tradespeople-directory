@@ -27,7 +27,7 @@ export interface SessionState {
  * حتى يرى كل المستهلكين (Favorites, UserMenu, BottomNav, AuthGuard ...)
  * نفس الحالة عبر كل الأكواد زمنياً؛ لا يتكرر جلب الجلسة في كل كومبوننت.
  */
-export function useSession(): SessionState & { signOut: () => Promise<void> } {
+export function useSession(): SessionState & { signOut: (redirectTo?: string) => Promise<void> } {
   const session = useSessionContext();
   return {
     user: session.user,

@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createSupabase } from "@/lib/db/client";
 import { performSignOut } from "@/lib/auth/logout";
@@ -22,7 +15,7 @@ export interface SessionContextValue {
   isAdmin: boolean;
   isCraftsman: boolean;
   isClient: boolean;
-  signOut: () => Promise<void>;
+  signOut: (redirectTo?: string) => Promise<void>;
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -82,10 +75,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     };
   }, [sync]);
 
-  const signOut = useCallback(async () => {
+  const signOut = useCallback(async (redirectTo = "/") => {
     await performSignOut();
     setUser(null);
     setProfile(null);
+    if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+      try {
+        if (window.location.pathname === redirectTo) {
+          window.location.reload();
+        } else {
+          window.location.href = redirectTo;
+        }
+      } catch {
+        // Fallback for unexpected browser environment issues
+      }
+    }
   }, []);
 
   const role = profile?.role ?? null;

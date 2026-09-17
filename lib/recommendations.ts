@@ -12,6 +12,8 @@ export type BehaviorEventType =
 export type BehaviorEvent = {
   type: BehaviorEventType;
   craftsmanSlug?: string;
+  /** slug التصنيف (مثل "plumbing") — يُملأ عند توفره لاستخدامه في البريدج */
+  categorySlug?: string;
   query?: string;
   ts: number;
 };
@@ -67,6 +69,8 @@ function isEvent(value: unknown): value is BehaviorEvent {
     EVENT_TYPES.includes(event.type as BehaviorEventType) &&
     (event.craftsmanSlug === undefined ||
       typeof event.craftsmanSlug === "string") &&
+    (event.categorySlug === undefined ||
+      typeof event.categorySlug === "string") &&
     (event.query === undefined || typeof event.query === "string")
   );
 }

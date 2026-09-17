@@ -111,6 +111,7 @@ export function CraftsmanDetail({
               craftsmanSlug={craftsman.slug}
               craftsmanName={craftsman.name}
               categoryName={category?.name}
+              categorySlug={category?.slug}
             />
             <div className="flex justify-center">
               <ShareButtons slug={craftsman.slug} name={craftsman.name} />
@@ -178,6 +179,7 @@ export function CraftsmanDetail({
         craftsmanSlug={craftsman.slug}
         craftsmanName={craftsman.name}
         categoryName={category?.name}
+        categorySlug={category?.slug}
       />
     </div>
   );

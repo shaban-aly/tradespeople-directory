@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
+import { useBehaviorPushBridge } from "@/hooks/useBehaviorPushBridge";
 import { type NotificationRow } from "@/lib/db/notifications";
 import { IconBell, IconX } from "@/components/shared/icons";
 
@@ -21,6 +22,7 @@ const TOAST_TTL_MS = 6000;
  * Toast يظهر 6 ثوانٍ ثم يختفي تلقائياً (يمكن إغلاقه مبكراً).
  */
 export function NotificationsToast() {
+  useBehaviorPushBridge();
   const [toasts, setToasts] = useState<LiveToast[]>([]);
   const seen = useRef(new Set<string>());
 

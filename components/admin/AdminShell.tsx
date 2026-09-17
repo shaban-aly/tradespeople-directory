@@ -11,7 +11,7 @@ import { ToastProvider } from "@/components/admin/ToastProvider";
 import { NotificationsToast } from "@/components/shared/ui/NotificationsToast";
 import { IconLogOut, IconMenu, IconX } from "@/components/shared/icons";
 import { ThemeToggle } from "@/components/shared/ui/ThemeToggle";
-import { useAdminSession } from "@/hooks/auth/useAdminSession";
+import { useSession } from "@/hooks/auth/useSession";
 import { useBodyScrollLock } from "@/hooks/ui/useBodyScrollLock";
 import type { AdminNavCounts } from "@/lib/db/admin";
 
@@ -62,7 +62,7 @@ function AdminSidebar({
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isAdmin, loading, signOut } = useAdminSession();
+  const { user, isAdmin, loading, signOut } = useSession();
   const { counts, refresh: refreshNavCounts } = useAdminNavCounts();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerClosing, setDrawerClosing] = useState(false);
@@ -99,7 +99,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace("/admin/login");
+      router.replace("/login?reason=admin&next=/admin");
     }
   }, [loading, user, router]);
 
@@ -123,8 +123,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const currentTitle = getAdminNavTitle(pathname);
 
   async function handleSignOut() {
-    await signOut();
-    router.replace("/admin/login");
+    await signOut("/login?reason=admin&next=/admin");
   }
 
   if (loading) {

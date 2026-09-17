@@ -85,6 +85,7 @@ export function CraftsmanCard({
           craftsmanSlug={craftsman.slug}
           craftsmanName={craftsman.name}
           categoryName={category?.name}
+          categorySlug={category?.slug}
         />
       </div>
       <div className="absolute left-2 top-2 flex flex-col gap-1.5">

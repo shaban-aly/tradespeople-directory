@@ -8,8 +8,7 @@ import { NextResponse, type NextRequest } from "next/server";
 //    يُسبب تعارضاً ويكسر التطبيق.
 // ============================================================
 
-const ADMIN_LOGIN = "/admin/login";
-const CLIENT_LOGIN = "/login";
+const LOGIN = "/login";
 
 // المسارات المحمية وأدوارها
 const PROTECTED: {
@@ -18,34 +17,34 @@ const PROTECTED: {
   fallback: string;
 }[] = [
   {
-    // لوحة المشرف (ما عدا صفحة الدخول)
-    pattern: /^\/admin(?:\/(?!login).*)?$|^\/admin$/,
+    // لوحة المشرف — تتطلب دور admin، والمدخل موحد عبر صفحة الدخول
+    pattern: /^\/admin(\/.*)?$/,
     roles: ["admin"],
-    fallback: ADMIN_LOGIN,
+    fallback: `${LOGIN}?reason=admin&next=/admin`,
   },
   {
     // لوحة تحكم الفني
     pattern: /^\/dashboard(\/.*)?$/,
     roles: ["craftsman"],
-    fallback: `${CLIENT_LOGIN}?reason=craftsman`,
+    fallback: `${LOGIN}?reason=craftsman`,
   },
   {
     // المفضّلة — أي مستخدم مسجّل
     pattern: /^\/favorites(\/.*)?$/,
     roles: ["client", "craftsman", "admin"],
-    fallback: `${CLIENT_LOGIN}?reason=favorites`,
+    fallback: `${LOGIN}?reason=favorites`,
   },
   {
     // إضافة صنايعي — أي مستخدم مسجّل (الطلب يُربط بحسابه عند الموافقة)
     pattern: /^\/join$/,
     roles: ["client", "craftsman", "admin"],
-    fallback: `${CLIENT_LOGIN}?reason=join`,
+    fallback: `${LOGIN}?reason=join`,
   },
   {
     // صفحة الإشعارات الكاملة — أي مستخدم مسجّل
     pattern: /^\/notifications(\/.*)?$/,
     roles: ["client", "craftsman", "admin"],
-    fallback: `${CLIENT_LOGIN}?reason=notifications`,
+    fallback: `${LOGIN}?reason=notifications`,
   },
 ];
 
@@ -76,17 +75,25 @@ export async function proxy(request: NextRequest) {
     },
   );
 
+  function buildRedirect(fallback: string): NextResponse {
+    const url = request.nextUrl.clone();
+    let target = fallback;
+    if (pathname.startsWith("/admin") && pathname !== "/admin") {
+      target = `${LOGIN}?reason=admin&next=${encodeURIComponent(pathname)}`;
+    }
+    const [path, query] = target.split("?");
+    url.pathname = path;
+    url.search = query ? `?${query}` : "";
+    return NextResponse.redirect(url);
+  }
+
   // التحقق من الجلسة
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    const url = request.nextUrl.clone();
-    const [path, query] = matched.fallback.split("?");
-    url.pathname = path;
-    url.search = query ? `?${query}` : "";
-    return NextResponse.redirect(url);
+    return buildRedirect(matched.fallback);
   }
 
   // جلب الدور
@@ -99,11 +106,7 @@ export async function proxy(request: NextRequest) {
   const role = profile?.role ?? "client";
 
   if (!matched.roles.includes(role)) {
-    const url = request.nextUrl.clone();
-    const [path, query] = matched.fallback.split("?");
-    url.pathname = path;
-    url.search = query ? `?${query}` : "";
-    return NextResponse.redirect(url);
+    return buildRedirect(matched.fallback);
   }
 
   return response;

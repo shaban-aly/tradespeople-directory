@@ -16,12 +16,14 @@ export function StickyCallBar({
   craftsmanSlug,
   craftsmanName,
   categoryName,
+  categorySlug,
 }: {
   phone: string;
   whatsapp: string;
   craftsmanSlug?: string;
   craftsmanName?: string;
   categoryName?: string;
+  categorySlug?: string;
 }) {
   const { track: counterTrack } = useStats();
   const hasWhatsapp = Boolean(whatsapp);
@@ -42,7 +44,7 @@ export function StickyCallBar({
             href={telHref(phone)}
             onClick={() => {
               if (craftsmanSlug) {
-                counterTrack(craftsmanSlug, "call");
+                counterTrack(craftsmanSlug, "call", categorySlug);
                 track("click_phone", { craftsman_slug: craftsmanSlug, category: categoryName });
               }
             }}
@@ -59,7 +61,7 @@ export function StickyCallBar({
               rel="noopener noreferrer"
               onClick={() => {
                 if (craftsmanSlug) {
-                  counterTrack(craftsmanSlug, "whatsapp");
+                  counterTrack(craftsmanSlug, "whatsapp", categorySlug);
                   track("click_whatsapp", { craftsman_slug: craftsmanSlug, category: categoryName });
                 }
               }}

@@ -5,7 +5,7 @@
 import { firebaseConfig, PUSH_APP_NAME } from "./config";
 import type { Messaging } from "firebase/messaging";
 
-export const SW_PATH = "/firebase-messaging-sw.js";
+export const SW_PATH = "/sw.js";
 
 let messaging: Promise<Messaging | null> | null = null;
 
@@ -38,13 +38,13 @@ function getMessagingSafe(): Promise<Messaging | null> {
   return messaging;
 }
 
-/** تسجيل الـ Service Worker الخاص بالإشعارات (idempotent) */
+/** تسجيل الـ Service Worker الموحد الخاص بالمشروع (idempotent) */
 async function ensurePushSw(): Promise<ServiceWorkerRegistration | null> {
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
     return null;
   }
   try {
-    const reg = await navigator.serviceWorker.register(SW_PATH);
+    const reg = await navigator.serviceWorker.register(SW_PATH, { scope: "/" });
     await navigator.serviceWorker.ready;
     return reg;
   } catch {

@@ -17,6 +17,7 @@ export function ActionButtons({
   craftsmanSlug,
   craftsmanName,
   categoryName,
+  categorySlug,
 }: {
   phone: string;
   whatsapp: string;
@@ -24,6 +25,7 @@ export function ActionButtons({
   craftsmanSlug?: string;
   craftsmanName?: string;
   categoryName?: string;
+  categorySlug?: string;
 }) {
   const { track: counterTrack } = useStats();
   const waUrl = whatsappHref(
@@ -43,7 +45,7 @@ export function ActionButtons({
         href={telHref(phone)}
         onClick={() => {
           if (craftsmanSlug) {
-            counterTrack(craftsmanSlug, "call");
+            counterTrack(craftsmanSlug, "call", categorySlug);
             track("click_phone", { craftsman_slug: craftsmanSlug, category: categoryName });
           }
         }}
@@ -60,7 +62,7 @@ export function ActionButtons({
         rel="noopener noreferrer"
         onClick={() => {
           if (craftsmanSlug) {
-            counterTrack(craftsmanSlug, "whatsapp");
+            counterTrack(craftsmanSlug, "whatsapp", categorySlug);
             track("click_whatsapp", { craftsman_slug: craftsmanSlug, category: categoryName });
           }
         }}

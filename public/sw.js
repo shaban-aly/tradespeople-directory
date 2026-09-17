@@ -1,6 +1,22 @@
-const CACHE_VERSION = "v3"; // رُفع الإصدار لإجبار تحديث SW عند كل المستخدمين
+// ---------------------------------------------------------------------------
+// 1. Firebase Background Messaging Module
+// ---------------------------------------------------------------------------
+try {
+  importScripts("/firebase-messaging-sw.js");
+} catch (err) {
+  console.error("[SW] Failed to import Firebase messaging module:", err);
+}
+
+// ---------------------------------------------------------------------------
+// 2. PWA Caching & Lifecycle
+// ---------------------------------------------------------------------------
+const CACHE_VERSION = "v4"; // رُفع الإصدار لتحديث Service Worker الموحد
 const PRECACHE_NAME = `shell-${CACHE_VERSION}`;
 const RUNTIME_NAME = `runtime-${CACHE_VERSION}`;
+
+const isDev =
+  self.location.hostname === "localhost" ||
+  self.location.hostname === "127.0.0.1";
 
 const PRECACHE_URLS = [
   "/",
@@ -30,6 +46,11 @@ function shouldBypass(url) {
 }
 
 self.addEventListener("install", (event) => {
+  if (isDev) {
+    // في وضع التطوير: تفعيل فوري بدون precaching لتجنب أي stale cache يعطل HMR
+    self.skipWaiting();
+    return;
+  }
   event.waitUntil(
     caches
       .open(PRECACHE_NAME)
@@ -57,8 +78,14 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
+  // تجاوز ملف تكوين Firebase حتى لا يُحفظ في الكاش ويبقى دائماً متجدداً
+  if (url.pathname === "/firebase-messaging-sw.js") return;
+
   // تجاوز API routes دائماً
   if (url.pathname.startsWith("/api/")) return;
+
+  // في وضع التطوير: اترك كل طلبات fetch تذهب للشبكة مباشرة لمنع أي تعارض مع HMR
+  if (isDev) return;
 
   // تجاوز كل دومينات Google (Analytics, Ads, TagManager) — اتركها للشبكة مباشرة
   if (shouldBypass(url)) return;
@@ -92,8 +119,6 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
 
   // موارد Next.js (_next/static/chunks): شبكة أولاً ثم كاش كاحتياطي
-  // لضمان تحميل آخر نسخة bundles في كل مرة ((Content-hashed files)).
-  // هذا يمنع بطش Service Worker لملفات bundle متغيرة.
   if (url.pathname.startsWith("/_next/")) {
     event.respondWith(
       fetch(request)

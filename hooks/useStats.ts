@@ -10,22 +10,30 @@ export type StatMetric = "view" | "call" | "whatsapp";
  * (العدّادات تكفي؛ الجلسات والسلوك التفصيلي يُقاس في GA4).
  */
 export function useStats() {
-  const track = useCallback((slug: string, type: StatMetric) => {
-    if (!slug) return;
+  const track = useCallback(
+    (slug: string, type: StatMetric, categorySlug?: string) => {
+      if (!slug) return;
 
-    // إشارة سلوكية محلية لمقترحات «مقترحات لك» (تسجل حتى لو فشل الرفع)
-    try {
-      recordBehaviorEvent({ type, craftsmanSlug: slug, ts: Date.now() });
-    } catch {
-      // تجاهل
-    }
+      // إشارة سلوكية محلية لمقترحات «مقترحات لك» (تسجل حتى لو فشل الرفع)
+      try {
+        recordBehaviorEvent({
+          type,
+          craftsmanSlug: slug,
+          categorySlug,
+          ts: Date.now(),
+        });
+      } catch {
+        // تجاهل
+      }
 
-    void fetch("/api/stats", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, type }),
-    }).catch(() => undefined);
-  }, []);
+      void fetch("/api/stats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, type }),
+      }).catch(() => undefined);
+    },
+    [],
+  );
 
   return { track };
 }

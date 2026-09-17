@@ -19,7 +19,7 @@ export function ViewTracker({
   useEffect(() => {
     if (!slug || sentSlug.current === slug) return;
     sentSlug.current = slug;
-    counterTrack(slug, "view");
+    counterTrack(slug, "view", categorySlug);
     track("view_craftsman", {
       craftsman_slug: slug,
       category_slug: categorySlug,
