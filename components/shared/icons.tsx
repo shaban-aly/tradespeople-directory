@@ -43,6 +43,7 @@ import {
   Settings,
   ShieldCheck,
   SlidersHorizontal,
+  Sparkles,
   Star,
   Sun,
   Tags,
@@ -214,6 +215,10 @@ export function IconSettings(props: LucideProps) {
 
 export function IconShieldCheck(props: LucideProps) {
   return <ShieldCheck {...props} />;
+}
+
+export function IconSparkles(props: LucideProps) {
+  return <Sparkles {...props} />;
 }
 
 export function IconChevronLeft(props: LucideProps) {

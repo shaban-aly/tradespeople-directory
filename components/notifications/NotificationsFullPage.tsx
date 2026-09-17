@@ -15,6 +15,7 @@ import {
   IconLink,
   IconMail,
   IconShieldCheck,
+  IconSparkles,
   IconStar,
   IconUserPlus,
   IconX,
@@ -50,6 +51,8 @@ function iconForType(type: string) {
       return { Icon: IconAlert, tone: "bg-danger/10 text-danger" };
     case "new_message":
       return { Icon: IconMail, tone: "bg-accent/10 text-accent" };
+    case "welcome":
+      return { Icon: IconSparkles, tone: "bg-accent/10 text-accent" };
     default:
       return { Icon: IconBell, tone: "bg-accent/10 text-accent" };
   }
