@@ -28,7 +28,7 @@ const app = firebase.initializeApp(${JSON.stringify(config)});
 const messaging = firebase.messaging(app);
 
 messaging.onBackgroundMessage((payload) => {
-  const data = (payload.data ?? {}) as Record<string, string>;
+  const data = payload.data || {};
   const title = data.title || "إشعار جديد";
   const body = data.body || "";
   const link = data.link || "/notifications";

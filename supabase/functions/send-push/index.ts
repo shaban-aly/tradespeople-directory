@@ -197,7 +197,7 @@ async function handleAnonymousOutbox(
   const staleIds: string[] = [];
 
   for (const sub of subscriptions) {
-    const message = buildFcmMessage(sub.token, outbox.title, outbox.body, link);
+    const message = buildFcmMessage(sub.token, outbox.title, outbox.body, link, outbox.id);
     try {
       const res = await fetch(endpoint, {
         method: "POST",
