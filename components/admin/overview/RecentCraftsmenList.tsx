@@ -1,8 +1,8 @@
-import Link from "next/link";
 import Image from "next/image";
 import { AdminSection } from "@/components/admin/AdminSection";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { AdminButtonLink } from "@/components/admin/ui/AdminButton";
 import { IconUsers } from "@/components/shared/icons";
 import type { CraftsmanRow } from "@/lib/db/admin";
 
@@ -13,12 +13,13 @@ export function RecentCraftsmenList({ craftsmen }: { craftsmen: CraftsmanRow[] }
       description="آخر 5 مضافين"
       icon={<IconUsers className="h-6 w-6" />}
       action={
-        <Link
+        <AdminButtonLink
           href="/admin/craftsmen"
-          className="flex min-h-12 w-full items-center justify-center rounded-xl border border-border px-4 text-base font-bold text-accent transition-colors hover:bg-accent/10 sm:w-auto"
+          variant="accentLink"
+          className="w-full sm:w-auto"
         >
           الكل
-        </Link>
+        </AdminButtonLink>
       }
     >
       {craftsmen.length === 0 ? (

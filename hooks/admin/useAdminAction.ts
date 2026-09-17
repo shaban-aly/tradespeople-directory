@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { revalidateSearchCache } from "@/lib/db/admin";
+import { notifyNavCountsChanged } from "@/hooks/admin/useAdminNavCounts";
 
 export function useAdminAction() {
   const [busyKey, setBusyKey] = useState("");
@@ -19,6 +20,7 @@ export function useAdminAction() {
         await action();
         await onSuccess?.();
         void revalidateSearchCache();
+        notifyNavCountsChanged();
         return true;
       } catch (nextError) {
         setError(

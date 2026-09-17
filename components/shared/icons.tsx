@@ -5,6 +5,7 @@ import {
   ArrowUp,
   BarChart3,
   Bell,
+  BellOff,
   Bookmark,
   Camera,
   Check,
@@ -31,6 +32,7 @@ import {
   Menu,
   MessageSquare,
   Moon,
+  MoreVertical,
   Pencil,
   Phone,
   Plus,
@@ -136,6 +138,10 @@ export function IconUndo(props: LucideProps) {
 
 export function IconMenu(props: LucideProps) {
   return <Menu {...props} />;
+}
+
+export function IconMoreVertical(props: LucideProps) {
+  return <MoreVertical {...props} />;
 }
 
 export function IconSliders(props: LucideProps) {
@@ -268,6 +274,10 @@ export function IconLink(props: LucideProps) {
 
 export function IconBell(props: LucideProps) {
   return <Bell {...props} />;
+}
+
+export function IconBellOff(props: LucideProps) {
+  return <BellOff {...props} />;
 }
 
 export function IconWhatsApp({ className }: IconProps) {

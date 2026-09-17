@@ -29,7 +29,7 @@ export function CategoryChart({
               </div>
               <div className="h-2.5 overflow-hidden rounded-full bg-border">
                 <div
-                  className="h-full rounded-full bg-accent"
+                  className="h-full rounded-full bg-chart-1"
                   style={{ width: `${(item.count / maxCount) * 100}%` }}
                 />
               </div>

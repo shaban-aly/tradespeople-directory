@@ -11,6 +11,7 @@ import { JsonLd } from "@/components/shared/seo/JsonLd";
 import { CategoryIcon } from "@/components/shared/ui/CategoryIcon";
 import { CategoryTracker } from "@/components/category/CategoryTracker";
 import { CraftsmanList } from "@/components/category/CraftsmanList";
+import { PushActivationLayer } from "@/components/notifications/PushActivationLayer";
 import { breadcrumbSchema, categoryPageSchema } from "@/lib/seo/schema";
 import { siteUrl } from "@/lib/data/site";
 
@@ -68,6 +69,9 @@ export default async function CategoryPage({
       />
       <JsonLd data={categoryPageSchema(category, craftsmen)} />
       <CategoryTracker slug={category.slug} />
+      <PushActivationLayer
+        context={{ scope: "category", refId: category.slug, label: category.name }}
+      />
       <section className="relative overflow-hidden border-b border-border bg-card">
         <div
           className="absolute inset-0 bg-linear-to-b from-accent/10 to-card"

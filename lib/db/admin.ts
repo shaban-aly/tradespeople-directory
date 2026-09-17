@@ -328,6 +328,31 @@ export async function fetchCounts(
   return data ?? [];
 }
 
+export type AdminNavCounts = {
+  pendingRequests: number;
+  pendingReports: number;
+  unreadMessages: number;
+};
+
+/** عدّادات خفيفة لشريط التنقل الجانبي (count=exact مع head) — بلا تحميل الصفوف. */
+export async function fetchAdminNavCounts(
+  client: SupabaseClient<Database> = createSupabase(),
+): Promise<AdminNavCounts> {
+  const [requests, reports, messages] = await Promise.all([
+    client.from("craftsmen").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    client.from("reports").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    client.from("contact_messages").select("id", { count: "exact", head: true }).eq("is_read", false),
+  ]);
+  for (const result of [requests, reports, messages]) {
+    if (result.error) throw new Error("مقدرناش نحمّل عدّادات القائمة");
+  }
+  return {
+    pendingRequests: requests.count ?? 0,
+    pendingReports: reports.count ?? 0,
+    unreadMessages: messages.count ?? 0,
+  };
+}
+
 // ------------------------------ عمليات التصنيفات ------------------------------
 
 export async function createCategory(

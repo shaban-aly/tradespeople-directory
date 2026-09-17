@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CategoryIconPicker } from "@/components/admin/CategoryIconPicker";
 import { Modal } from "@/components/admin/Modal";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { Field, fieldErrorId } from "@/components/shared/form/Field";
 import { TextField } from "@/components/shared/form/TextField";
 import {
@@ -17,7 +18,7 @@ import {
 } from "@/lib/utils/validation";
 
 const inputClass =
-  "w-full rounded-xl border border-border bg-card px-3 py-2.5 text-base text-foreground placeholder:text-muted focus:border-accent focus:outline-none";
+  "w-full rounded-xl border border-border-strong bg-card px-3 py-2.5 text-base text-foreground placeholder:text-muted focus:border-accent focus:outline-none";
 
 export type CategoryFormValues = {
   slug: string;
@@ -141,13 +142,9 @@ export function CategoryFormModal({
           <span className="text-base font-bold text-foreground">الأيقونة</span>
           <CategoryIconPicker value={icon} onChange={setIcon} />
         </label>
-        <button
-          type="submit"
-          disabled={busy}
-          className="min-h-12 rounded-xl bg-accent px-4 text-base font-bold text-on-accent transition-colors hover:bg-accent/90 disabled:opacity-50"
-        >
+        <AdminButton type="submit" disabled={busy}>
           {busy ? "جاري الحفظ..." : target === "new" ? "إضافة التخصص" : "حفظ التعديلات"}
-        </button>
+        </AdminButton>
       </form>
     </Modal>
   );

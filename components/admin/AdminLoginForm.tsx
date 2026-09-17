@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IconEye, IconEyeOff, IconLock, IconMail } from "@/components/shared/icons";
 import { useAdminSession } from "@/hooks/auth/useAdminSession";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { Field, fieldErrorId } from "@/components/shared/form/Field";
 import { validateEmail, validatePassword } from "@/lib/utils/validation";
 
 const inputClass =
-  "w-full rounded-xl border border-border bg-background py-3 pl-4 pr-11 text-base text-foreground placeholder:text-muted focus:border-accent focus:outline-none";
+  "w-full rounded-xl border border-border-strong bg-background py-3 pl-4 pr-11 text-base text-foreground placeholder:text-muted focus:border-accent focus:outline-none";
 
 export function AdminLoginForm() {
   const router = useRouter();
@@ -164,13 +165,9 @@ export function AdminLoginForm() {
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={submitting}
-        className="min-h-12 rounded-xl bg-accent px-4 text-lg font-bold text-on-accent transition-colors hover:bg-accent/90 disabled:opacity-50"
-      >
+      <AdminButton type="submit" disabled={submitting}>
         {submitting ? "جاري الدخول..." : "دخول المشرف"}
-      </button>
+      </AdminButton>
     </form>
   );
 }

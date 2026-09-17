@@ -13,6 +13,7 @@ import { IconTrendingUp } from "@/components/shared/icons";
 import { breadcrumbSchema, craftsmanSchema } from "@/lib/seo/schema";
 import { rankRelatedCraftsmen } from "@/lib/recommendations";
 import { getCraftsmanRatingSummary } from "@/lib/db/reviews";
+import { PushActivationLayer } from "@/components/notifications/PushActivationLayer";
 import { siteUrl } from "@/lib/data/site";
 
 export const revalidate = 3600;
@@ -99,6 +100,13 @@ export default async function CraftsmanPage({
           craftsman={craftsman}
           category={category}
           ratingSummary={ratingSummary}
+        />
+        <PushActivationLayer
+          context={{
+            scope: "category",
+            refId: craftsman.category,
+            label: category?.name,
+          }}
         />
       </div>
 

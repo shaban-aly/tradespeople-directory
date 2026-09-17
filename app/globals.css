@@ -15,6 +15,16 @@
   --on-danger: #ffffff;
   --card: #ffffff;
   --border: #c9d0e4;
+  /* سلم الأسطح: الإضافة أعلى من الكارت في الوضع الفاتح تُحمَل بالظلال؛
+     في الوضع الغامق تُحمَل بدرجات إضاءة متصاعدة. */
+  --elevated: #ffffff;
+  --popover: #ffffff;
+  --border-strong: #b8c1dc;
+  /* ألوان الرسوم البيانية — منفصلة عن accent/action حتى تبقى مرئية بتباين
+     3:1 كعناصر رسومية على السطح الأفتح في الثيمين. */
+  --chart-1: #3b5fe3;
+  --chart-2: #16a34a;
+  --chart-label: #5d6674;
   --card-shadow: 0 8px 24px rgba(20, 20, 43, 0.12);
   --bar-shadow: 0 -8px 24px rgba(20, 20, 43, 0.12);
   --radius-card: 1rem;
@@ -47,6 +57,14 @@
   --on-danger: #10131f;
   --card: #181c2c;
   --border: #262b45;
+  /* سلم أسطح غامق: background ← card ← elevated ← popover (الأعلى إضاءة). */
+  --elevated: #1e2338;
+  --popover: #252b44;
+  --border-strong: #39426b;
+  /* ألوان رسوم غامقة أفتح من ألوان الوضع الفاتح لثبات الوزن البصري. */
+  --chart-1: #6f8dff;
+  --chart-2: #41d8a4;
+  --chart-label: #9ca3c4;
   --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   --bar-shadow: 0 -8px 24px rgba(0, 0, 0, 0.45);
 
@@ -66,6 +84,13 @@
   --color-on-danger: var(--on-danger);
   --color-card: var(--card);
   --color-border: var(--border);
+  --color-elevated: var(--elevated);
+  --color-popover: var(--popover);
+  --color-border-strong: var(--border-strong);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-label: var(--chart-label);
 
   --color-cat-1: var(--cat-1);
   --color-cat-2: var(--cat-2);

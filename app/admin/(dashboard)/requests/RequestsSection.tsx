@@ -49,7 +49,6 @@ export function RequestsSection({
   }, [error, toast]);
 
   const pendingCount = requests.filter((item) => item.status === "pending").length;
-  const approvedCount = requests.filter((item) => item.status === "approved").length;
   const rejectedCount = requests.filter((item) => item.status === "rejected").length;
 
   const filteredRequests = useMemo(
@@ -100,7 +99,6 @@ export function RequestsSection({
           counts={{
             all: requests.length,
             pending: pendingCount,
-            approved: approvedCount,
             rejected: rejectedCount,
           }}
           onStatusChange={setStatusFilter}

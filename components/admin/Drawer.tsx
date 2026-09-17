@@ -51,7 +51,7 @@ export function Drawer({
         }`}
       />
       <aside
-        className={`absolute inset-y-0 right-0 flex w-full max-w-md flex-col border-e border-border bg-card shadow-card transition-transform duration-300 ease-out ${
+        className={`absolute inset-y-0 right-0 flex w-full max-w-md flex-col border-e border-border bg-elevated shadow-card transition-transform duration-300 ease-out ${
           visible ? "translate-x-0" : "translate-x-full"
         }`}
       >

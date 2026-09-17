@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { toArabicDigits } from "@/lib/utils/format";
 
 export function Pagination({
@@ -15,25 +16,25 @@ export function Pagination({
 
   return (
     <div className="flex items-center justify-center gap-3 pt-2">
-      <button
+      <AdminButton
         type="button"
+        variant="outline"
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
-        className="min-h-12 rounded-xl border border-border px-4 text-base font-bold text-muted transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
       >
         السابق
-      </button>
+      </AdminButton>
       <span className="text-base text-muted">
         صفحة {toArabicDigits(page)} من {toArabicDigits(pageCount)}
       </span>
-      <button
+      <AdminButton
         type="button"
+        variant="outline"
         disabled={page >= pageCount}
         onClick={() => onPageChange(page + 1)}
-        className="min-h-12 rounded-xl border border-border px-4 text-base font-bold text-muted transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
       >
         التالي
-      </button>
+      </AdminButton>
     </div>
   );
 }

@@ -14,6 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
+      anonymous_push_outbox: {
+        Row: {
+          body: string
+          category_slug: string
+          craftsman_id: string
+          created_at: string
+          id: string
+          key: string
+          status: string
+          title: string
+          url: string
+        }
+        Insert: {
+          body: string
+          category_slug: string
+          craftsman_id: string
+          created_at?: string
+          id?: string
+          key: string
+          status?: string
+          title: string
+          url?: string
+        }
+        Update: {
+          body?: string
+          category_slug?: string
+          craftsman_id?: string
+          created_at?: string
+          id?: string
+          key?: string
+          status?: string
+          title?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anonymous_push_outbox_craftsman_id_fkey"
+            columns: ["craftsman_id"]
+            isOneToOne: false
+            referencedRelation: "craftsmen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      anonymous_push_subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          interests: string[]
+          last_notified_at: string | null
+          notification_count: number
+          platform: string
+          status: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interests?: string[]
+          last_notified_at?: string | null
+          notification_count?: number
+          platform?: string
+          status?: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interests?: string[]
+          last_notified_at?: string | null
+          notification_count?: number
+          platform?: string
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       areas: {
         Row: {
           created_at: string
@@ -138,7 +218,7 @@ export type Database = {
         Insert: {
           calls?: number
           craftsman_id: string
-          day: string
+          day?: string
           views?: number
           whatsapp?: number
         }
@@ -175,9 +255,9 @@ export type Database = {
           social_links: Json
           status: string
           submitted_by: string | null
+          updated_at: string
           verified: boolean
           whatsapp: string | null
-          updated_at: string
         }
         Insert: {
           added_at?: string
@@ -194,9 +274,9 @@ export type Database = {
           social_links?: Json
           status?: string
           submitted_by?: string | null
+          updated_at?: string
           verified?: boolean
           whatsapp?: string | null
-          updated_at?: string
         }
         Update: {
           added_at?: string
@@ -213,9 +293,9 @@ export type Database = {
           social_links?: Json
           status?: string
           submitted_by?: string | null
+          updated_at?: string
           verified?: boolean
           whatsapp?: string | null
-          updated_at?: string
         }
         Relationships: [
           {
@@ -344,6 +424,21 @@ export type Database = {
           },
         ]
       }
+      push_settings: {
+        Row: {
+          key: string
+          value: string
+        }
+        Insert: {
+          key: string
+          value?: string
+        }
+        Update: {
+          key?: string
+          value?: string
+        }
+        Relationships: []
+      }
       rate_limits: {
         Row: {
           count: number
@@ -439,6 +534,54 @@ export type Database = {
           },
         ]
       }
+      user_interest_subscriptions: {
+        Row: {
+          category_slug: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          category_slug: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          category_slug?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_push_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen_at: string
+          platform: string
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform?: string
+          token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform?: string
+          token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       craftsman_counts_by_category: {
@@ -471,6 +614,23 @@ export type Database = {
         Args: { p_craftsman_id: string }
         Returns: string
       }
+      create_notification: {
+        Args: {
+          p_body: string
+          p_key?: string
+          p_metadata?: Json
+          p_recipient_id: string
+          p_title: string
+          p_type: string
+        }
+        Returns: undefined
+      }
+      get_admin_user_ids: {
+        Args: never
+        Returns: {
+          user_id: string
+        }[]
+      }
       get_craftsman_favorites_count: {
         Args: { p_craftsman_id: string }
         Returns: number
@@ -494,20 +654,48 @@ export type Database = {
         Args: { craftsman_id_input: string; user_email_input: string }
         Returns: boolean
       }
-      mark_notifications_read: {
-        Args: { p_ids: string[] }
+      mark_notifications_read: { Args: { p_ids: string[] }; Returns: number }
+      notify_all_admins: {
+        Args: {
+          p_body: string
+          p_key: string
+          p_metadata: Json
+          p_title: string
+          p_type: string
+        }
+        Returns: undefined
+      }
+      purge_old_notifications: {
+        Args: { p_max_age_days?: number }
         Returns: number
       }
       rate_limit_consume: {
-        Args: {
-          p_key: string
-          p_limit: number
-          p_window_seconds: number
-        }
+        Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: Json
+      }
+      register_anonymous_push: {
+        Args: { p_interests?: string[]; p_platform?: string; p_token: string }
+        Returns: undefined
+      }
+      register_push_token: {
+        Args: { p_platform?: string; p_token: string }
+        Returns: undefined
       }
       reject_craftsman_application: {
         Args: { p_craftsman_id: string }
+        Returns: undefined
+      }
+      unregister_anonymous_push: {
+        Args: { p_token: string }
+        Returns: undefined
+      }
+      unregister_push_token: { Args: { p_token: string }; Returns: undefined }
+      update_anonymous_interests: {
+        Args: { p_interests: string[]; p_token: string }
+        Returns: undefined
+      }
+      upsert_push_setting: {
+        Args: { p_key: string; p_value: string }
         Returns: undefined
       }
     }

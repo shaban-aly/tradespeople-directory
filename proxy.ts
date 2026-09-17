@@ -41,6 +41,12 @@ const PROTECTED: {
     roles: ["client", "craftsman", "admin"],
     fallback: `${CLIENT_LOGIN}?reason=join`,
   },
+  {
+    // صفحة الإشعارات الكاملة — أي مستخدم مسجّل
+    pattern: /^\/notifications(\/.*)?$/,
+    roles: ["client", "craftsman", "admin"],
+    fallback: `${CLIENT_LOGIN}?reason=notifications`,
+  },
 ];
 
 export async function proxy(request: NextRequest) {
@@ -109,6 +115,7 @@ export const config = {
     "/dashboard/:path*",
     "/favorites/:path*",
     "/join",
+    "/notifications/:path*",
   ],
 };
 

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Drawer } from "@/components/admin/Drawer";
+import { DetailField } from "@/components/admin/ui/DetailField";
 import { IconUsers } from "@/components/shared/icons";
 import type { JoinRequestRow } from "@/lib/db/admin";
 import { toArabicDigits } from "@/lib/utils/format";
@@ -17,45 +18,29 @@ export function RequestDetailsDrawer({
     <Drawer open={open} onClose={onClose} title="تفاصيل طلب التسجيل">
       {request && (
         <div className="grid gap-3 text-base text-muted">
-          <p>
-            <span className="font-bold text-foreground">الحالة: </span>
+          <DetailField label="الحالة">
             {request.status === "pending"
               ? "معلق"
               : request.status === "approved"
                 ? "مقبول"
                 : "مرفوض"}
-          </p>
-          <p>
-            <span className="font-bold text-foreground">التاريخ: </span>
+          </DetailField>
+          <DetailField label="التاريخ">
             {toArabicDigits(request.created_at)}
-          </p>
-          <p>
-            <span className="font-bold text-foreground">الاسم: </span>
-            {request.name}
-          </p>
-          <p>
-            <span className="font-bold text-foreground">التخصص: </span>
-            {request.category?.name}
-          </p>
-          <p>
-            <span className="font-bold text-foreground">المنطقة: </span>
-            {request.area?.name}
-          </p>
-          <p dir="ltr" className="text-right">
-            <span className="font-bold text-foreground">الهاتف: </span>
+          </DetailField>
+          <DetailField label="الاسم">{request.name}</DetailField>
+          <DetailField label="التخصص">{request.category?.name}</DetailField>
+          <DetailField label="المنطقة">{request.area?.name}</DetailField>
+          <DetailField label="الهاتف" dir="ltr" className="text-right">
             {request.phone}
-          </p>
+          </DetailField>
           {request.whatsapp && (
-            <p dir="ltr" className="text-right">
-              <span className="font-bold text-foreground">واتساب: </span>
+            <DetailField label="واتساب" dir="ltr" className="text-right">
               {request.whatsapp}
-            </p>
+            </DetailField>
           )}
           {request.description && (
-            <p>
-              <span className="font-bold text-foreground">الوصف: </span>
-              {request.description}
-            </p>
+            <DetailField label="الوصف">{request.description}</DetailField>
           )}
           {request.socialLinks?.length ? (
             <div className="rounded-xl bg-background/40 p-3">

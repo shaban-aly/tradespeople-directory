@@ -1,5 +1,6 @@
 import { AdminSection } from "@/components/admin/AdminSection";
 import { EmptyState } from "@/components/admin/EmptyState";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { IconAlert } from "@/components/shared/icons";
 import type { ReportRow } from "@/lib/db/admin";
 import { toArabicDigits } from "@/lib/utils/format";
@@ -47,24 +48,24 @@ export function PendingReportsList({
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <button
+                <AdminButton
                   type="button"
+                  variant="action"
                   disabled={busyKey === `report-review-${report.id}`}
                   onClick={() => onReview(report)}
-                  className="min-h-12 rounded-xl bg-action px-4 text-base font-bold text-on-action disabled:opacity-50"
                 >
                   {busyKey === `report-review-${report.id}`
                     ? "جاري..."
                     : "تمت المراجعة"}
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
                   type="button"
+                  variant="outlineDanger"
                   disabled={busyKey === `report-dismiss-${report.id}`}
                   onClick={() => onDismiss(report.id)}
-                  className="min-h-12 rounded-xl border border-danger/40 px-4 text-base font-bold text-danger disabled:opacity-50"
                 >
                   {busyKey === `report-dismiss-${report.id}` ? "جاري..." : "إغلاق"}
-                </button>
+                </AdminButton>
               </div>
             </div>
           ))}

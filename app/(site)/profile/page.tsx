@@ -3,6 +3,7 @@ import { getServerSession } from "@/lib/db/server";
 import type { SessionProfile } from "@/hooks/auth/useSession";
 import { ProfileCard } from "@/components/profile/ProfileCard";
 import { ThemeSettings } from "@/components/profile/ThemeSettings";
+import { PushSettingsCard } from "@/components/notifications/PushSettingsCard";
 import { SignOutButton } from "@/components/profile/SignOutButton";
 import { GoogleSignInButton } from "@/components/shared/GoogleSignInButton";
 import {
@@ -131,6 +132,11 @@ export default async function ProfilePage() {
         {/* قسم مظهر التطبيق المدمج والأنيق */}
         <div className="rounded-2xl border border-border bg-card p-4 shadow-xs">
           <ThemeSettings />
+        </div>
+
+        {/* إعدادات إشعارات المتصفح — التفعيل تلقائي عند أول تفاعل؛ الإيقاف من هنا فقط */}
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-xs">
+          <PushSettingsCard />
         </div>
 
         {/* خيار خاص بأصحاب المهن */}

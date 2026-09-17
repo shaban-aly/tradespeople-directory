@@ -6,6 +6,7 @@ import { DashboardLoading } from "@/components/admin/DashboardLoading";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { RefreshButton } from "@/components/admin/RefreshButton";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { CategoriesTable } from "@/components/admin/categories/CategoriesTable";
 import {
   CategoryFormModal,
@@ -99,14 +100,13 @@ export function CategoriesSection({
         actions={
           <>
             <RefreshButton onRefresh={() => void refresh()} />
-            <button
+            <AdminButton
               type="button"
               onClick={() => setFormTarget("new")}
-              className="flex min-h-12 items-center gap-2 rounded-xl bg-accent px-4 text-base font-bold text-on-accent transition-colors hover:bg-accent/90"
             >
               <IconPlus className="h-5 w-5" />
               إضافة تخصص
-            </button>
+            </AdminButton>
           </>
         }
       />

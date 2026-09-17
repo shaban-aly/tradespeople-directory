@@ -1,7 +1,7 @@
+import { FilterTabs } from "@/components/shared/ui/FilterTabs";
 import { type ReportStatusFilter } from "@/lib/db/admin-selectors";
-import { toArabicDigits } from "@/lib/utils/format";
 
-const STATUS_FILTERS: { value: ReportStatusFilter; label: string }[] = [
+const STATUS_TABS: { value: ReportStatusFilter; label: string }[] = [
   { value: "all", label: "الكل" },
   { value: "pending", label: "معلق" },
   { value: "reviewed", label: "تمت المراجعة" },
@@ -18,31 +18,13 @@ export function ReportFilters({
   onStatusChange: (filter: ReportStatusFilter) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {STATUS_FILTERS.map((filter) => {
-        const isActive = statusFilter === filter.value;
-        return (
-          <button
-            key={filter.value}
-            type="button"
-            onClick={() => onStatusChange(filter.value)}
-            className={`flex min-h-12 items-center gap-2 rounded-xl px-4 text-base font-bold transition-colors ${
-              isActive
-                ? "bg-action text-on-action"
-                : "border border-border text-muted hover:text-foreground"
-            }`}
-          >
-            {filter.label}
-            <span
-              className={`rounded-full px-2 py-0.5 text-sm ${
-                isActive ? "bg-on-action/20" : "bg-accent/10 text-accent"
-              }`}
-            >
-              {toArabicDigits(counts[filter.value])}
-            </span>
-          </button>
-        );
-      })}
-    </div>
+    <FilterTabs
+      tabs={STATUS_TABS.map((tab) => ({
+        ...tab,
+        count: counts[tab.value],
+      }))}
+      active={statusFilter}
+      onChange={onStatusChange}
+    />
   );
 }

@@ -1,4 +1,6 @@
 import { Drawer } from "@/components/admin/Drawer";
+import { DetailField } from "@/components/admin/ui/DetailField";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { IconEye, IconEyeOff } from "@/components/shared/icons";
 import type { ContactMessageRow } from "@/lib/db/admin";
 import { toArabicDigits } from "@/lib/utils/format";
@@ -22,22 +24,16 @@ export function MessageDetailsDrawer({
     <Drawer open={open} onClose={onClose} title="تفاصيل الرسالة">
       {message && (
         <div className="grid gap-3 text-base text-muted">
-          <p>
-            <span className="font-bold text-foreground">الحالة: </span>
+          <DetailField label="الحالة">
             {message.is_read ? "مقروءة" : "غير مقروءة"}
-          </p>
-          <p>
-            <span className="font-bold text-foreground">الاسم: </span>
-            {message.name}
-          </p>
-          <p dir="ltr" className="text-right">
-            <span className="font-bold text-foreground">رقم الهاتف: </span>
+          </DetailField>
+          <DetailField label="الاسم">{message.name}</DetailField>
+          <DetailField label="رقم الهاتف" dir="ltr" className="text-right">
             {message.phone}
-          </p>
-          <p>
-            <span className="font-bold text-foreground">التاريخ: </span>
+          </DetailField>
+          <DetailField label="التاريخ">
             {toArabicDigits(message.created_at)}
-          </p>
+          </DetailField>
           <div className="rounded-xl bg-background p-4">
             <p className="mb-2 font-bold text-foreground">الرسالة:</p>
             <p className="whitespace-pre-wrap text-foreground">
@@ -45,11 +41,11 @@ export function MessageDetailsDrawer({
             </p>
           </div>
           <div className="mt-2 flex flex-wrap gap-3">
-            <button
+            <AdminButton
               type="button"
+              variant="outline"
               disabled={busyKey === `message-${message.id}`}
               onClick={() => onToggleRead(message)}
-              className="flex min-h-12 items-center gap-2 rounded-xl border border-border px-4 text-base font-bold text-muted transition-colors hover:text-foreground disabled:opacity-50"
             >
               {message.is_read ? (
                 <IconEyeOff className="h-5 w-5" />
@@ -57,15 +53,15 @@ export function MessageDetailsDrawer({
                 <IconEye className="h-5 w-5" />
               )}
               {message.is_read ? "تحديد كغير مقروءة" : "تحديد كمقروءة"}
-            </button>
-            <button
+            </AdminButton>
+            <AdminButton
               type="button"
+              variant="outlineDanger"
               disabled={busyKey === `delete-message-${message.id}`}
               onClick={() => onDelete(message)}
-              className="min-h-12 rounded-xl border border-danger/40 px-4 text-base font-bold text-danger disabled:opacity-50"
             >
               حذف الرسالة
-            </button>
+            </AdminButton>
           </div>
         </div>
       )}

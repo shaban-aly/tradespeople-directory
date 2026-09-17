@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { RefreshButton } from "@/components/admin/RefreshButton";
+import { AdminButtonLink } from "@/components/admin/ui/AdminButton";
 import { DashboardLoading } from "@/components/admin/DashboardLoading";
+import { ActionCounters } from "@/components/admin/overview/ActionCounters";
 import { AnalyticsStats } from "@/components/admin/overview/AnalyticsStats";
 import { CategoryChart } from "@/components/admin/overview/CategoryChart";
 import { MostContactedList } from "@/components/admin/overview/MostContactedList";
-import { OverviewKPIs } from "@/components/admin/overview/OverviewKPIs";
 import { PendingReportsList } from "@/components/admin/overview/PendingReportsList";
 import { PendingRequestsList } from "@/components/admin/overview/PendingRequestsList";
 import { RecentCraftsmenList } from "@/components/admin/overview/RecentCraftsmenList";
+import { SecondaryStats } from "@/components/admin/overview/SecondaryStats";
 import {
   useAdminOverview,
   type AdminOverviewData,
@@ -19,6 +20,48 @@ import {
 import { useAnalytics } from "@/hooks/admin/useAnalytics";
 import { useToast } from "@/hooks/ui/useToast";
 import type { AnalyticsOverview } from "@/lib/db/analytics";
+
+type OverviewTab = "summary" | "analytics" | "manage";
+
+const OVERVIEW_TABS: { value: OverviewTab; label: string }[] = [
+  { value: "summary", label: "الملخص" },
+  { value: "analytics", label: "الإحصائيات" },
+  { value: "manage", label: "الإدارة" },
+];
+
+function OverviewTabs({
+  active,
+  onChange,
+}: {
+  active: OverviewTab;
+  onChange: (value: OverviewTab) => void;
+}) {
+  return (
+    <div className="flex gap-1 overflow-x-auto border-b border-border" role="tablist">
+      {OVERVIEW_TABS.map((tab) => {
+        const isActive = tab.value === active;
+        return (
+          <button
+            key={tab.value}
+            type="button"
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => onChange(tab.value)}
+            className={`min-h-12 shrink-0 border-b-2 px-4 py-2 text-base font-bold transition-colors ${
+              isActive
+                ? "border-accent text-accent"
+                : "border-transparent text-muted hover:text-foreground"
+            }`}
+          >
+            {tab.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+const linkActionClass = "w-full sm:w-auto";
 
 export function OverviewSection({
   initialData,
@@ -46,13 +89,15 @@ export function OverviewSection({
     error: analyticsError,
   } = useAnalytics(initialAnalytics);
 
+  const [tab, setTab] = useState<OverviewTab>("summary");
+
   useEffect(() => {
     if (error) toast("error", error);
   }, [error, toast]);
 
   if (loading || !metrics) return <DashboardLoading />;
 
-  return (
+return (
     <div className="grid gap-4 sm:gap-6">
       <PageHeader
         title="نظرة عامة"
@@ -60,58 +105,72 @@ export function OverviewSection({
         actions={<RefreshButton onRefresh={() => void refresh()} />}
       />
 
-      <OverviewKPIs metrics={metrics} />
+      <ActionCounters metrics={metrics} />
 
-      <AnalyticsStats
-        analytics={analytics}
-        loading={analyticsLoading}
-        error={analyticsError}
-        totals={{
-          calls: metrics.totalCalls,
-          whatsapp: metrics.totalWhatsapp,
-          views: metrics.totalViews,
-        }}
-      />
+      <OverviewTabs active={tab} onChange={setTab} />
 
-      <section className="grid gap-4 lg:grid-cols-2">
-        <PendingRequestsList
-          requests={metrics.pendingRequests}
-          busyKey={busyKey}
-          onApprove={(request) => void approveRequest(request)}
-          onReject={(requestId) => void rejectRequest(requestId)}
-          action={
-            <Link
-              href="/admin/requests"
-              className="flex min-h-12 w-full items-center justify-center rounded-xl border border-border px-4 text-base font-bold text-accent transition-colors hover:bg-accent/10 sm:w-auto"
-            >
-              الكل
-            </Link>
-          }
+      {tab === "summary" && (
+        <div className="grid gap-4 sm:gap-6">
+          <section className="grid gap-4 lg:grid-cols-2">
+            <PendingRequestsList
+              requests={metrics.pendingRequests}
+              busyKey={busyKey}
+              onApprove={(request) => void approveRequest(request)}
+              onReject={(requestId) => void rejectRequest(requestId)}
+              action={
+                <AdminButtonLink
+                  href="/admin/requests"
+                  variant="accentLink"
+                  className={linkActionClass}
+                >
+                  الكل
+                </AdminButtonLink>
+              }
+            />
+            <PendingReportsList
+              reports={metrics.pendingReports}
+              busyKey={busyKey}
+              onReview={(report) => void reviewReport(report)}
+              onDismiss={(reportId) => void dismissReport(reportId)}
+              action={
+                <AdminButtonLink
+                  href="/admin/reports"
+                  variant="accentLink"
+                  className={linkActionClass}
+                >
+                  الكل
+                </AdminButtonLink>
+              }
+            />
+          </section>
+
+          <SecondaryStats metrics={metrics} />
+        </div>
+      )}
+
+      {tab === "analytics" && (
+        <AnalyticsStats
+          analytics={analytics}
+          loading={analyticsLoading}
+          error={analyticsError}
+          totals={{
+            calls: metrics.totalCalls,
+            whatsapp: metrics.totalWhatsapp,
+            views: metrics.totalViews,
+          }}
         />
-        <PendingReportsList
-          reports={metrics.pendingReports}
-          busyKey={busyKey}
-          onReview={(report) => void reviewReport(report)}
-          onDismiss={(reportId) => void dismissReport(reportId)}
-          action={
-            <Link
-              href="/admin/reports"
-              className="flex min-h-12 w-full items-center justify-center rounded-xl border border-border px-4 text-base font-bold text-accent transition-colors hover:bg-accent/10 sm:w-auto"
-            >
-              الكل
-            </Link>
-          }
-        />
-      </section>
+      )}
 
-      <CategoryChart
-        items={metrics.categoryChart}
-        maxCount={metrics.maxCount}
-      />
-
-      <MostContactedList items={metrics.mostContacted} />
-
-      <RecentCraftsmenList craftsmen={metrics.recentCraftsmen} />
+      {tab === "manage" && (
+        <div className="grid gap-4 sm:gap-6">
+          <CategoryChart
+            items={metrics.categoryChart}
+            maxCount={metrics.maxCount}
+          />
+          <MostContactedList items={metrics.mostContacted} />
+          <RecentCraftsmenList craftsmen={metrics.recentCraftsmen} />
+        </div>
+      )}
     </div>
   );
 }

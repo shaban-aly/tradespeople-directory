@@ -4,6 +4,7 @@ import type { CraftsmanSort } from "@/lib/data/craftsmen";
 import { SearchFilters } from "@/components/search/SearchFilters";
 import { SearchResults } from "@/components/search/SearchResults";
 import { SearchHeaderTrigger } from "@/components/search/SearchHeaderTrigger";
+import { PushActivationLayer } from "@/components/notifications/PushActivationLayer";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +70,7 @@ export default async function SearchPage({
           </p>
 
           <SearchHeaderTrigger initialQuery={query} />
+          <PushActivationLayer context={{ scope: "general" }} />
         </div>
       </section>
 

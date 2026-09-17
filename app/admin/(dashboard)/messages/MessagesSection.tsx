@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { RefreshButton } from "@/components/admin/RefreshButton";
 import { MessageCard } from "@/components/admin/messages/MessageCard";
 import { MessageDetailsDrawer } from "@/components/admin/messages/MessageDetailsDrawer";
+import { FilterTabs } from "@/components/shared/ui/FilterTabs";
 import { IconMail } from "@/components/shared/icons";
 import type { ContactMessageRow } from "@/lib/db/admin";
 import { filterMessages } from "@/lib/db/admin-selectors";
@@ -83,33 +84,14 @@ export function MessagesSection({
       />
 
       <section className="grid gap-4 rounded-2xl border border-border bg-card p-6 shadow-card">
-        <div className="flex flex-wrap items-center gap-2">
-          {READ_TABS.map((tab) => {
-            const count = tab.value === "all" ? allCount : unreadCount;
-            const isActive = readFilter === tab.value;
-            return (
-              <button
-                key={tab.value}
-                type="button"
-                onClick={() => setReadFilter(tab.value)}
-                className={`flex min-h-12 items-center gap-2 rounded-xl px-4 text-base font-bold transition-colors ${
-                  isActive
-                    ? "bg-accent text-on-accent"
-                    : "border border-border text-muted hover:text-foreground"
-                }`}
-              >
-                {tab.label}
-                <span
-                  className={`rounded-full px-2 py-0.5 text-sm ${
-                    isActive ? "bg-on-accent/20" : "bg-accent/10 text-accent"
-                  }`}
-                >
-                  {toArabicDigits(count)}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        <FilterTabs
+          tabs={READ_TABS.map((tab) => ({
+            ...tab,
+            count: tab.value === "all" ? allCount : unreadCount,
+          }))}
+          active={readFilter}
+          onChange={setReadFilter}
+        />
 
         {filteredMessages.length === 0 ? (
           <EmptyState

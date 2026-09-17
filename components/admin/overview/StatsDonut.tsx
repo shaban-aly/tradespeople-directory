@@ -8,7 +8,7 @@ export function StatsDonut({
   display,
   label,
   sublabel,
-  strokeClass = "stroke-accent",
+  strokeClass = "stroke-chart-1",
   sizeClass = "h-24 w-24 sm:h-28 sm:w-28",
 }: {
   /** جزء من 0..1 — يُقصّ تلقائياً داخل المدى */

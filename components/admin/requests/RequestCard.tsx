@@ -1,4 +1,7 @@
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { RecordCard } from "@/components/admin/ui/RecordCard";
+import { DetailField, DetailFieldList } from "@/components/admin/ui/DetailField";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { IconTrash } from "@/components/shared/icons";
 import type { JoinRequestRow } from "@/lib/db/admin";
 import { toArabicDigits } from "@/lib/utils/format";
@@ -25,81 +28,65 @@ export function RequestCard({
         ? ("approved" as const)
         : ("rejected" as const);
 
+  const statusLabel =
+    request.status === "pending"
+      ? "معلق"
+      : request.status === "approved"
+        ? "مقبول"
+        : "مرفوض";
+
   return (
-    <article className="grid gap-4 rounded-xl border border-border p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <StatusBadge variant={statusVariant}>
-            {request.status === "pending"
-              ? "معلق"
-              : request.status === "approved"
-                ? "مقبول"
-                : "مرفوض"}
-          </StatusBadge>
-          <span className="text-base font-bold text-foreground">طلب تسجيل</span>
-        </div>
-        <span className="text-base text-muted">
-          {toArabicDigits(request.created_at.slice(0, 10))}
-        </span>
-      </div>
-
-      <div className="grid gap-2 text-base text-muted sm:grid-cols-2">
-        <p>
-          <span className="font-bold text-foreground">الاسم: </span>
-          {request.name}
-        </p>
-        <p>
-          <span className="font-bold text-foreground">التخصص: </span>
-          {request.category?.name}
-        </p>
-        <p>
-          <span className="font-bold text-foreground">المنطقة: </span>
-          {request.area?.name}
-        </p>
-        <p dir="ltr" className="text-right">
-          <span className="font-bold text-foreground">الهاتف: </span>
-          {request.phone}
-        </p>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={() => onDetails(request)}
-          className="min-h-12 rounded-xl border border-border px-4 text-base font-bold text-muted transition-colors hover:text-foreground"
-        >
-          التفاصيل
-        </button>
-        {request.status === "pending" && (
-          <>
-            <button
-              type="button"
-              disabled={busyKey === `approve-${request.id}`}
-              onClick={() => onApprove(request)}
-              className="min-h-12 rounded-xl bg-action px-4 text-base font-bold text-on-action disabled:opacity-50"
-            >
-              موافقة
-            </button>
-            <button
-              type="button"
-              disabled={busyKey === `reject-${request.id}`}
-              onClick={() => onReject(request)}
-              className="min-h-12 rounded-xl border border-danger/40 px-4 text-base font-bold text-danger disabled:opacity-50"
-            >
-              رفض
-            </button>
-          </>
-        )}
-        <button
-          type="button"
-          aria-label="حذف الطلب"
-          disabled={busyKey === `delete-request-${request.id}`}
-          onClick={() => onDelete(request)}
-          className="rounded-xl border border-border p-3 text-muted transition-colors hover:border-danger hover:text-danger disabled:opacity-50"
-        >
-          <IconTrash className="h-5 w-5" />
-        </button>
-      </div>
-    </article>
+    <RecordCard
+      badge={<StatusBadge variant={statusVariant}>{statusLabel}</StatusBadge>}
+      title="طلب تسجيل"
+      meta={toArabicDigits(request.created_at.slice(0, 10))}
+      body={
+        <DetailFieldList className="sm:grid-cols-2">
+          <DetailField label="الاسم">{request.name}</DetailField>
+          <DetailField label="التخصص">{request.category?.name}</DetailField>
+          <DetailField label="المنطقة">{request.area?.name}</DetailField>
+          <DetailField label="الهاتف" dir="ltr" className="text-right">
+            {request.phone}
+          </DetailField>
+        </DetailFieldList>
+      }
+      actions={
+        <>
+          <AdminButton type="button" variant="outline" onClick={() => onDetails(request)}>
+            التفاصيل
+          </AdminButton>
+          {request.status === "pending" && (
+            <>
+              <AdminButton
+                type="button"
+                variant="action"
+                disabled={busyKey === `approve-${request.id}`}
+                onClick={() => onApprove(request)}
+              >
+                موافقة
+              </AdminButton>
+              <AdminButton
+                type="button"
+                variant="outlineDanger"
+                disabled={busyKey === `reject-${request.id}`}
+                onClick={() => onReject(request)}
+              >
+                رفض
+              </AdminButton>
+            </>
+          )}
+          <AdminButton
+            type="button"
+            variant="dangerHover"
+            size="icon"
+            aria-label="حذف الطلب"
+            disabled={busyKey === `delete-request-${request.id}`}
+            onClick={() => onDelete(request)}
+          >
+            <IconTrash className="h-5 w-5" />
+          </AdminButton>
+        </>
+      }
+    />
   );
 }

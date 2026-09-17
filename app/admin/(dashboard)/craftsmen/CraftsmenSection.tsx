@@ -9,6 +9,7 @@ import { Modal } from "@/components/admin/Modal";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Pagination } from "@/components/admin/Pagination";
 import { RefreshButton } from "@/components/admin/RefreshButton";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { CraftsmenFilters } from "@/components/admin/craftsmen/CraftsmenFilters";
 import { CraftsmenTable } from "@/components/admin/craftsmen/CraftsmenTable";
 import { LinkAccountModal } from "@/components/admin/craftsmen/LinkAccountModal";
@@ -114,14 +115,13 @@ export function CraftsmenSection({ initialData }: { initialData: AdminCraftsmenD
         actions={
           <>
             <RefreshButton onRefresh={() => void refresh()} />
-            <button
+            <AdminButton
               type="button"
               onClick={() => setFormTarget("new")}
-              className="flex min-h-12 items-center gap-2 rounded-xl bg-accent px-4 text-base font-bold text-on-accent transition-colors hover:bg-accent/90"
             >
               <IconPlus className="h-5 w-5" />
               إضافة صنايعي
-            </button>
+            </AdminButton>
           </>
         }
       />
@@ -147,11 +147,12 @@ export function CraftsmenSection({ initialData }: { initialData: AdminCraftsmenD
             <CraftsmenTable
               craftsmen={pageItems}
               busyKey={busyKey}
-              onToggleVerified={(item) => void handleToggleVerified(item)}
+                onToggleVerified={(item) => void handleToggleVerified(item)}
               onTogglePublished={(item) => void handleTogglePublished(item)}
               onEdit={setFormTarget}
               onDelete={setDeleteTarget}
               onLinkAccount={setLinkTarget}
+              onView={(slug) => window.open(`/craftsman/${slug}`, "_blank")}
             />
             <Pagination
               page={safePage}

@@ -2,21 +2,27 @@ import { createSupabase } from "./client";
 import type { Database } from "./database.types";
 
 const MAX_NOTIFICATIONS = 50;
+const MAX_PAGE_NOTIFICATIONS = 200;
 const MAX_MARK_IDS = 200;
 
 export type NotificationRow = Database["public"]["Tables"]["notifications"]["Row"];
 
 /**
  * جلب آخر إشعارات المستخدم (ترتيب زمني تنازلي — الأحدث أولاً)
+ * الـ default يعود للجرس (50)؛ الصفحة الكاملة تطلب حداً أعلى (حتى 200)
  */
-export async function getUserNotifications(userId: string): Promise<NotificationRow[]> {
+export async function getUserNotifications(
+  userId: string,
+  limit?: number,
+): Promise<NotificationRow[]> {
+  const effective = Math.max(1, Math.min(limit ?? MAX_NOTIFICATIONS, MAX_PAGE_NOTIFICATIONS));
   const supabase = createSupabase();
   const { data, error } = await supabase
     .from("notifications")
     .select("*")
     .eq("recipient_id", userId)
     .order("created_at", { ascending: false })
-    .limit(MAX_NOTIFICATIONS);
+    .limit(effective);
 
   if (error || !data) {
     return [];

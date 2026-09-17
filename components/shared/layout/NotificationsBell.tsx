@@ -4,36 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSession } from "@/hooks/auth/useSession";
 import { useNotifications } from "@/hooks/useNotifications";
+import { formatRelativeTime } from "@/lib/utils/formatTime";
 import { IconBell, IconCheck, IconInbox } from "@/components/shared/icons";
 
 type NotificationMeta = {
   slug?: string;
 };
 
-function formatTime(iso: string): string {
-  const date = new Date(iso);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMin = Math.floor(diffMs / 60_000);
-
-  if (diffMin < 1) return "الآن";
-  if (diffMin < 60) return `منذ ${diffMin} دقيقة`;
-
-  const diffHours = Math.floor(diffMin / 60);
-  if (diffHours < 24) return `منذ ${diffHours} ساعة`;
-
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `منذ ${diffDays} يوم`;
-
-  return new Intl.DateTimeFormat("ar-EG", {
-    day: "numeric",
-    month: "short",
-  }).format(date);
-}
-
 export function NotificationsBell() {
   const { isLoggedIn } = useSession();
-  const { items, unreadCount, markAllRead } = useNotifications();
+  const { items, unreadCount, markAllRead, markAsRead } = useNotifications();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -78,7 +58,7 @@ export function NotificationsBell() {
         <div
           role="dialog"
           aria-label="الإشعارات"
-          className="absolute left-0 z-50 mt-2 w-80 origin-top-left rounded-2xl border border-border bg-card shadow-card overflow-hidden sm:w-96"
+          className="fixed left-1/2 top-16 z-50 w-[min(calc(100vw-2rem),24rem)] -translate-x-1/2 origin-top rounded-2xl border border-border bg-card shadow-card overflow-hidden sm:absolute sm:left-0 sm:top-auto sm:mt-2 sm:w-96 sm:translate-x-0 sm:origin-top-left"
         >
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <span className="text-sm font-bold text-foreground">الإشعارات</span>
@@ -116,7 +96,7 @@ export function NotificationsBell() {
                           {n.title}
                         </p>
                         <span className="shrink-0 text-[11px] text-muted">
-                          {formatTime(n.created_at)}
+                          {formatRelativeTime(n.created_at)}
                         </span>
                       </div>
                       <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted">
@@ -131,7 +111,7 @@ export function NotificationsBell() {
                           href={href}
                           onClick={() => {
                             setOpen(false);
-                            if (!n.read_at) void markAllRead();
+                            if (!n.read_at) void markAsRead(n.id);
                           }}
                           className={`block px-4 py-3 transition-colors hover:bg-accent/10 ${
                             n.read_at ? "opacity-70" : ""
@@ -141,6 +121,9 @@ export function NotificationsBell() {
                         </Link>
                       ) : (
                         <div
+                          onClick={() => {
+                            if (!n.read_at) void markAsRead(n.id);
+                          }}
                           className={`block px-4 py-3 transition-colors hover:bg-accent/10 ${
                             n.read_at ? "opacity-70" : ""
                           }`}
@@ -153,6 +136,17 @@ export function NotificationsBell() {
                 })}
               </ul>
             )}
+          </div>
+
+          <div className="border-t border-border p-2">
+            <Link
+              href="/notifications"
+              onClick={() => setOpen(false)}
+              className="flex min-h-12 items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-accent transition-colors hover:bg-accent/10"
+            >
+              <IconInbox className="h-4 w-4" />
+              عرض كل الإشعارات
+            </Link>
           </div>
         </div>
       )}

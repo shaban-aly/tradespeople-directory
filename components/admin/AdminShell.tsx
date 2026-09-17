@@ -3,13 +3,17 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ADMIN_NAV_ITEMS, AdminNav } from "@/components/admin/AdminNav";
+import { AdminNav, getAdminNavTitle } from "@/components/admin/AdminNav";
+import { TopbarAttentionChip } from "@/components/admin/overview/TopbarAttentionChip";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
+import { useAdminNavCounts } from "@/hooks/admin/useAdminNavCounts";
 import { ToastProvider } from "@/components/admin/ToastProvider";
 import { NotificationsToast } from "@/components/shared/ui/NotificationsToast";
 import { IconLogOut, IconMenu, IconX } from "@/components/shared/icons";
 import { ThemeToggle } from "@/components/shared/ui/ThemeToggle";
 import { useAdminSession } from "@/hooks/auth/useAdminSession";
 import { useBodyScrollLock } from "@/hooks/ui/useBodyScrollLock";
+import type { AdminNavCounts } from "@/lib/db/admin";
 
 function Brand() {
   return (
@@ -25,14 +29,16 @@ function Brand() {
 function AdminSidebar({
   onSignOut,
   email,
+  counts,
 }: {
   onSignOut: () => void;
   email?: string;
+  counts?: AdminNavCounts;
 }) {
   return (
     <div className="flex h-full flex-col gap-6 p-4">
       <Brand />
-      <AdminNav />
+      <AdminNav counts={counts} />
       <div className="mt-auto grid gap-3 border-t border-border pt-4">
         <div className="grid gap-1">
           <p className="text-base font-bold text-foreground">المشرف</p>
@@ -40,14 +46,14 @@ function AdminSidebar({
             {email}
           </p>
         </div>
-        <button
+        <AdminButton
           type="button"
+          variant="dangerHover"
           onClick={onSignOut}
-          className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border px-4 text-base font-bold text-muted transition-colors hover:border-danger/50 hover:text-danger"
         >
           <IconLogOut className="h-5 w-5" />
           تسجيل الخروج
-        </button>
+        </AdminButton>
       </div>
     </div>
   );
@@ -57,9 +63,26 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, isAdmin, loading, signOut } = useAdminSession();
+  const { counts, refresh: refreshNavCounts } = useAdminNavCounts();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerClosing, setDrawerClosing] = useState(false);
   useBodyScrollLock(drawerOpen);
+
+  // تحديث عدّادات الـ sidebar أثناء التنقل بين الأقسام
+  useEffect(() => {
+    if (loading || !user) return;
+    const timer = window.setTimeout(() => {
+      void refreshNavCounts();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [pathname, loading, user, refreshNavCounts]);
+
+  // إنعاش العدّادات بعد أي عملية متابعة ناجحة (approve/reject/review/dismiss/read)
+  useEffect(() => {
+    const onNavRefresh = () => void refreshNavCounts();
+    window.addEventListener("admin-nav-refresh", onNavRefresh);
+    return () => window.removeEventListener("admin-nav-refresh", onNavRefresh);
+  }, [refreshNavCounts]);
 
   const openDrawer = useCallback(() => {
     setDrawerClosing(false);
@@ -97,12 +120,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     return () => window.clearTimeout(drawerTimer);
   }, [pathname]);
 
-  const currentTitle =
-    ADMIN_NAV_ITEMS.find(
-      (item) =>
-        pathname === item.href ||
-        (item.href !== "/admin" && pathname.startsWith(item.href)),
-    )?.label ?? "لوحة التحكم";
+  const currentTitle = getAdminNavTitle(pathname);
 
   async function handleSignOut() {
     await signOut();
@@ -130,13 +148,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <p className="text-base font-bold text-accent">
             الحساب الحالي مسجل دخول لكنه ليس مشرفاً.
           </p>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="min-h-12 rounded-xl bg-accent px-4 text-base font-bold text-on-accent"
-          >
+          <AdminButton type="button" onClick={handleSignOut}>
             تسجيل الخروج
-          </button>
+          </AdminButton>
         </div>
       </div>
     );
@@ -145,8 +159,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <ToastProvider>
       <div className="flex min-h-screen bg-background">
-        <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-e border-border bg-card lg:flex">
-          <AdminSidebar onSignOut={() => void handleSignOut()} email={user.email} />
+        <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-e border-border bg-elevated lg:flex">
+          <AdminSidebar
+            onSignOut={() => void handleSignOut()}
+            email={user.email}
+            counts={counts ?? undefined}
+          />
         </aside>
 
         {drawerOpen && (
@@ -164,7 +182,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               }`}
             />
             <aside
-              className={`absolute inset-y-0 right-0 flex w-72 max-w-[85vw] flex-col border-e border-border bg-card shadow-card transition-transform duration-300 ease-out ${
+              className={`absolute inset-y-0 right-0 flex w-72 max-w-[85vw] flex-col border-e border-border bg-elevated shadow-card transition-transform duration-300 ease-out ${
                 drawerClosing ? "translate-x-full" : "translate-x-0"
               }`}
             >
@@ -180,7 +198,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto">
-                <AdminSidebar onSignOut={() => void handleSignOut()} email={user.email} />
+                <AdminSidebar
+                  onSignOut={() => void handleSignOut()}
+                  email={user.email}
+                  counts={counts ?? undefined}
+                />
               </div>
             </aside>
           </div>
@@ -201,7 +223,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 {currentTitle}
               </span>
             </div>
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              <TopbarAttentionChip counts={counts ?? undefined} />
+              <ThemeToggle />
+            </div>
           </header>
           <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 lg:py-8">
             {children}

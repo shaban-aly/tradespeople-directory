@@ -35,7 +35,7 @@ export function Modal({
         onClick={onClose}
         className="absolute inset-0 bg-black/50"
       />
-      <div className="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-card p-6 shadow-card">
+      <div className="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-popover p-6 shadow-card">
         <div className="mb-4 flex items-start justify-between gap-4">
           <h3 className="font-heading text-xl font-extrabold text-foreground">
             {title}

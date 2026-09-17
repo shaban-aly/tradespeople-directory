@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Modal } from "@/components/admin/Modal";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { linkCraftsmanAccount, type CraftsmanRow } from "@/lib/db/admin";
 
 interface LinkAccountModalProps {
@@ -60,7 +61,7 @@ export function LinkAccountModal({
         </p>
 
         {error && (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-600">
+          <div className="rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
             {error}
           </div>
         )}
@@ -82,27 +83,29 @@ export function LinkAccountModal({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="example@gmail.com"
-            className="min-h-12 w-full rounded-xl border border-border bg-background px-4 py-3 text-base text-foreground focus:outline-none"
+            className="min-h-12 w-full rounded-xl border border-border-strong bg-background px-4 py-3 text-base text-foreground focus:outline-none"
             dir="ltr"
           />
         </div>
 
         <div className="mt-2 flex justify-end gap-2">
-          <button
+          <AdminButton
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={onClose}
             disabled={loading}
-            className="min-h-12 rounded-xl border border-border px-4 py-2 text-sm font-semibold text-muted hover:bg-card active:scale-98"
           >
             إلغاء
-          </button>
-          <button
+          </AdminButton>
+          <AdminButton
             type="submit"
+            variant="action"
+            size="sm"
             disabled={loading}
-            className="min-h-12 rounded-xl bg-action px-5 py-2 text-sm font-bold text-on-action shadow-sm hover:bg-action/90 active:scale-98 disabled:opacity-50"
           >
             {loading ? "جاري الربط..." : "ربط الحساب الآن"}
-          </button>
+          </AdminButton>
         </div>
       </form>
     </Modal>

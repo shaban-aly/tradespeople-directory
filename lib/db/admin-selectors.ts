@@ -8,7 +8,7 @@ import type {
   ReportRow,
 } from "./admin";
 
-export type RequestStatusFilter = "all" | "pending" | "approved" | "rejected";
+export type RequestStatusFilter = "all" | "pending" | "rejected";
 export type ReportStatusFilter = "all" | "pending" | "reviewed" | "dismissed";
 
 export type CraftsmanFilter = {

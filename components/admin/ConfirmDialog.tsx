@@ -1,6 +1,7 @@
 "use client";
 
 import { Modal } from "./Modal";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
 
 export function ConfirmDialog({
   open,
@@ -28,26 +29,22 @@ export function ConfirmDialog({
       title={title}
       footer={
         <>
-          <button
+          <AdminButton
             type="button"
+            variant="outline"
             onClick={onClose}
             disabled={busy}
-            className="min-h-12 rounded-xl border border-border px-4 text-base font-bold text-muted transition-colors hover:text-foreground"
           >
             إلغاء
-          </button>
-          <button
+          </AdminButton>
+          <AdminButton
             type="button"
+            variant={danger ? "danger" : "primary"}
             onClick={onConfirm}
             disabled={busy}
-            className={`min-h-12 rounded-xl px-4 text-base font-bold text-on-accent transition-colors ${
-              danger
-                ? "bg-danger hover:bg-danger/90"
-                : "bg-accent hover:bg-accent/90"
-            } disabled:opacity-50`}
           >
             {busy ? "جاري..." : confirmLabel}
-          </button>
+          </AdminButton>
         </>
       }
     >

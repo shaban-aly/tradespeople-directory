@@ -49,8 +49,12 @@ TASK*
 AGENTS.md
 .agents
 
-#supabase
-/supabase
+# Supabase: version-control config, migrations, and Edge Functions.
+# Local CLI state and environment secrets are ignored by supabase/.gitignore.
 
 #backups
 /backups
+
+# firebase service account (أسرار — لا تُرفع)
+tradespeople-directory-65b35-firebase-adminsdk-fbsvc-a1ca8e1437.json
+*.firebase-adminsdk-*.json

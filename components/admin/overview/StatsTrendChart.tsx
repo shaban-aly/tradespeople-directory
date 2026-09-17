@@ -44,7 +44,7 @@ export function StatsTrendChart({ points }: { points: DailyPoint[] }) {
               width={barW}
               height={Math.max(viewsH, 2)}
               rx={4}
-              className="fill-accent"
+              className="fill-chart-1"
             />
             <rect
               x={xCenter + barW * 0.06}
@@ -52,13 +52,13 @@ export function StatsTrendChart({ points }: { points: DailyPoint[] }) {
               width={barW}
               height={Math.max(contactsH, 2)}
               rx={4}
-              className="fill-action"
+              className="fill-chart-2"
             />
             <text
               x={xCenter}
               y={VIEW_H - 8}
               textAnchor="middle"
-              className="fill-muted text-[11px]"
+              className="fill-chart-label text-[11px]"
             >
               {toArabicDigits(Number(dayNum))}
             </text>
@@ -73,11 +73,11 @@ export function StatsTrendLegend() {
   return (
     <div className="flex flex-wrap items-center gap-4 text-sm text-muted">
       <span className="flex items-center gap-1.5">
-        <span className="inline-block h-2.5 w-2.5 rounded-full bg-accent" aria-hidden />
+        <span className="inline-block h-2.5 w-2.5 rounded-full bg-chart-1" aria-hidden />
         مشاهدات
       </span>
       <span className="flex items-center gap-1.5">
-        <span className="inline-block h-2.5 w-2.5 rounded-full bg-action" aria-hidden />
+        <span className="inline-block h-2.5 w-2.5 rounded-full bg-chart-2" aria-hidden />
         تواصل (اتصال + واتساب)
       </span>
     </div>

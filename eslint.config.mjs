@@ -13,6 +13,7 @@ const eslintConfig = defineConfig([
     "docs/**",
     "*.md",
     "*.test.ts",
+    "supabase/functions/**",
   ]),
 ]);
 

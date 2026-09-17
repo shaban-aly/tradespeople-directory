@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Modal } from "@/components/admin/Modal";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
 import type { JoinRequestRow } from "@/lib/db/admin";
 
 export function ApproveRequestModal({
@@ -22,22 +23,22 @@ export function ApproveRequestModal({
       title="موافقة على طلب التسجيل"
       footer={
         <>
-          <button
+          <AdminButton
             type="button"
+            variant="outline"
             onClick={onClose}
             disabled={busy}
-            className="min-h-12 rounded-xl border border-border px-4 text-base font-bold text-muted transition-colors hover:text-foreground"
           >
             إلغاء
-          </button>
-          <button
+          </AdminButton>
+          <AdminButton
             type="button"
+            variant="action"
             onClick={onConfirm}
             disabled={busy}
-            className="min-h-12 rounded-xl bg-action px-4 text-base font-bold text-on-action disabled:opacity-50"
           >
             {busy ? "جاري النشر..." : "نشر الصنايعي"}
-          </button>
+          </AdminButton>
         </>
       }
     >

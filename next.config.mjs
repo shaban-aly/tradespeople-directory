@@ -44,16 +44,19 @@ const nextConfig = {
     const csp = [
       "default-src 'self'",
       // script-src: جميع مصادر السكريبتات بما فيها Google Identity Services
-      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://accounts.google.com/gsi/client${gaHost ? ` ${gaHost}` : ""} ${adsenseScriptHosts}`,
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://accounts.google.com/gsi/client https://www.gstatic.com${gaHost ? ` ${gaHost}` : ""} ${adsenseScriptHosts}`,
       // script-src-elem صريح لتجنب أخطاء الـ fallback من المتصفح
-      `script-src-elem 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://accounts.google.com/gsi/client${gaHost ? ` ${gaHost}` : ""} ${adsenseScriptHosts}`,
+      `script-src-elem 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://accounts.google.com/gsi/client https://www.gstatic.com${gaHost ? ` ${gaHost}` : ""} ${adsenseScriptHosts}`,
       "style-src 'self' 'unsafe-inline'",
       "font-src 'self' data:",
       `img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com https://*.googleusercontent.com${supabaseHost ? ` https://${supabaseHost}` : ""}${gaHost ? ` ${gaHost}` : ""} ${adsenseHosts}`,
       "media-src 'self' blob:",
       // connect-src: تشمل GA POST requests وكل دومينات Ads و Google Auth
       // + wss:// لنفس host الـ Supabase — إلزامي لاتصال Realtime WebSocket
-      `connect-src 'self' https://accounts.google.com${supabaseUrl ? ` ${supabaseUrl}` : ""}${supabaseHost ? ` wss://${supabaseHost}` : ""} ${gaConnectHosts} ${adsenseHosts}`,
+      // + fcm + installations + registrations — إلزاميان لإشعارات Firebase (SW/token)
+      // + gstatic — إلزامي لتحميل أكواد Firebase Messaging
+      `connect-src 'self' https://accounts.google.com https://fcm.googleapis.com https://firebaseinstallations.googleapis.com https://fcmregistrations.googleapis.com https://www.gstatic.com${supabaseUrl ? ` ${supabaseUrl}` : ""}${supabaseHost ? ` wss://${supabaseHost}` : ""} ${gaConnectHosts} ${adsenseHosts}`,
+      "worker-src 'self' blob:",
       `frame-src 'self' https://accounts.google.com ${adsenseFrameHosts}`,
       "base-uri 'self'",
       "form-action 'self'",

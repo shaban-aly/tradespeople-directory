@@ -1,9 +1,7 @@
 import { SearchInput } from "@/components/admin/SearchInput";
+import { AdminSelect } from "@/components/admin/ui/AdminSelect";
 import type { CategoryRow } from "@/lib/db/admin";
 import type { CraftsmanFilter } from "@/lib/db/admin-selectors";
-
-const selectClass =
-  "w-full rounded-xl border border-border bg-card px-3 py-2.5 text-base text-foreground focus:border-accent focus:outline-none";
 
 export function CraftsmenFilters({
   filter,
@@ -21,12 +19,9 @@ export function CraftsmenFilters({
         onChange={(search) => onChange({ search })}
         placeholder="ابحث بالاسم أو الهاتف..."
       />
-      <select
+      <AdminSelect
         value={filter.category}
-        onChange={(event) =>
-          onChange({ category: event.target.value })
-        }
-        className={selectClass}
+        onChange={(event) => onChange({ category: event.target.value })}
       >
         <option value="all">كل التخصصات</option>
         {categories.map((category) => (
@@ -34,33 +29,27 @@ export function CraftsmenFilters({
             {category.name}
           </option>
         ))}
-      </select>
-      <select
+      </AdminSelect>
+      <AdminSelect
         value={filter.published}
         onChange={(event) =>
-          onChange({
-            published: event.target.value as CraftsmanFilter["published"],
-          })
+          onChange({ published: event.target.value as CraftsmanFilter["published"] })
         }
-        className={selectClass}
       >
         <option value="all">منشور / مخفي</option>
         <option value="published">منشور فقط</option>
         <option value="hidden">مخفي فقط</option>
-      </select>
-      <select
+      </AdminSelect>
+      <AdminSelect
         value={filter.verified}
         onChange={(event) =>
-          onChange({
-            verified: event.target.value as CraftsmanFilter["verified"],
-          })
+          onChange({ verified: event.target.value as CraftsmanFilter["verified"] })
         }
-        className={selectClass}
       >
         <option value="all">موثّق / غير موثق</option>
         <option value="verified">موثّق فقط</option>
         <option value="unverified">غير موثق فقط</option>
-      </select>
+      </AdminSelect>
     </div>
   );
 }

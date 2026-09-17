@@ -1,5 +1,6 @@
 import { AdminSection } from "@/components/admin/AdminSection";
 import { EmptyState } from "@/components/admin/EmptyState";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { IconInbox } from "@/components/shared/icons";
 import type { JoinRequestRow } from "@/lib/db/admin";
 import { toArabicDigits } from "@/lib/utils/format";
@@ -47,22 +48,22 @@ export function PendingRequestsList({
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <button
+                <AdminButton
                   type="button"
+                  variant="action"
                   disabled={busyKey === `approve-${request.id}`}
                   onClick={() => onApprove(request)}
-                  className="min-h-12 rounded-xl bg-action px-4 text-base font-bold text-on-action disabled:opacity-50"
                 >
                   {busyKey === `approve-${request.id}` ? "جاري..." : "موافقة"}
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
                   type="button"
+                  variant="outlineDanger"
                   disabled={busyKey === `reject-${request.id}`}
                   onClick={() => onReject(request.id)}
-                  className="min-h-12 rounded-xl border border-danger/40 px-4 text-base font-bold text-danger disabled:opacity-50"
                 >
                   {busyKey === `reject-${request.id}` ? "جاري..." : "رفض"}
-                </button>
+                </AdminButton>
               </div>
             </div>
           ))}
