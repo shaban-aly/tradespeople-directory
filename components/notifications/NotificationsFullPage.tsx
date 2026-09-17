@@ -24,6 +24,7 @@ const PAGE_LIMIT = 200;
 
 type NotificationMeta = {
   slug?: string;
+  link?: string;
 };
 
 function iconForType(type: string) {
@@ -43,6 +44,7 @@ function iconForType(type: string) {
     case "report_status":
       return { Icon: IconAlert, tone: "bg-danger/10 text-danger" };
     case "new_request":
+    case "new_craftsman":
       return { Icon: IconUserPlus, tone: "bg-accent/10 text-accent" };
     case "new_report":
       return { Icon: IconAlert, tone: "bg-danger/10 text-danger" };
@@ -62,11 +64,13 @@ function NotificationRow({
 }) {
   const { Icon, tone } = iconForType(n.type);
   const meta = (n.metadata ?? {}) as NotificationMeta;
-  const href = meta.slug
-    ? `/craftsman/${meta.slug}`
-    : n.type.startsWith("new_")
-      ? "/admin"
-      : null;
+  const href = meta.link
+    ? meta.link
+    : meta.slug
+      ? `/craftsman/${meta.slug}`
+      : n.type === "new_request" || n.type === "new_report" || n.type === "new_message"
+        ? "/admin"
+        : null;
 
   const row = (
     <>

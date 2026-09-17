@@ -9,6 +9,7 @@ import { IconBell, IconCheck, IconInbox } from "@/components/shared/icons";
 
 type NotificationMeta = {
   slug?: string;
+  link?: string;
 };
 
 export function NotificationsBell() {
@@ -84,11 +85,13 @@ export function NotificationsBell() {
               <ul className="divide-y divide-border">
                 {items.map((n) => {
                   const meta = (n.metadata ?? {}) as NotificationMeta;
-                  const href = meta.slug
-                    ? `/craftsman/${meta.slug}`
-                    : n.type.startsWith("new_")
-                      ? "/admin"
-                      : null;
+                  const href = meta.link
+                    ? meta.link
+                    : meta.slug
+                      ? `/craftsman/${meta.slug}`
+                      : n.type === "new_request" || n.type === "new_report" || n.type === "new_message"
+                        ? "/admin"
+                        : null;
                   const row = (
                     <>
                       <div className="flex items-start justify-between gap-2">
