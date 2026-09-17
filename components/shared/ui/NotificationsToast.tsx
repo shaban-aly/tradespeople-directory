@@ -3,23 +3,25 @@
 import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
+import { useForegroundPush } from "@/hooks/useForegroundPush";
 import { useBehaviorPushBridge } from "@/hooks/useBehaviorPushBridge";
 import { type NotificationRow } from "@/lib/db/notifications";
+import { type ForegroundPushMessage } from "@/lib/push/client";
 import { IconBell, IconX } from "@/components/shared/icons";
 
 type LiveToast = {
   id: string;
   title: string;
   body: string;
-  slug?: string;
+  link?: string;
 };
 
 const TOAST_TTL_MS = 6000;
 
 /**
- * Toast داخل التطبيق للإشعارات الجديدة الواردة عبر Realtime (قناة Delivery
- * منفصلة عن المركز — جرس الهيدر). يُركَّب مرة واحدة في الهيدر المشترك، وكل
- * Toast يظهر 6 ثوانٍ ثم يختفي تلقائياً (يمكن إغلاقه مبكراً).
+ * Toast داخل التطبيق للإشعارات الجديدة الواردة عبر Realtime و FCM Foreground Push.
+ * مسار عرض موحد يمنع التكرار (Deduplication) عبر notification_id، ويعرض
+ * التوست لمدة 6 ثوانٍ مع إمكانية النقر والانتقال للرابط أو الإغلاق.
  */
 export function NotificationsToast() {
   useBehaviorPushBridge();
@@ -30,21 +32,49 @@ export function NotificationsToast() {
     setToasts((list) => list.filter((t) => t.id !== id));
   }, []);
 
-  useRealtimeNotifications(
-    useCallback((row: NotificationRow) => {
-      // منع التكرار عند إعادة الاشتراك أو مضاعفة الصف نفسه
-      if (seen.current.has(row.id)) return;
-      seen.current.add(row.id);
-      if (seen.current.size > 200) seen.current.clear();
+  // مسار العرض الموحد: يفحص الـ ID ويمنع التكرار تماماً بين Realtime و FCM Push
+  const displayToast = useCallback((toast: LiveToast) => {
+    if (!toast.id || seen.current.has(toast.id)) return;
+    seen.current.add(toast.id);
+    if (seen.current.size > 200) seen.current.clear();
 
-      const meta = (row.metadata ?? {}) as { slug?: string };
-      setToasts((list) =>
-        [...list, { id: row.id, title: row.title, body: row.body, slug: meta.slug }].slice(-3),
-      );
-      window.setTimeout(() => {
-        setToasts((list) => list.filter((t) => t.id !== row.id));
-      }, TOAST_TTL_MS);
-    }, []),
+    setToasts((list) => [...list, toast].slice(-3));
+    window.setTimeout(() => {
+      setToasts((list) => list.filter((t) => t.id !== toast.id));
+    }, TOAST_TTL_MS);
+  }, []);
+
+  // 1. مسار Supabase Realtime (للمستخدمين المسجلين)
+  useRealtimeNotifications(
+    useCallback(
+      (row: NotificationRow) => {
+        const meta = (row.metadata ?? {}) as { slug?: string };
+        const link = meta.slug ? `/craftsman/${meta.slug}` : undefined;
+        displayToast({
+          id: row.id,
+          title: row.title,
+          body: row.body,
+          link,
+        });
+      },
+      [displayToast],
+    ),
+  );
+
+  // 2. مسار FCM Foreground Push (للمسجلين والزوار في الـ foreground)
+  useForegroundPush(
+    useCallback(
+      (msg: ForegroundPushMessage) => {
+        const id = msg.notificationId || `fcm-${msg.title}-${msg.body}`;
+        displayToast({
+          id,
+          title: msg.title,
+          body: msg.body,
+          link: msg.link,
+        });
+      },
+      [displayToast],
+    ),
   );
 
   if (toasts.length === 0) {
@@ -54,7 +84,7 @@ export function NotificationsToast() {
   return (
     <div className="pointer-events-none fixed top-16 left-1/2 z-[120] flex w-full max-w-sm -translate-x-1/2 flex-col gap-2 px-4">
       {toasts.map((toast) => {
-        const href = toast.slug ? `/craftsman/${toast.slug}` : null;
+        const href = toast.link || null;
         return (
           <div
             key={toast.id}

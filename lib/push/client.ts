@@ -99,3 +99,66 @@ export async function revokePushToken(): Promise<boolean> {
     return false;
   }
 }
+
+export interface ForegroundPushMessage {
+  title: string;
+  body: string;
+  link?: string;
+  notificationId?: string;
+}
+
+/**
+ * الاستماع لإشعارات FCM الواردة أثناء فتح واستخدام التطبيق (Foreground).
+ * يستخرج البيانات من payload.data فقط (data-only).
+ * يعيد دالة إلغاء اشتراك (cleanup) لفك الـ listener بأمان.
+ */
+export function listenToForegroundPush(
+  callback: (message: ForegroundPushMessage) => void,
+): () => void {
+  if (
+    typeof window === "undefined" ||
+    typeof Notification === "undefined" ||
+    Notification.permission !== "granted"
+  ) {
+    return () => {};
+  }
+
+  let unsubscribe: (() => void) | null = null;
+  let isCancelled = false;
+
+  void (async () => {
+    const msg = await getMessagingSafe();
+    if (!msg || isCancelled) return;
+
+    try {
+      const { onMessage } = await import("firebase/messaging");
+      if (isCancelled) return;
+
+      unsubscribe = onMessage(msg, (payload) => {
+        const data = (payload.data ?? {}) as Record<string, string>;
+        const title = data.title || "إشعار جديد";
+        const body = data.body || "";
+        const link = data.link || undefined;
+        const notificationId = data.notification_id || undefined;
+
+        callback({
+          title,
+          body,
+          link,
+          notificationId,
+        });
+      });
+    } catch (err) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("[Push Client] Failed to listen to foreground push:", err);
+      }
+    }
+  })();
+
+  return () => {
+    isCancelled = true;
+    if (unsubscribe) {
+      unsubscribe();
+    }
+  };
+}
