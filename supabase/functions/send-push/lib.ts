@@ -11,13 +11,8 @@ export interface ServiceAccount {
 export interface FcmMessage {
   message: {
     token: string;
-    notification: { title: string; body: string };
-    webpush?: {
-      fcm_options?: {
-        link?: string;
-        analytics_label?: string;
-      };
-    };
+    /** data-only payload — لا notification كائن عمداً لمنع العرض التلقائي من Firebase SDK */
+    data: Record<string, string>;
   };
 }
 
@@ -100,22 +95,19 @@ export function buildFcmMessage(
   title: string,
   body: string,
   linkUrl?: string,
+  notificationId?: string,
 ): FcmMessage {
-  const message: FcmMessage = {
-    message: {
-      token,
-      notification: { title, body },
-    },
+  // data-only payload: Firebase SDK لن يعرض الإشعار تلقائياً.
+  // العرض الوحيد يتم عبر self.registration.showNotification() في onBackgroundMessage.
+  const data: Record<string, string> = {
+    title,
+    body,
+    link: linkUrl ?? "",
   };
-  if (linkUrl) {
-    message.message.webpush = {
-      fcm_options: {
-        link: linkUrl,
-        analytics_label: "notification-open",
-      },
-    };
+  if (notificationId) {
+    data.notification_id = notificationId;
   }
-  return message;
+  return { message: { token, data } };
 }
 
 export function fcmSendEndpoint(projectId: string): string {

@@ -28,14 +28,17 @@ const app = firebase.initializeApp(${JSON.stringify(config)});
 const messaging = firebase.messaging(app);
 
 messaging.onBackgroundMessage((payload) => {
-  const notification = payload.notification ?? {};
-  const title = notification.title || "إشعار جديد";
-  const body = notification.body || "";
-  const link = (payload.data && payload.data.link) || "/notifications";
+  const data = (payload.data ?? {}) as Record<string, string>;
+  const title = data.title || "إشعار جديد";
+  const body = data.body || "";
+  const link = data.link || "/notifications";
+  const notificationId = data.notification_id;
   self.registration.showNotification(title, {
     body,
+    icon: "/favicon.svg",
     data: { link },
-    tag: payload.messageId ? String(payload.messageId) : undefined,
+    // tag يمنع تراكم إشعارات متطابقة في مركز الإشعارات (آلية ثانوية فقط)
+    tag: notificationId || undefined,
   });
 });
 

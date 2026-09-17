@@ -115,7 +115,7 @@ async function handleRegisteredNotification(
   result.notifiedTokens = tokens.length;
 
   for (const row of tokens) {
-    const message = buildFcmMessage(row.token, notification.title, notification.body, link);
+    const message = buildFcmMessage(row.token, notification.title, notification.body, link, notificationId);
     try {
       const res = await fetch(endpoint, {
         method: "POST",
