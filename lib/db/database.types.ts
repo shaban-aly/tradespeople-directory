@@ -558,26 +558,35 @@ export type Database = {
       user_push_tokens: {
         Row: {
           created_at: string
+          device_name: string
+          device_type: string
           id: string
           last_seen_at: string
           platform: string
           token: string
+          user_agent: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          device_name?: string
+          device_type?: string
           id?: string
           last_seen_at?: string
           platform?: string
           token: string
+          user_agent?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          device_name?: string
+          device_type?: string
           id?: string
           last_seen_at?: string
           platform?: string
           token?: string
+          user_agent?: string
           user_id?: string
         }
         Relationships: []
@@ -678,7 +687,13 @@ export type Database = {
         Returns: undefined
       }
       register_push_token: {
-        Args: { p_platform?: string; p_token: string }
+        Args: {
+          p_device_name?: string
+          p_device_type?: string
+          p_platform?: string
+          p_token: string
+          p_user_agent?: string
+        }
         Returns: undefined
       }
       reject_craftsman_application: {

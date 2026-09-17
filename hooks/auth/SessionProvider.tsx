@@ -10,6 +10,8 @@ import {
 } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createSupabase } from "@/lib/db/client";
+import { performSignOut } from "@/lib/auth/logout";
+import { syncDevicePushOnLogin } from "@/lib/push/activation";
 import type { SessionProfile, UserRole } from "@/hooks/auth/useSession";
 
 export interface SessionContextValue {
@@ -68,7 +70,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const t = window.setTimeout(() => void sync(), 0);
     const {
       data: { subscription },
-    } = createSupabase().auth.onAuthStateChange(() => void sync());
+    } = createSupabase().auth.onAuthStateChange((event, session) => {
+      void sync();
+      if (event === "SIGNED_IN" || (event === "INITIAL_SESSION" && session?.user)) {
+        void syncDevicePushOnLogin();
+      }
+    });
     return () => {
       window.clearTimeout(t);
       subscription.unsubscribe();
@@ -76,7 +83,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [sync]);
 
   const signOut = useCallback(async () => {
-    await createSupabase().auth.signOut();
+    await performSignOut();
     setUser(null);
     setProfile(null);
   }, []);

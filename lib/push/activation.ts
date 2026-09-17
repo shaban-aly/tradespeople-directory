@@ -231,3 +231,24 @@ export async function executePushActivation(options: {
 
   return { ok: false, status: "idle", token: null };
 }
+
+/**
+ * مزامنة تلقائية لتوكن الجهاز الحالي فور تسجيل الدخول إذا كان إذن المتصفح ممنوحاً مسبقاً
+ */
+export async function syncDevicePushOnLogin(): Promise<boolean> {
+  if (typeof window === "undefined" || typeof Notification === "undefined") return false;
+  if (Notification.permission !== "granted") return false;
+
+  const token = await requestPushToken();
+  if (!token) return false;
+
+  const ok = await registerPushToken(token);
+  if (ok) {
+    try {
+      window.localStorage.setItem(PUSH_STORAGE_KEY, PUSH_ENABLED_VALUE);
+    } catch {
+      // تجاهل
+    }
+  }
+  return ok;
+}

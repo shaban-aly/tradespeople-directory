@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createSupabase } from "@/lib/db/client";
 
+import { performSignOut } from "@/lib/auth/logout";
+
 async function getAdminFlag(userId: string): Promise<boolean> {
   const { data } = await createSupabase()
     .from("profiles")
@@ -68,7 +70,7 @@ export function useAdminSession() {
   }
 
   async function signOut() {
-    await createSupabase().auth.signOut();
+    await performSignOut();
     setUser(null);
     setIsAdmin(false);
   }
