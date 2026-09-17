@@ -10,7 +10,7 @@ try {
 // ---------------------------------------------------------------------------
 // 2. PWA Caching & Lifecycle
 // ---------------------------------------------------------------------------
-const CACHE_VERSION = "v4"; // رُفع الإصدار لتحديث Service Worker الموحد
+const CACHE_VERSION = "v5"; // رُفع الإصدار لتحديث Service Worker الموحد
 const PRECACHE_NAME = `shell-${CACHE_VERSION}`;
 const RUNTIME_NAME = `runtime-${CACHE_VERSION}`;
 
