@@ -5,6 +5,7 @@ import { ProfileCard } from "@/components/profile/ProfileCard";
 import { ThemeSettings } from "@/components/profile/ThemeSettings";
 import { PushSettingsCard } from "@/components/notifications/PushSettingsCard";
 import { SignOutButton } from "@/components/profile/SignOutButton";
+import { TourHelpCard } from "@/components/profile/TourHelpCard";
 import { GoogleSignInButton } from "@/components/shared/GoogleSignInButton";
 import {
   IconActivity,
@@ -133,6 +134,9 @@ export default async function ProfilePage() {
         <div className="rounded-2xl border border-border bg-card p-4 shadow-xs">
           <ThemeSettings />
         </div>
+
+        {/* جولة تعريفية في دليل الصنايعية */}
+        <TourHelpCard />
 
         {/* إعدادات إشعارات المتصفح — التفعيل تلقائي عند أول تفاعل؛ الإيقاف من هنا فقط */}
         <div className="rounded-2xl border border-border bg-card p-4 shadow-xs">

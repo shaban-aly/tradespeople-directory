@@ -35,13 +35,14 @@ export function StickyCallBar({
   );
 
   return (
-    <div className="sticky bottom-18 z-20 sm:hidden">
+    <div className="sticky bottom-18 z-20 sm:hidden" data-tour="sticky-call">
       <div className="rounded-2xl border border-border bg-card/95 p-2.5 shadow-up backdrop-blur">
         <div
           className={`grid gap-2 ${hasWhatsapp ? "grid-cols-2" : "grid-cols-1"}`}
         >
           <ButtonAnchor
             href={telHref(phone)}
+            data-tour="sticky-call-call"
             onClick={() => {
               if (craftsmanSlug) {
                 counterTrack(craftsmanSlug, "call", categorySlug);
@@ -59,6 +60,7 @@ export function StickyCallBar({
               href={waUrl}
               target="_blank"
               rel="noopener noreferrer"
+              data-tour="sticky-call-whatsapp"
               onClick={() => {
                 if (craftsmanSlug) {
                   counterTrack(craftsmanSlug, "whatsapp", categorySlug);

@@ -28,6 +28,7 @@ export function Header() {
           <nav
             className="hidden items-center gap-1 md:flex"
             aria-label="التنقل الرئيسي"
+            data-tour="header-nav"
           >
             <SiteNavLinks variant="desktop" />
           </nav>

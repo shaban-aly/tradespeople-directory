@@ -1,11 +1,10 @@
 import { getHomeCategories, getStats } from "@/lib/db/queries";
 import { homeCategoriesLimit } from "@/lib/data/site";
 import { toArabicDigits } from "@/lib/utils/format";
-import { ButtonLink } from "@/components/shared/ui/Button";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { Reveal } from "@/components/shared/ui/Reveal";
 import { SectionHeader } from "@/components/shared/ui/SectionHeader";
-import { IconGrid, IconArrow } from "@/components/shared/icons";
+import { IconGrid } from "@/components/shared/icons";
 
 export async function CategoriesSection() {
   const [stats, categories] = await Promise.all([
@@ -14,7 +13,11 @@ export async function CategoriesSection() {
   ]);
 
   return (
-    <section id="categories" className="mx-auto w-full max-w-5xl px-4 pt-4 sm:pt-8 pb-14 sm:pb-20">
+    <section
+      id="categories"
+      data-tour="home-categories"
+      className="mx-auto w-full max-w-5xl px-4 pt-4 sm:pt-8 pb-14 sm:pb-20"
+    >
       <Reveal>
         <SectionHeader
           icon={<IconGrid className="h-4 w-4" />}

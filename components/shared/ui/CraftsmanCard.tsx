@@ -44,8 +44,11 @@ export function CraftsmanCard({
   reason?: string;
 }) {
   return (
-    <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-all duration-300 hover:border-accent hover:shadow-md">
-      <Link href={craftsmanHref(craftsman.slug)} className="flex flex-1 flex-col">
+    <article
+      data-tour="craftsman-card"
+      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-all duration-300 hover:border-accent hover:shadow-md"
+    >
+      <Link href={craftsmanHref(craftsman.slug)} data-tour="craftsman-card-link" className="flex flex-1 flex-col">
         <div className="relative aspect-4/3 overflow-hidden bg-accent/10">
           <CraftsmanImage craftsman={craftsman} />
           {(craftsman.verified || recent) && (
@@ -77,7 +80,7 @@ export function CraftsmanCard({
           )}
         </div>
       </Link>
-      <div className="border-t border-border bg-background/50 p-2">
+      <div className="border-t border-border bg-background/50 p-2" data-tour="card-contact">
         <ActionButtons
           size="sm"
           phone={craftsman.phone}
@@ -86,9 +89,10 @@ export function CraftsmanCard({
           craftsmanName={craftsman.name}
           categoryName={category?.name}
           categorySlug={category?.slug}
+          tourPrefix="card"
         />
       </div>
-      <div className="absolute left-2 top-2 flex flex-col gap-1.5">
+      <div className="absolute left-2 top-2 flex flex-col gap-1.5" data-tour="card-favorite">
         <FavoriteButton slug={craftsman.slug} />
       </div>
     </article>

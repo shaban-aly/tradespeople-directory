@@ -34,7 +34,7 @@ export function NotificationsBell() {
   }
 
   return (
-    <div className="relative" ref={rootRef}>
+    <div className="relative" ref={rootRef} data-tour="notifications-bell">
       <button
         id="header-notifications-btn"
         type="button"

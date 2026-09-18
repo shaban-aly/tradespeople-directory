@@ -73,6 +73,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="شريط التنقل السفلي"
+      data-tour="bottom-nav"
       className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur-md supports-backdrop-filter:bg-card/85 sm:hidden pb-[max(env(safe-area-inset-bottom),8px)]"
     >
       <div className="relative flex items-center justify-around px-2">
@@ -176,6 +177,13 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href!}
+              data-tour={
+                item.id === "favorites"
+                  ? "nav-favorites"
+                  : item.id === "profile"
+                    ? "nav-profile"
+                    : undefined
+              }
               className={className}
             >
               {content}

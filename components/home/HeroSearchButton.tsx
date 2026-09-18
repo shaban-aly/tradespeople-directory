@@ -13,6 +13,7 @@ export function HeroSearchButton() {
   return (
     <button
       type="button"
+      data-tour="hero-search"
       onClick={() => openSearch()}
       aria-label="ابحث عن صنايعي أو تخصص في السويس"
       className="group flex min-h-11 sm:min-h-14 w-full items-center justify-between gap-1 sm:gap-2 rounded-full border border-white/50 dark:border-white/10 bg-white/50 dark:bg-card overflow-hidden p-1 sm:p-1.5 shadow-lg backdrop-blur-md transition-all hover:bg-white/70 dark:hover:bg-card/90 hover:ring-4 hover:ring-sky-500/20 active:scale-[0.99]"

@@ -18,6 +18,7 @@ export function ActionButtons({
   craftsmanName,
   categoryName,
   categorySlug,
+  tourPrefix,
 }: {
   phone: string;
   whatsapp: string;
@@ -26,6 +27,8 @@ export function ActionButtons({
   craftsmanName?: string;
   categoryName?: string;
   categorySlug?: string;
+  /** بادئة وسوم الجولة على الأزرار نفسها (مثال: "card" → card-call/card-whatsapp) */
+  tourPrefix?: string;
 }) {
   const { track: counterTrack } = useStats();
   const waUrl = whatsappHref(
@@ -43,6 +46,7 @@ export function ActionButtons({
     <div className={isIconOnly ? "flex gap-2" : "grid grid-cols-2 gap-2"}>
       <ButtonAnchor
         href={telHref(phone)}
+        data-tour={tourPrefix ? `${tourPrefix}-call` : undefined}
         onClick={() => {
           if (craftsmanSlug) {
             counterTrack(craftsmanSlug, "call", categorySlug);
@@ -60,6 +64,7 @@ export function ActionButtons({
         href={waUrl}
         target="_blank"
         rel="noopener noreferrer"
+        data-tour={tourPrefix ? `${tourPrefix}-whatsapp` : undefined}
         onClick={() => {
           if (craftsmanSlug) {
             counterTrack(craftsmanSlug, "whatsapp", categorySlug);

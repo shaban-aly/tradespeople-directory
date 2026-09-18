@@ -1,8 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
-import { IconLock, IconX } from "@/components/shared/icons";
+import { IconExternalLink, IconLock, IconX } from "@/components/shared/icons";
 import { GoogleSignInButton } from "@/components/shared/GoogleSignInButton";
+import { ButtonAnchor } from "@/components/shared/ui/Button";
+import { useExternalBrowserPrompt } from "@/hooks/ui/useExternalBrowserPrompt";
+import {
+  detectMobileBrowserKind,
+  openInExternalBrowser,
+} from "@/lib/auth/detectBrowser";
+import { track } from "@/lib/analytics/track";
 
 export interface AuthGuardModalProps {
   open: boolean;
@@ -21,6 +28,8 @@ export function AuthGuardModal({
   message = "يرجى تسجيل الدخول بحساب جوجل للمتابعة والاستفادة من هذه الميزة.",
   actionDescription,
 }: AuthGuardModalProps) {
+  const { ua, shouldPrompt: mobileBrowser } = useExternalBrowserPrompt();
+
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
@@ -82,17 +91,47 @@ export function AuthGuardModal({
           </div>
         )}
 
-        {/* زر تسجيل الدخول المباشر بجوجل */}
+        {/* زر تسجيل الدخول المباشر بجوجل / أو توجيه موبايل المتصفحات المضمّنة */}
         <div className="mt-6 flex flex-col items-center justify-center">
-          <GoogleSignInButton
-            onSuccess={() => {
-              if (onSuccess) {
-                onSuccess();
-              } else {
-                onClose();
-              }
-            }}
-          />
+          {mobileBrowser ? (
+            <div className="w-full">
+              <div className="rounded-2xl border border-accent/20 bg-accent/5 p-3.5 text-sm text-foreground">
+                تسجيل الدخول بجوجل لا يعمل داخل متصفح التطبيق المضمّن أو
+                متصفحات الموبايل الثانوية. افتح انضمامك في متصفحك الأساسي
+                (كروم/سفاري) اللي عليه حساب جيميل جاهز.
+              </div>
+              <ButtonAnchor
+                href="#"
+                variant="primary"
+                size="md"
+                className="mt-3 w-full"
+                onClick={(event) => {
+                  event.preventDefault();
+                  track("external_browser_prompt", {
+                    shown: true,
+                    action: "auth_guard_open",
+                    browser: detectMobileBrowserKind(ua) ?? "other",
+                  });
+                  openInExternalBrowser(window.location.href, ua);
+                }}
+              >
+                <IconExternalLink className="h-5 w-5" />
+                افتح في كروم/سفاري
+              </ButtonAnchor>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center">
+              <GoogleSignInButton
+                onSuccess={() => {
+                  if (onSuccess) {
+                    onSuccess();
+                  } else {
+                    onClose();
+                  }
+                }}
+              />
+            </div>
+          )}
         </div>
 
         {/* خيار الإلغاء */}

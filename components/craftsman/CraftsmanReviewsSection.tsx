@@ -82,7 +82,10 @@ export function CraftsmanReviewsSection({
   const visibleReviews = reviews.slice(0, 3);
 
   return (
-    <section className="rounded-3xl border border-border bg-card p-6 shadow-card sm:p-8">
+    <section
+      data-tour="details-reviews"
+      className="rounded-3xl border border-border bg-card p-6 shadow-card sm:p-8"
+    >
       {/* هيدر القسم */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-5">
         <div>

@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Cairo, Tajawal } from "next/font/google";
 import "./globals.css";
 import { PwaInstallBanner } from "@/components/shared/PwaInstallBanner";
+import { ExternalBrowserBanner } from "@/components/shared/auth/ExternalBrowserBanner";
 import { PwaRegister } from "@/components/shared/layout/PwaRegister";
 import { SessionProvider } from "@/hooks/auth/SessionProvider";
 import { PushAutoEnabler } from "@/components/notifications/PushAutoEnabler";
@@ -156,6 +157,7 @@ export default function RootLayout({
           <PushAutoEnabler />
           <PwaRegister />
           <PwaInstallBanner />
+          <ExternalBrowserBanner delayMs={10_000} />
           {children}
         </SessionProvider>
       </body>

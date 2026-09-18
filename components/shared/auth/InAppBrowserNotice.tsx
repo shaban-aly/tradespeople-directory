@@ -4,22 +4,26 @@ import { useEffect, useState } from "react";
 import { ButtonAnchor } from "@/components/shared/ui/Button";
 import { IconAlert, IconExternalLink, IconX } from "@/components/shared/icons";
 import { track } from "@/lib/analytics/track";
-import type {
-  ExternalOpenHref,
-  InAppBrowserKind,
-  TrafficSource,
+import {
+  openInExternalBrowser,
+  type InAppBrowserKind,
+  type TrafficSource,
 } from "@/lib/auth/detectBrowser";
 
 interface InAppBrowserNoticeProps {
   browser: InAppBrowserKind;
   source: TrafficSource;
-  open: ExternalOpenHref;
+  /** الرابط الذي سيُفتح في المتصفح الخارجي (نفس الصفحة مع معاملاتها) */
+  url: string;
+  /** الـ User-Agent (لاختيار آلية الفتح في كروم/سفاري) */
+  ua: string;
 }
 
 export function InAppBrowserNotice({
   browser,
   source,
-  open,
+  url,
+  ua,
 }: InAppBrowserNoticeProps) {
   const [dismissed, setDismissed] = useState(false);
 
@@ -67,23 +71,23 @@ export function InAppBrowserNotice({
       </div>
 
       <ButtonAnchor
-        href={open.href}
-        target={open.target}
-        rel={open.rel}
+        href="#"
         variant="primary"
         size="md"
         className="mt-4 w-full"
-        onClick={() => {
+        onClick={(event) => {
+          event.preventDefault();
           track("in_app_browser_notice", {
             shown: true,
             action: "open_external",
             browser,
             source,
           });
+          openInExternalBrowser(url, ua);
         }}
       >
         <IconExternalLink className="h-5 w-5" />
-        افتح الموقع في المتصفح
+        افتح الموقع في كروم/سفاري
       </ButtonAnchor>
     </div>
   );

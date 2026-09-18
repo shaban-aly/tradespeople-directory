@@ -54,7 +54,10 @@ export function CraftsmanDetail({
         </span>
       </nav>
 
-      <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
+      <section
+        data-tour="details-header"
+        className="overflow-hidden rounded-3xl border border-border bg-card shadow-card"
+      >
         {craftsman.image ? (
           <div className="relative h-64 sm:h-80">
             <Image
@@ -90,7 +93,10 @@ export function CraftsmanDetail({
             </span>
           </div>
 
-          <div className="mt-5 hidden flex-col gap-4 border-t border-border pt-5 sm:flex">
+          <div
+            data-tour="details-contact"
+            className="mt-5 hidden flex-col gap-4 border-t border-border pt-5 sm:flex"
+          >
             <p className="flex flex-wrap items-center justify-center gap-1.5 text-base text-muted">
               <span>اتصل مباشرة على</span>
               <bdi className="font-bold text-foreground" dir="ltr">
@@ -112,6 +118,7 @@ export function CraftsmanDetail({
               craftsmanName={craftsman.name}
               categoryName={category?.name}
               categorySlug={category?.slug}
+              tourPrefix="details"
             />
             <div className="flex justify-center">
               <ShareButtons slug={craftsman.slug} name={craftsman.name} />

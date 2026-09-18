@@ -15,7 +15,9 @@ export type AnalyticsEventName =
   | "click_whatsapp"
   | "login"
   | "sign_up"
-  | "in_app_browser_notice";
+  | "in_app_browser_notice"
+  | "external_browser_prompt"
+  | "page_404";
 
 type AnalyticsEventParams = Record<string, string | number | boolean | null | undefined>;
 

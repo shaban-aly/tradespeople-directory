@@ -3,7 +3,6 @@ import { headers } from "next/headers";
 import { GoogleSignInButton } from "@/components/shared/GoogleSignInButton";
 import { InAppBrowserNotice } from "@/components/shared/auth/InAppBrowserNotice";
 import {
-  buildExternalBrowserOpenHref,
   detectInAppBrowser,
   detectTrafficSource,
 } from "@/lib/auth/detectBrowser";
@@ -38,7 +37,7 @@ export default async function LoginPage({ searchParams }: Props) {
   if (params.reason) query.set("reason", params.reason);
   if (params.next) query.set("next", params.next);
   const qs = query.size > 0 ? `?${query.toString()}` : "";
-  const open = buildExternalBrowserOpenHref(`${siteUrl}/login${qs}`, ua);
+  const url = `${siteUrl}/login${qs}`;
 
   const reason = params.reason;
   const next = params.next ?? "/";
@@ -72,7 +71,7 @@ export default async function LoginPage({ searchParams }: Props) {
       {/* زراير تسجيل الدخول */}
       <div className="flex flex-col gap-3">
         {browser && (
-          <InAppBrowserNotice browser={browser} source={source} open={open} />
+          <InAppBrowserNotice browser={browser} source={source} url={url} ua={ua} />
         )}
         <GoogleSignInButton redirectTo={next} />
       </div>

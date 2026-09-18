@@ -15,7 +15,7 @@ export function HeroSearchTags({ tags }: HeroSearchTagsProps) {
   if (!tags || tags.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 pt-1">
+    <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 pt-1" data-tour="hero-search-tags">
       <span className="text-xs font-semibold text-slate-700 dark:text-zinc-400 shrink-0 drop-shadow-sm">
         الأكثر طلباً:
       </span>
