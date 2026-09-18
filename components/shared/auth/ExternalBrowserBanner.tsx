@@ -93,7 +93,7 @@ export function ExternalBrowserBanner({ delayMs = 10_000 }: ExternalBrowserBanne
               </button>
             </div>
             <p className="mt-0.5 text-sm leading-relaxed text-muted">
-              لو سجّلت دخولك بجوجل، اتفتح في كروم أو سفاري وهيوصلك الحساب
+              لو سجّلت دخولك بجوجل، افتح في كروم أو سفاري وهيوصلك الحساب
               جاهز — تسجيل الدخول هيبقى نقرة واحدة.
             </p>
           </div>
