@@ -1,9 +1,10 @@
-import { uploadCraftsmanImage } from "../storage/images";
+import { deleteImageByUrl, uploadCraftsmanImage } from "../storage/images";
 import { createSupabase } from "./client";
 import {
   anyError,
   cleanText,
   firstError,
+  sanitizeAndNormalizePhone,
   type SocialLinkDraft,
   validateRegisterFields,
   validateReportFields,
@@ -114,8 +115,8 @@ export async function submitCraftsmanApplication(
     name: cleanText(payload.name),
     category_id: categoryId,
     area_id: areaId,
-    phone: cleanText(payload.phone),
-    whatsapp: payload.whatsapp ? cleanText(payload.whatsapp) : null,
+    phone: sanitizeAndNormalizePhone(payload.phone),
+    whatsapp: payload.whatsapp ? sanitizeAndNormalizePhone(payload.whatsapp) : null,
     description: payload.description ? cleanText(payload.description) : null,
     image_url: imageUrl,
     status: "pending",
@@ -129,6 +130,9 @@ export async function submitCraftsmanApplication(
   });
 
   if (error) {
+    if (imageUrl) {
+      await deleteImageByUrl(imageUrl);
+    }
     if (error.code === "23505") {
       throw new Error("عندك طلب تسجيل قيد المراجعة بالفعل — هيظهر بعد ما المشرف يوافق");
     }
@@ -149,7 +153,7 @@ export async function submitReportRequest(
 
   const { error } = await supabase.from("reports").insert({
     craftsman_name: cleanText(payload.craftsmanName),
-    phone: cleanText(payload.phone),
+    phone: sanitizeAndNormalizePhone(payload.phone),
     message: cleanText(payload.message),
     reporter_user_id: data.user?.id ?? null,
   });

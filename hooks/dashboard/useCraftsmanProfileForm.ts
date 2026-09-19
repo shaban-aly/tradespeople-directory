@@ -14,6 +14,14 @@ import {
   type DashboardSocialLink,
 } from "@/lib/db/craftsman-dashboard";
 
+import {
+  anyError,
+  type FieldErrors,
+  validateDescription,
+  validatePhone,
+  validateSocialLinks,
+} from "@/lib/utils/validation";
+
 export interface ProfileFormData {
   phone: string;
   whatsapp: string;
@@ -21,6 +29,9 @@ export interface ProfileFormData {
   areaId: string;
   socialLinks: DashboardSocialLink[];
 }
+
+export type ProfileFormFieldName = "phone" | "whatsapp" | "description" | "areaId";
+export type ProfileFormErrors = FieldErrors<ProfileFormFieldName>;
 
 export interface AreaOption {
   id: string;
@@ -39,6 +50,9 @@ export function useCraftsmanProfileForm(
     areaId: initialProfile?.areaId ?? "",
     socialLinks: initialProfile?.socialLinks ?? [],
   });
+  const [touched, setTouched] = useState<Partial<Record<ProfileFormFieldName, boolean>>>({});
+  const [fieldErrors, setFieldErrors] = useState<ProfileFormErrors>({});
+  const [socialError, setSocialError] = useState("");
 
   // نموذج الحذف المؤجل: اختيار صورة جديدة = استبدال عند الحفظ فقط،
   // والضغط على "حذف" بيجيل الحذف (removeRequested) من غير ما يلمس
@@ -121,9 +135,67 @@ export function useCraftsmanProfileForm(
     setPreviewUrl(initialProfile?.imageUrl ?? null);
   }
 
+  function validateField(field: ProfileFormFieldName, value: string): string | undefined {
+    switch (field) {
+      case "phone":
+        return validatePhone(value) ?? undefined;
+      case "whatsapp":
+        return value.trim() ? (validatePhone(value, false) ?? undefined) : undefined;
+      case "description":
+        return value.trim() ? (validateDescription(value) ?? undefined) : undefined;
+      case "areaId":
+        return value.trim() ? undefined : "اختر المنطقة";
+    }
+  }
+
+  function handleFieldChange(field: ProfileFormFieldName, value: string) {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (touched[field]) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        [field]: validateField(field, value),
+      }));
+    }
+  }
+
+  function handleFieldBlur(field: ProfileFormFieldName) {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    setFieldErrors((prev) => ({
+      ...prev,
+      [field]: validateField(field, formData[field]),
+    }));
+  }
+
+  function handleSocialLinksChange(links: DashboardSocialLink[]) {
+    setFormData((prev) => ({ ...prev, socialLinks: links }));
+    setSocialError("");
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!initialProfile) return;
+
+    // التحقق من صحة الحقول أولاً
+    const nextErrors: ProfileFormErrors = {
+      phone: validatePhone(formData.phone) ?? undefined,
+      whatsapp: formData.whatsapp.trim() ? (validatePhone(formData.whatsapp, false) ?? undefined) : undefined,
+      description: formData.description.trim() ? (validateDescription(formData.description) ?? undefined) : undefined,
+    };
+    setFieldErrors(nextErrors);
+    setTouched({ phone: true, whatsapp: true, description: true, areaId: true });
+
+    if (anyError(nextErrors)) {
+      setError("يرجى مراجعة وتصحيح الحقول المحددة");
+      return;
+    }
+
+    const activeLinks = formData.socialLinks.filter((l) => l.url.trim() !== "");
+    const linksError = validateSocialLinks(activeLinks);
+    setSocialError(linksError ?? "");
+    if (linksError) {
+      setError(linksError);
+      return;
+    }
 
     // الصورة إجبارية في الدليل: ممنوع الحفظ وحساب الصنايعي من غير صورة.
     const willHaveImage =
@@ -173,6 +245,13 @@ export function useCraftsmanProfileForm(
   return {
     formData,
     setFormData,
+    handleFieldChange,
+    handleFieldBlur,
+    handleSocialLinksChange,
+    fieldErrors,
+    touched,
+    getFieldError: (field: ProfileFormFieldName) => (touched[field] ? fieldErrors[field] : undefined),
+    socialError,
     areas,
     previewUrl,
     removeRequested,

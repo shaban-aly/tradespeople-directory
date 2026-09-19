@@ -1,6 +1,7 @@
 import { createSupabase } from "./client";
 import {
   cleanText,
+  sanitizeAndNormalizePhone,
   validateMessage,
   validateName,
   validatePhone,
@@ -24,7 +25,7 @@ export async function submitContactMessage(
 
   const { error } = await createSupabase().from("contact_messages").insert({
     name: cleanText(payload.name),
-    phone: cleanText(payload.phone),
+    phone: sanitizeAndNormalizePhone(payload.phone),
     message: cleanText(payload.message),
   });
 

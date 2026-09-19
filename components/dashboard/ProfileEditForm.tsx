@@ -23,7 +23,11 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     formData,
-    setFormData,
+    handleFieldChange,
+    handleFieldBlur,
+    handleSocialLinksChange,
+    getFieldError,
+    socialError,
     areas,
     previewUrl,
     removeRequested,
@@ -187,16 +191,21 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
             inputMode="tel"
             required
             value={formData.phone}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, phone: e.target.value }))
-            }
+            onChange={(e) => handleFieldChange("phone", e.target.value)}
+            onBlur={() => handleFieldBlur("phone")}
             placeholder="01012345678"
-            className="min-h-12 w-full rounded-xl border border-border bg-background px-4 py-3 text-base text-foreground transition-colors focus:outline-none"
+            className={`min-h-12 w-full rounded-xl border bg-background px-4 py-3 text-base text-foreground transition-colors focus:outline-none ${
+              getFieldError("phone") ? "border-danger focus:border-danger" : "border-border"
+            }`}
             dir="ltr"
           />
-          <p className="mt-1 text-xs text-muted">
-            الرقم الذي سيتصل به العميل مباشرة
-          </p>
+          {getFieldError("phone") ? (
+            <p className="mt-1.5 text-sm font-semibold text-danger">{getFieldError("phone")}</p>
+          ) : (
+            <p className="mt-1 text-xs text-muted">
+              الرقم الذي سيتصل به العميل مباشرة
+            </p>
+          )}
         </div>
 
         <div>
@@ -211,16 +220,21 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
             type="tel"
             inputMode="tel"
             value={formData.whatsapp}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, whatsapp: e.target.value }))
-            }
+            onChange={(e) => handleFieldChange("whatsapp", e.target.value)}
+            onBlur={() => handleFieldBlur("whatsapp")}
             placeholder="اتركه فارغاً إذا كان نفس رقم الاتصال"
-            className="min-h-12 w-full rounded-xl border border-border bg-background px-4 py-3 text-base text-foreground transition-colors focus:outline-none"
+            className={`min-h-12 w-full rounded-xl border bg-background px-4 py-3 text-base text-foreground transition-colors focus:outline-none ${
+              getFieldError("whatsapp") ? "border-danger focus:border-danger" : "border-border"
+            }`}
             dir="ltr"
           />
-          <p className="mt-1 text-xs text-muted">
-            إذا اختلف عن رقم الاتصال المباشر
-          </p>
+          {getFieldError("whatsapp") ? (
+            <p className="mt-1.5 text-sm font-semibold text-danger">{getFieldError("whatsapp")}</p>
+          ) : (
+            <p className="mt-1 text-xs text-muted">
+              إذا اختلف عن رقم الاتصال المباشر
+            </p>
+          )}
         </div>
       </div>
 
@@ -235,10 +249,11 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
         <select
           id="area-select"
           value={formData.areaId}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, areaId: e.target.value }))
-          }
-          className="min-h-12 w-full rounded-xl border border-border bg-background px-4 py-3 text-base text-foreground transition-colors focus:outline-none"
+          onChange={(e) => handleFieldChange("areaId", e.target.value)}
+          onBlur={() => handleFieldBlur("areaId")}
+          className={`min-h-12 w-full rounded-xl border bg-background px-4 py-3 text-base text-foreground transition-colors focus:outline-none ${
+            getFieldError("areaId") ? "border-danger focus:border-danger" : "border-border"
+          }`}
         >
           <option value="">اختر المنطقة...</option>
           {areas.map((area) => (
@@ -247,37 +262,50 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
             </option>
           ))}
         </select>
+        {getFieldError("areaId") && (
+          <p className="mt-1.5 text-sm font-semibold text-danger">{getFieldError("areaId")}</p>
+        )}
       </div>
 
       {/* النبذة المهنية والخدمات */}
       <div>
-        <label
-          htmlFor="description-textarea"
-          className="mb-1.5 block text-sm font-bold text-foreground"
-        >
-          نبذة عن خدماتك وخبرتك
-        </label>
+        <div className="flex items-center justify-between mb-1.5">
+          <label
+            htmlFor="description-textarea"
+            className="text-sm font-bold text-foreground"
+          >
+            نبذة عن خدماتك وخبرتك
+          </label>
+          <span className="text-xs text-muted">
+            {formData.description.length}/1000
+          </span>
+        </div>
         <textarea
           id="description-textarea"
           rows={4}
+          maxLength={1000}
           value={formData.description}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, description: e.target.value }))
-          }
+          onChange={(e) => handleFieldChange("description", e.target.value)}
+          onBlur={() => handleFieldBlur("description")}
           placeholder="اكتب هنا التخصصات اللي بتشتغل فيها بدقة، سنوات خبرتك، وأي خدمات إضافية بتقدمها لأهل السويس..."
-          className="w-full rounded-xl border border-border bg-background p-4 text-base text-foreground transition-colors focus:outline-none resize-y"
+          className={`w-full rounded-xl border bg-background p-4 text-base text-foreground transition-colors focus:outline-none resize-y ${
+            getFieldError("description") ? "border-danger focus:border-danger" : "border-border"
+          }`}
         />
-        <p className="mt-1 text-xs text-muted">
-          الوصف الواضح والمهني يساعد العميل على فهم شغلك واختيارك
-        </p>
+        {getFieldError("description") ? (
+          <p className="mt-1.5 text-sm font-semibold text-danger">{getFieldError("description")}</p>
+        ) : (
+          <p className="mt-1 text-xs text-muted">
+            الوصف الواضح والمهني يساعد العميل على فهم شغلك واختيارك
+          </p>
+        )}
       </div>
 
       {/* روابط السوشيال ميديا */}
       <SocialLinksEditor
         links={formData.socialLinks}
-        onChange={(links) =>
-          setFormData((prev) => ({ ...prev, socialLinks: links }))
-        }
+        onChange={handleSocialLinksChange}
+        error={socialError}
       />
 
       {/* زر الحفظ الكبير والمريح على الموبايل */}

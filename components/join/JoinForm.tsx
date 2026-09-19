@@ -214,6 +214,7 @@ export function JoinForm({
         <Field
           label="وصف قصير"
           htmlFor="description"
+          hint={`(${register.description.length}/${FIELD_LIMITS.descriptionMax})`}
           error={getRegisterError("description")}
         >
           <TextArea
