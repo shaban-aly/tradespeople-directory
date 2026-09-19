@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { Modal } from "@/components/shared/ui/Modal";
 import { Button } from "@/components/shared/ui/Button";
-import { IconStar } from "@/components/shared/icons";
-import { upsertReview, type ReviewItem } from "@/lib/db/reviews";
+import { IconStar, IconTrash } from "@/components/shared/icons";
+import { deleteReview, upsertReview, type ReviewItem } from "@/lib/db/reviews";
 
 interface ReviewModalProps {
   open: boolean;
@@ -29,6 +29,7 @@ export function ReviewModal({
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -41,6 +42,24 @@ export function ReviewModal({
     }
     setError(null);
   }, [existingReview, open]);
+
+  async function handleDelete() {
+    if (!existingReview) return;
+    if (!window.confirm("هل أنت متأكد من رغبتك في حذف هذا التقييم؟")) return;
+
+    setDeleting(true);
+    setError(null);
+
+    const success = await deleteReview(userId, existingReview.id, craftsmanId);
+    setDeleting(false);
+
+    if (success) {
+      onSuccess();
+      onClose();
+    } else {
+      setError("فشل حذف التقييم، يرجى المحاولة مرة أخرى");
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -150,22 +169,43 @@ export function ReviewModal({
           </div>
 
           {/* أزرار الإجراء */}
-          <div className="flex items-center justify-end gap-3 pt-2">
-            <Button type="button" variant="ghost" onClick={onClose}>
-              إلغاء
-            </Button>
-            <Button
-              type="submit"
-              variant="action"
-              className="min-w-30 px-6"
-              disabled={loading}
-            >
-              {loading
-                ? "جاري الحفظ..."
-                : existingReview
-                  ? "تحديث التقييم"
-                  : "نشر التقييم"}
-            </Button>
+          <div className="flex items-center justify-between gap-3 pt-2">
+            {existingReview ? (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={loading || deleting}
+                className="flex items-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-2 text-xs sm:text-sm font-bold text-red-600 transition-colors hover:bg-red-500/20 disabled:opacity-50"
+              >
+                <IconTrash className="h-4 w-4" />
+                <span>{deleting ? "جاري الحذف..." : "حذف التقييم"}</span>
+              </button>
+            ) : (
+              <div />
+            )}
+
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onClose}
+                disabled={loading || deleting}
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                variant="action"
+                className="min-w-30 px-6"
+                disabled={loading || deleting}
+              >
+                {loading
+                  ? "جاري الحفظ..."
+                  : existingReview
+                    ? "تحديث التقييم"
+                    : "نشر التقييم"}
+              </Button>
+            </div>
           </div>
         </form>
       </div>

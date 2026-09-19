@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/shared/ui/Button";
 import { EmptyState } from "@/components/shared/ui/EmptyState";
-import { IconStar } from "@/components/shared/icons";
+import { IconEdit, IconStar, IconTrash } from "@/components/shared/icons";
 import { toArabicDigits } from "@/lib/utils/format";
 import { useAuthGuard } from "@/hooks/auth/useAuthGuard";
 import { useReviews } from "@/hooks/craftsman/useReviews";
@@ -12,6 +12,7 @@ import { AuthGuardModal } from "@/components/shared/auth/AuthGuardModal";
 import { ReviewModal } from "@/components/craftsman/ReviewModal";
 import { AllReviewsModal } from "@/components/craftsman/AllReviewsModal";
 import { useSession } from "@/hooks/auth/useSession";
+import { deleteReview } from "@/lib/db/reviews";
 
 interface CraftsmanReviewsSectionProps {
   craftsmanId: string;
@@ -27,8 +28,10 @@ export function CraftsmanReviewsSection({
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
 
-  const { user, isLoggedIn } = useSession();
+  const { user, isLoggedIn, profile } = useSession();
+  const isOwner = Boolean(profile?.craftsmanId && profile.craftsmanId === craftsmanId);
   const { summary, reviews, userReview, loading, reload } = useReviews(craftsmanId);
+  const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null);
   const {
     isOpen: isAuthGuardOpen,
     guardOptions,
@@ -61,6 +64,7 @@ export function CraftsmanReviewsSection({
 
   // الضغط على إضافة تقييم مع حارس تسجيل الدخول
   const handleAddReviewClick = () => {
+    if (isOwner) return;
     requireAuth(
       () => {
         updateUrlParam("review", "new");
@@ -77,6 +81,17 @@ export function CraftsmanReviewsSection({
   const handleReviewSuccess = () => {
     reload();
     updateUrlParam("review", null);
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!user) return;
+    if (!window.confirm("هل أنت متأكد من رغبتك في حذف تقييمك؟")) return;
+    setDeletingReviewId(reviewId);
+    const ok = await deleteReview(user.id, reviewId, craftsmanId);
+    setDeletingReviewId(null);
+    if (ok) {
+      reload();
+    }
   };
 
   const visibleReviews = reviews.slice(0, 3);
@@ -122,9 +137,11 @@ export function CraftsmanReviewsSection({
             </div>
           )}
 
-          <Button variant="action" onClick={handleAddReviewClick}>
-            {userReview ? "تعديل تقييمك ⭐" : "+ أضف تقييمك"}
-          </Button>
+          {!isOwner && (
+            <Button variant="action" onClick={handleAddReviewClick}>
+              {userReview ? "تعديل تقييمك ⭐" : "+ أضف تقييمك"}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -139,58 +156,100 @@ export function CraftsmanReviewsSection({
           <EmptyState
             icon="💬"
             title="لا توجد تقييمات مسجلة بعد"
-            description={`هل سبق لك التعامل مع ${craftsmanName}؟ شاركنا رأيك وساعد باقي أهالي السويس في اختيار الصنايعي المناسب.`}
+            description={
+              isOwner
+                ? "لم يقم أي عميل بكتابة تقييم لصفحتك بعد. شارك رابط صفحتك مع عملائك بعد إتمام الشغل ليشاركوا تجاربهم."
+                : `هل سبق لك التعامل مع ${craftsmanName}؟ شاركنا رأيك وساعد باقي أهالي السويس في اختيار الصنايعي المناسب.`
+            }
             action={
-              <Button variant="ghost" onClick={handleAddReviewClick}>
-                كن أول من يقيّم
-              </Button>
+              !isOwner ? (
+                <Button variant="ghost" onClick={handleAddReviewClick}>
+                  كن أول من يقيّم
+                </Button>
+              ) : undefined
             }
           />
         ) : (
           <div className="space-y-3">
-            {visibleReviews.map((rev) => (
-              <div
-                key={rev.id}
-                className="rounded-2xl border border-border bg-background/40 p-4 transition-colors hover:border-accent/30 sm:p-5"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/15 text-xs font-bold text-accent">
-                      {rev.userName.charAt(0) || "ع"}
+            {visibleReviews.map((rev) => {
+              const isMyReview = Boolean(user && rev.userId === user.id);
+              return (
+                <div
+                  key={rev.id}
+                  className="rounded-2xl border border-border bg-background/40 p-4 transition-colors hover:border-accent/30 sm:p-5"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/15 text-xs font-bold text-accent">
+                        {rev.userName.charAt(0) || "ع"}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-bold text-foreground">
+                            {rev.userName}
+                          </h4>
+                          {isMyReview && (
+                            <span className="rounded-md bg-accent/15 px-2 py-0.5 text-[11px] font-bold text-accent">
+                              تقييمك
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-muted">
+                          {new Date(rev.createdAt).toLocaleDateString("ar-EG", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-foreground">
-                        {rev.userName}
-                      </h4>
-                      <p className="text-[11px] text-muted">
-                        {new Date(rev.createdAt).toLocaleDateString("ar-EG", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </p>
+
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-0.5 text-amber-500">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <IconStar
+                            key={i}
+                            className={`h-3.5 w-3.5 ${
+                              i < rev.rating ? "fill-current" : "text-border"
+                            }`}
+                          />
+                        ))}
+                      </div>
+
+                      {isMyReview && (
+                        <div className="flex items-center gap-1 border-r border-border/80 pr-2 mr-1">
+                          <button
+                            type="button"
+                            onClick={() => updateUrlParam("review", "new")}
+                            className="rounded-lg border border-border p-1.5 text-muted transition-colors hover:border-accent hover:text-accent"
+                            title="تعديل تقييمك"
+                            aria-label="تعديل تقييمك"
+                          >
+                            <IconEdit className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteReview(rev.id)}
+                            disabled={deletingReviewId === rev.id}
+                            className="rounded-lg border border-border p-1.5 text-muted transition-colors hover:border-danger hover:text-danger disabled:opacity-50"
+                            title="حذف تقييمك"
+                            aria-label="حذف تقييمك"
+                          >
+                            <IconTrash className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-0.5 text-amber-500">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <IconStar
-                        key={i}
-                        className={`h-3.5 w-3.5 ${
-                          i < rev.rating ? "fill-current" : "text-border"
-                        }`}
-                      />
-                    ))}
-                  </div>
+                  {rev.comment && (
+                    <p className="mt-2.5 text-sm text-foreground/90 leading-relaxed">
+                      «{rev.comment}»
+                    </p>
+                  )}
                 </div>
-
-                {rev.comment && (
-                  <p className="mt-2.5 text-sm text-foreground/90 leading-relaxed">
-                    «{rev.comment}»
-                  </p>
-                )}
-              </div>
-            ))}
+              );
+            })}
 
             {/* رابط عرض كل التقييمات إذا كانت أكثر من 3 برابط في الـ URL */}
             {reviews.length > 3 && (
@@ -218,7 +277,7 @@ export function CraftsmanReviewsSection({
       />
 
       {/* مودال كتابة / تعديل التقييم (برابط ?review=new) */}
-      {isLoggedIn && user && (
+      {!isOwner && isLoggedIn && user && (
         <ReviewModal
           open={isReviewModalOpen}
           onClose={() => updateUrlParam("review", null)}
@@ -238,6 +297,13 @@ export function CraftsmanReviewsSection({
         summary={summary}
         reviews={reviews}
         onAddReviewClick={handleAddReviewClick}
+        isOwner={isOwner}
+        currentUserId={user?.id}
+        onEditReview={() => {
+          updateUrlParam("reviews", null);
+          updateUrlParam("review", "new");
+        }}
+        onDeleteReview={handleDeleteReview}
       />
     </section>
   );

@@ -35,6 +35,8 @@ export function useReviews(craftsmanId: string) {
     if (user?.id) {
       const userRev = await getUserReviewForCraftsman(user.id, craftsmanId);
       setUserReview(userRev);
+    } else {
+      setUserReview(null);
     }
     setLoading(false);
   }, [craftsmanId, user?.id]);
