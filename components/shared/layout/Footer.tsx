@@ -4,6 +4,7 @@ import { siteContact, siteNavLinks } from "@/lib/data/site";
 import { toArabicDigits } from "@/lib/utils/format";
 import { mailtoHref, telHref, whatsappHref } from "@/lib/utils/url";
 import { IconMail, IconPhone, IconWhatsApp } from "@/components/shared/icons";
+import { PwaInstallTrigger } from "@/components/shared/PwaInstallTrigger";
 
 export async function Footer() {
   const year = toArabicDigits(new Date().getFullYear());
@@ -57,6 +58,7 @@ export async function Footer() {
                   أضف صنايعي
                 </Link>
               </li>
+              <PwaInstallTrigger />
             </ul>
           </nav>
 

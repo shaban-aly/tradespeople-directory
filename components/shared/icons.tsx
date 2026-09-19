@@ -42,6 +42,7 @@ import {
   Save,
   Search,
   Settings,
+  Share,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
@@ -104,6 +105,14 @@ export function IconGlobe(props: LucideProps) {
 
 export function IconDownload(props: LucideProps) {
   return <Download {...props} />;
+}
+
+export function IconShare(props: LucideProps) {
+  return <Share {...props} />;
+}
+
+export function IconPlus(props: LucideProps) {
+  return <Plus {...props} />;
 }
 
 export function IconCamera(props: LucideProps) {
