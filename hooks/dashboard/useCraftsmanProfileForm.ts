@@ -57,11 +57,9 @@ export function useCraftsmanProfileForm(
   const [fieldErrors, setFieldErrors] = useState<ProfileFormErrors>({});
   const [socialError, setSocialError] = useState("");
 
-  // نموذج الحذف المؤجل: اختيار صورة جديدة = استبدال عند الحفظ فقط،
-  // والضغط على "حذف" بيجيل الحذف (removeRequested) من غير ما يلمس
-  // الصورة الفعلية في Supabase/Storage لحد ما المستخدم يحفظ.
+  // نموذج تغيير الصورة: اختيار صورة جديدة = استبدال عند الحفظ فقط،
+  // والضغط على "تراجع" يلغي الصورة الجديدة ويرجع للصورة الأصلية.
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
-  const [removeRequested, setRemoveRequested] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     initialProfile?.imageUrl ?? null
   );
@@ -114,27 +112,16 @@ export function useCraftsmanProfileForm(
     if (objUrlRef.current) revokeImagePreview(objUrlRef.current);
     objUrlRef.current = null;
     setNewImageFile(converted);
-    setRemoveRequested(false);
     const url = URL.createObjectURL(converted);
     objUrlRef.current = url;
     setPreviewUrl(url);
   }
 
-  function handleImageRemove() {
+  function handleRevertImage() {
     setError(null);
     if (objUrlRef.current) revokeImagePreview(objUrlRef.current);
     objUrlRef.current = null;
     setNewImageFile(null);
-    setRemoveRequested(true);
-    setPreviewUrl(null);
-  }
-
-  function handleImageUndo() {
-    setError(null);
-    if (objUrlRef.current) revokeImagePreview(objUrlRef.current);
-    objUrlRef.current = null;
-    setNewImageFile(null);
-    setRemoveRequested(false);
     setPreviewUrl(initialProfile?.imageUrl ?? null);
   }
 
@@ -205,8 +192,7 @@ export function useCraftsmanProfileForm(
 
     // الصورة إجبارية في الدليل: ممنوع الحفظ وحساب الصنايعي من غير صورة.
     const willHaveImage =
-      newImageFile !== null ||
-      (initialProfile.imageUrl !== null && !removeRequested);
+      newImageFile !== null || initialProfile.imageUrl !== null;
     if (!willHaveImage) {
       setError("ما ينفعش تعمل حفظ من غير صورة — الصورة مطلوبة لكل صنايعي في الدليل.");
       return;
@@ -226,7 +212,6 @@ export function useCraftsmanProfileForm(
         areaId: formData.areaId || undefined,
         socialLinks: formData.socialLinks,
         image: newImageFile,
-        removeImage: removeRequested,
         existingImageUrl: initialProfile.imageUrl,
       });
 
@@ -261,14 +246,13 @@ export function useCraftsmanProfileForm(
     socialError,
     areas,
     previewUrl,
-    removeRequested,
+    hasNewImage: Boolean(newImageFile),
     saving,
     error,
     warning,
     success,
     handleImageChange,
-    handleImageRemove,
-    handleImageUndo,
+    handleRevertImage,
     handleSubmit,
   };
 }

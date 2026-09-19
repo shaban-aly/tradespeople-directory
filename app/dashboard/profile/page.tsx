@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getServerSession } from "@/lib/db/server";
 import {
@@ -31,11 +32,17 @@ export default async function CraftsmanProfileEditPage() {
     <>
       <DashboardHeader profile={data.profile} />
       <DashboardNav />
-      <ProfileEditForm
-        key={data.profile.imageUrl ?? "no-image"}
-        profile={data.profile}
-        initialAreas={areas}
-      />
+      <Suspense
+        fallback={
+          <div className="h-96 w-full animate-pulse rounded-2xl border border-border bg-card" />
+        }
+      >
+        <ProfileEditForm
+          key={data.profile.imageUrl ?? "no-image"}
+          profile={data.profile}
+          initialAreas={areas}
+        />
+      </Suspense>
     </>
   );
 }

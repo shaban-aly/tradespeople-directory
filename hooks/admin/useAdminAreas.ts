@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import {
   createArea,
   deleteArea,
+  fetchAdminBreakdownCounts,
   fetchAreas,
   fetchCounts,
   toggleAreaActive,
@@ -16,20 +17,30 @@ import { useAdminQuery } from "./useAdminQuery";
 
 export interface AdminAreasData {
   areas: AreaRow[];
-  counts: Awaited<ReturnType<typeof fetchCounts>>;
+  counts?: Awaited<ReturnType<typeof fetchCounts>>;
+  areaCounts?: Record<string, number>;
 }
 
 export function useAdminAreas(initialData?: AdminAreasData) {
+  const seeded = useMemo(() => {
+    if (!initialData) return undefined;
+    return {
+      areas: initialData.areas,
+      areaCounts:
+        initialData.areaCounts ?? buildAreaCounts(initialData.counts ?? []),
+    };
+  }, [initialData]);
+
   const { data, loading, error: loadError, refresh } = useAdminQuery(async () => {
-    const [areas, counts] = await Promise.all([fetchAreas(), fetchCounts()]);
-    return { areas, counts };
-  }, initialData);
+    const [areas, breakdown] = await Promise.all([
+      fetchAreas(),
+      fetchAdminBreakdownCounts(),
+    ]);
+    return { areas, areaCounts: breakdown.byArea };
+  }, seeded);
   const { busyKey, error: actionError, run } = useAdminAction();
 
-  const areaCounts = useMemo(
-    () => buildAreaCounts(data?.counts ?? []),
-    [data],
-  );
+  const areaCounts = data?.areaCounts ?? {};
 
   const addArea = (name: string) =>
     run("add-area", () => createArea(name, data?.areas ?? []), refresh);

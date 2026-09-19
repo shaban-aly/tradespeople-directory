@@ -29,8 +29,10 @@ import {
   LogOut,
   Mail,
   MapPin,
+  Maximize2,
   Menu,
   MessageSquare,
+  Minus,
   Moon,
   MoreVertical,
   MousePointerClick,
@@ -56,6 +58,8 @@ import {
   Users,
   Wrench,
   X,
+  ZoomIn,
+  ZoomOut,
   type LucideProps,
 } from "lucide-react";
 
@@ -365,3 +369,20 @@ export function IconTikTok({ className }: IconProps) {
     </svg>
   );
 }
+
+export function IconMinus(props: LucideProps) {
+  return <Minus {...props} />;
+}
+
+export function IconZoomIn(props: LucideProps) {
+  return <ZoomIn {...props} />;
+}
+
+export function IconZoomOut(props: LucideProps) {
+  return <ZoomOut {...props} />;
+}
+
+export function IconMaximize(props: LucideProps) {
+  return <Maximize2 {...props} />;
+}
+

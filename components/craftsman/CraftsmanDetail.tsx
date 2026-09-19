@@ -17,6 +17,7 @@ import { StickyCallBar } from "@/components/craftsman/StickyCallBar";
 import { ShareButtons } from "@/components/craftsman/ShareButtons";
 import { ViewTracker } from "@/components/craftsman/ViewTracker";
 import { CraftsmanReviewsSection } from "@/components/craftsman/CraftsmanReviewsSection";
+import { CraftsmanHeroImage } from "@/components/craftsman/CraftsmanHeroImage";
 import { categoryHref } from "@/lib/utils/url";
 
 export function CraftsmanDetail({
@@ -58,26 +59,32 @@ export function CraftsmanDetail({
         data-tour="details-header"
         className="overflow-hidden rounded-3xl border border-border bg-card shadow-card"
       >
-        {craftsman.image ? (
-          <div className="relative h-64 sm:h-80">
-            <Image
-              src={craftsman.image}
-              alt={craftsman.name}
-              fill
-              priority
-              sizes="(min-width: 640px) 56rem, 100vw"
-              className="object-cover"
-            />
-          </div>
-        ) : (
-          <div className="flex h-44 items-center justify-center bg-linear-to-br from-accent/10 via-card to-accent/10 sm:h-52">
-            <CraftsmanAvatar
-              name={craftsman.name}
-              className="h-24 w-24 rounded-2xl shadow-card sm:h-28 sm:w-28"
-              textClassName="text-4xl sm:text-5xl"
-            />
-          </div>
-        )}
+        <Suspense
+          fallback={
+            craftsman.image ? (
+              <div className="relative h-64 sm:h-80">
+                <Image
+                  src={craftsman.image}
+                  alt={craftsman.name}
+                  fill
+                  priority
+                  sizes="(min-width: 640px) 56rem, 100vw"
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className="flex h-44 items-center justify-center bg-linear-to-br from-accent/10 via-card to-accent/10 sm:h-52">
+                <CraftsmanAvatar
+                  name={craftsman.name}
+                  className="h-24 w-24 rounded-2xl shadow-card sm:h-28 sm:w-28"
+                  textClassName="text-4xl sm:text-5xl"
+                />
+              </div>
+            )
+          }
+        >
+          <CraftsmanHeroImage image={craftsman.image} name={craftsman.name} />
+        </Suspense>
         <div className="p-6 sm:p-8">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="min-w-0 flex-1 font-heading text-3xl font-extrabold text-foreground sm:text-4xl">

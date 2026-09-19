@@ -337,10 +337,24 @@ export type AdminNavCounts = {
   unreadMessages: number;
 };
 
-/** عدّادات خفيفة لشريط التنقل الجانبي (count=exact مع head) — بلا تحميل الصفوف. */
+/** عدّادات خفيفة لشريط التنقل الجانبي عبر RPC مجمعة مع fallback للاستعلامات المنفصلة */
 export async function fetchAdminNavCounts(
   client: SupabaseClient<Database> = createSupabase(),
 ): Promise<AdminNavCounts> {
+  try {
+    const { data, error } = await client.rpc("get_admin_nav_counts");
+    if (!error && data && typeof data === "object") {
+      const d = data as Record<string, unknown>;
+      return {
+        pendingRequests: Number(d.pendingRequests) || 0,
+        pendingReports: Number(d.pendingReports) || 0,
+        unreadMessages: Number(d.unreadMessages) || 0,
+      };
+    }
+  } catch {
+    // التراجع التلقائي للاستعلامات المنفصلة
+  }
+
   const [requests, reports, messages] = await Promise.all([
     client.from("craftsmen").select("id", { count: "exact", head: true }).eq("status", "pending"),
     client.from("reports").select("id", { count: "exact", head: true }).eq("status", "pending"),
@@ -354,6 +368,41 @@ export async function fetchAdminNavCounts(
     pendingReports: reports.count ?? 0,
     unreadMessages: messages.count ?? 0,
   };
+}
+
+export type AdminBreakdownCounts = {
+  byCategory: Record<string, number>;
+  byArea: Record<string, number>;
+};
+
+/** أعداد الصنايعية المجمعة لكل تصنيف ومنطقة مباشرة من SQL دون تحميل الصفوف */
+export async function fetchAdminBreakdownCounts(
+  client: SupabaseClient<Database> = createSupabase(),
+): Promise<AdminBreakdownCounts> {
+  try {
+    const { data, error } = await client.rpc("get_admin_breakdown_counts");
+    if (!error && data && typeof data === "object") {
+      const d = data as { byCategory?: Record<string, number>; byArea?: Record<string, number> };
+      return {
+        byCategory: d.byCategory ?? {},
+        byArea: d.byArea ?? {},
+      };
+    }
+  } catch {
+    // التراجع للوضع اليدوي عند تعذر RPC
+  }
+
+  // Fallback يدوي: جلب الصفوف وتجميعها
+  const counts = await fetchCounts(client);
+  const byCategory: Record<string, number> = {};
+  const byArea: Record<string, number> = {};
+  for (const row of counts) {
+    const cat = row.category?.slug ?? "unknown";
+    byCategory[cat] = (byCategory[cat] ?? 0) + 1;
+    const area = row.area?.name ?? "unknown";
+    byArea[area] = (byArea[area] ?? 0) + 1;
+  }
+  return { byCategory, byArea };
 }
 
 // ------------------------------ عمليات التصنيفات ------------------------------

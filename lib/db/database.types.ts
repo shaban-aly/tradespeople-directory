@@ -697,6 +697,21 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_admin_nav_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          pendingRequests: number
+          pendingReports: number
+          unreadMessages: number
+        }
+      }
+      get_admin_breakdown_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          byCategory: Record<string, number>
+          byArea: Record<string, number>
+        }
+      }
       reject_craftsman_application: {
         Args: { p_craftsman_id: string }
         Returns: undefined

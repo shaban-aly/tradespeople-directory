@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import {
   createCategory,
   deleteCategory,
+  fetchAdminBreakdownCounts,
   fetchCategories,
   fetchCounts,
   toggleCategoryActive,
@@ -23,20 +24,30 @@ export type CategoryPayload = {
 
 export interface AdminCategoriesData {
   categories: CategoryRow[];
-  counts: Awaited<ReturnType<typeof fetchCounts>>;
+  counts?: Awaited<ReturnType<typeof fetchCounts>>;
+  categoryCounts?: Record<string, number>;
 }
 
 export function useAdminCategories(initialData?: AdminCategoriesData) {
+  const seeded = useMemo(() => {
+    if (!initialData) return undefined;
+    return {
+      categories: initialData.categories,
+      categoryCounts:
+        initialData.categoryCounts ?? buildCategoryCounts(initialData.counts ?? []),
+    };
+  }, [initialData]);
+
   const { data, loading, error: loadError, refresh } = useAdminQuery(async () => {
-    const [categories, counts] = await Promise.all([fetchCategories(), fetchCounts()]);
-    return { categories, counts };
-  }, initialData);
+    const [categories, breakdown] = await Promise.all([
+      fetchCategories(),
+      fetchAdminBreakdownCounts(),
+    ]);
+    return { categories, categoryCounts: breakdown.byCategory };
+  }, seeded);
   const { busyKey, error: actionError, run } = useAdminAction();
 
-  const categoryCounts = useMemo(
-    () => buildCategoryCounts(data?.counts ?? []),
-    [data],
-  );
+  const categoryCounts = data?.categoryCounts ?? {};
 
   const addCategory = (payload: CategoryPayload) =>
     run("add-category", () => createCategory(payload, data?.categories ?? []), refresh);

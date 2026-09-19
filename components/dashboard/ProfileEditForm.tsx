@@ -1,15 +1,23 @@
 "use client";
 
-import { useRef } from "react";
+import { useCallback, useRef, useState, startTransition } from "react";
 import Image from "next/image";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   useCraftsmanProfileForm,
   type AreaOption,
 } from "@/hooks/dashboard/useCraftsmanProfileForm";
 import { SocialLinksEditor } from "@/components/shared/ui/SocialLinksEditor";
 import { CraftsmanAvatar } from "@/components/shared/ui/CraftsmanAvatar";
+import { ImageViewer } from "@/components/shared/ui/ImageViewer";
 import { Button } from "@/components/shared/ui/Button";
-import { IconCamera, IconCheck, IconSave, IconTrash, IconUndo } from "@/components/shared/icons";
+import {
+  IconCamera,
+  IconCheck,
+  IconMaximize,
+  IconSave,
+  IconUndo,
+} from "@/components/shared/icons";
 import type { CraftsmanSelfProfile } from "@/lib/db/craftsman-dashboard";
 import { ACCEPTED_IMAGE_TYPES } from "@/lib/storage/images";
 
@@ -21,6 +29,37 @@ interface ProfileEditFormProps {
 
 export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const isUrlViewerOpen = searchParams?.get("image") === "view";
+  const showViewer = isViewerOpen || isUrlViewerOpen;
+
+  const handleOpenViewer = useCallback(() => {
+    const current = new URLSearchParams(searchParams ? searchParams.toString() : "");
+    current.set("image", "view");
+    const search = current.toString();
+    const query = search ? `?${search}` : "";
+    startTransition(() => {
+      router.push(`${pathname}${query}`, { scroll: false });
+    });
+    setIsViewerOpen(true);
+  }, [pathname, router, searchParams]);
+
+  const handleCloseViewer = useCallback(() => {
+    setIsViewerOpen(false);
+    if (searchParams?.get("image") === "view") {
+      const current = new URLSearchParams(searchParams.toString());
+      current.delete("image");
+      const search = current.toString();
+      const query = search ? `?${search}` : "";
+      startTransition(() => {
+        router.push(`${pathname}${query}`, { scroll: false });
+      });
+    }
+  }, [pathname, router, searchParams]);
   const {
     formData,
     handleFieldChange,
@@ -30,14 +69,13 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
     socialError,
     areas,
     previewUrl,
-    removeRequested,
+    hasNewImage,
     saving,
     error,
     warning,
     success,
     handleImageChange,
-    handleImageRemove,
-    handleImageUndo,
+    handleRevertImage,
     handleSubmit,
   } = useCraftsmanProfileForm(profile, onSaved, initialAreas);
 
@@ -77,15 +115,36 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
 
       {/* قسم الصورة الشخصية */}
       <section className="flex flex-col items-center gap-3 border-b border-border pb-6 sm:flex-row sm:items-center sm:gap-6">
-        <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl border-2 border-dashed border-border sm:h-28 sm:w-28">
+        <div
+          onClick={() => {
+            if (previewUrl) handleOpenViewer();
+          }}
+          className={`group relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl border-2 border-dashed border-border sm:h-28 sm:w-28 ${
+            previewUrl ? "cursor-pointer transition-transform hover:scale-102 focus-visible:ring-2 focus-visible:ring-accent" : ""
+          }`}
+          title={previewUrl ? "اضغط لمعاينة الصورة بحجم كامل" : undefined}
+          role={previewUrl ? "button" : undefined}
+          tabIndex={previewUrl ? 0 : undefined}
+          onKeyDown={(e) => {
+            if (previewUrl && (e.key === "Enter" || e.key === " ")) {
+              e.preventDefault();
+              handleOpenViewer();
+            }
+          }}
+        >
           {previewUrl ? (
-            <Image
-              src={previewUrl}
-              alt={profile.name}
-              fill
-              sizes="(max-width: 640px) 96px, 112px"
-              className="object-cover"
-            />
+            <>
+              <Image
+                src={previewUrl}
+                alt={profile.name}
+                fill
+                sizes="(max-width: 640px) 96px, 112px"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                <IconMaximize className="h-6 w-6 text-white" />
+              </div>
+            </>
           ) : (
             <CraftsmanAvatar
               name={formData.name || profile.name}
@@ -114,63 +173,43 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
           />
 
           <div className="mt-1 flex flex-wrap justify-center gap-2 sm:justify-start">
-            {previewUrl ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-base font-semibold text-foreground transition-colors hover:bg-card active:scale-98"
-                >
-                  <IconCamera className="h-5 w-5" />
-                  <span>تغيير الصورة</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleImageRemove}
-                  className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-base font-medium text-red-500 hover:bg-red-500/10 active:scale-98"
-                >
-                  <IconTrash className="h-5 w-5" />
-                  <span>حذف</span>
-                </button>
-              </>
-            ) : removeRequested ? (
-              <>
-                <button
-                  type="button"
-                  onClick={handleImageUndo}
-                  className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-base font-semibold text-foreground transition-colors hover:bg-card active:scale-98"
-                >
-                  <IconUndo className="h-5 w-5" />
-                  <span>تراجع عن الحذف</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-base font-medium text-foreground hover:bg-card active:scale-98"
-                >
-                  <IconCamera className="h-5 w-5" />
-                  <span>رفع صورة جديدة</span>
-                </button>
-              </>
-            ) : (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-base font-semibold text-foreground transition-colors hover:bg-card active:scale-98"
+            >
+              <IconCamera className="h-5 w-5" />
+              <span>{previewUrl ? "تغيير الصورة" : "رفع صورة"}</span>
+            </button>
+
+            {hasNewImage && (
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-base font-semibold text-foreground transition-colors hover:bg-card active:scale-98"
+                onClick={handleRevertImage}
+                className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-base font-medium text-amber-600 hover:bg-amber-500/10 active:scale-98"
+                title="التراجع عن الصورة المختارة والعودة للصورة الحالية"
               >
-                <IconCamera className="h-5 w-5" />
-                <span>رفع صورة</span>
+                <IconUndo className="h-5 w-5" />
+                <span>تراجع عن الاختيار</span>
+              </button>
+            )}
+
+            {previewUrl && (
+              <button
+                type="button"
+                onClick={handleOpenViewer}
+                className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-base font-medium text-muted hover:bg-card hover:text-foreground active:scale-98"
+                title="معاينة وتكبير الصورة بحجم كامل"
+              >
+                <IconMaximize className="h-5 w-5" />
+                <span>معاينة مكبرة</span>
               </button>
             )}
           </div>
 
-          {removeRequested && (
-            <p
-              role="alert"
-              className="mt-2 flex items-center gap-1.5 rounded-lg bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-600"
-            >
-              <IconTrash className="h-4 w-4 shrink-0" />
-              <span>سيتم حذف الصورة نهائياً من الدليل عند حفظ التعديلات.</span>
+          {hasNewImage && (
+            <p className="mt-1 text-xs text-action font-medium">
+              تم اختيار صورة جديدة. سيتم رفعها وحفظها عند الضغط على زر «حفظ التعديلات» بالأسفل.
             </p>
           )}
         </div>
@@ -359,6 +398,15 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
           )}
         </Button>
       </div>
+
+      {previewUrl && (
+        <ImageViewer
+          open={showViewer}
+          onClose={handleCloseViewer}
+          src={previewUrl}
+          title={formData.name || profile.name}
+        />
+      )}
     </form>
   );
 }
