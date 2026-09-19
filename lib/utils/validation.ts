@@ -35,6 +35,17 @@ const SLUG_PATTERN = /^[a-z0-9\u0621-\u064A\u0660-\u0669]+(?:-[a-z0-9\u0621-\u06
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
+const ARABIC_INDIC_DIGITS: Record<string, string> = {
+  "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4",
+  "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9",
+  "۰": "0", "۱": "1", "۲": "2", "۳": "3", "۴": "4",
+  "۵": "5", "۶": "6", "۷": "7", "۸": "8", "۹": "9",
+};
+
+export function toAsciiDigits(value: string): string {
+  return value.replace(/[٠-٩۰-۹]/g, (digit) => ARABIC_INDIC_DIGITS[digit] ?? digit);
+}
+
 export type FieldErrors<T extends string = string> = Partial<Record<T, string>>;
 
 export function cleanText(value: string): string {
@@ -46,7 +57,12 @@ export function hasDangerousContent(value: string): boolean {
 }
 
 export function normalizePhone(value: string): string {
-  return value.replace(CONTROL_CHARS, "").replace(/[\s().\-_]/g, "");
+  const ascii = toAsciiDigits(value);
+  return ascii.replace(CONTROL_CHARS, "").replace(/[\s().\-_]/g, "");
+}
+
+export function sanitizeAndNormalizePhone(value: string): string {
+  return normalizePhone(value);
 }
 
 export function anyError(errors: FieldErrors): boolean {

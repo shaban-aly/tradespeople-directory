@@ -5,6 +5,8 @@ import { getCraftsmanFavoritesCount } from "./favorites";
 import { getCraftsmanReviews, getCraftsmanRatingSummary } from "./reviews";
 import { uploadCraftsmanImage, deleteImageByUrl } from "../storage/images";
 import {
+  cleanText,
+  sanitizeAndNormalizePhone,
   validatePhone,
   validateDescription,
   validateSocialLinks,
@@ -214,26 +216,14 @@ export async function updateCraftsmanSelfProfile(
 
   // معالجة رفع الصورة إذا وجدت جديدة
   let imageUrl = payload.existingImageUrl ?? null;
+  let newlyUploadedUrl: string | null = null;
   if (payload.image) {
     const uploaded = await uploadCraftsmanImage(payload.image, "craftsmen");
     imageUrl = uploaded.url;
-
-    // حذف الصورة القديمة إذا تغيرت
-    if (payload.existingImageUrl && payload.existingImageUrl !== uploaded.url) {
-      const removed = await deleteImageByUrl(payload.existingImageUrl);
-      if (removed && !removed.ok) {
-        warnings.push("الصورة القديمة مكانتش اتشالت من التخزين.");
-      }
-    }
+    newlyUploadedUrl = uploaded.url;
   } else if (payload.removeImage) {
-    // حذف مؤجل اتحجز من الفورم واتأكد عليه — بينفذ فعلياً هنا
+    // حذف مؤجل اتحجز من الفورم واتأكد عليه
     imageUrl = null;
-    if (payload.existingImageUrl) {
-      const removed = await deleteImageByUrl(payload.existingImageUrl);
-      if (removed && !removed.ok) {
-        warnings.push("الصورة مكانتش اتشالت من التخزين بشكل نهائي.");
-      }
-    }
   }
 
   const socialLinksJson = Array.isArray(payload.socialLinks)
@@ -243,13 +233,13 @@ export async function updateCraftsmanSelfProfile(
       }))
     : [];
 
-  // تحديث جدول craftsmen
+  // تحديث جدول craftsmen أولاً
   const { error: updateError } = await supabase
     .from("craftsmen")
     .update({
-      phone: payload.phone.trim(),
-      whatsapp: payload.whatsapp ? payload.whatsapp.trim() : null,
-      description: payload.description ? payload.description.trim() : null,
+      phone: sanitizeAndNormalizePhone(payload.phone),
+      whatsapp: payload.whatsapp ? sanitizeAndNormalizePhone(payload.whatsapp) : null,
+      description: payload.description ? cleanText(payload.description) : null,
       area_id: payload.areaId || undefined,
       image_url: imageUrl,
       social_links: socialLinksJson,
@@ -257,7 +247,24 @@ export async function updateCraftsmanSelfProfile(
     .eq("id", craftsmanId);
 
   if (updateError) {
+    // إذا فشل التحديث: حذف الصورة الجديدة المرفوعة فوراً لمنع الملفات اليتيمة
+    if (newlyUploadedUrl) {
+      await deleteImageByUrl(newlyUploadedUrl);
+    }
     throw new Error("حدث خطأ أثناء حفظ البيانات: " + updateError.message);
+  }
+
+  // حذف الصورة القديمة فقط بعد نجاح التحديث في قاعدة البيانات
+  if (newlyUploadedUrl && payload.existingImageUrl && payload.existingImageUrl !== newlyUploadedUrl) {
+    const removed = await deleteImageByUrl(payload.existingImageUrl);
+    if (removed && !removed.ok) {
+      warnings.push("الصورة القديمة مكانتش اتشالت من التخزين.");
+    }
+  } else if (payload.removeImage && payload.existingImageUrl) {
+    const removed = await deleteImageByUrl(payload.existingImageUrl);
+    if (removed && !removed.ok) {
+      warnings.push("الصورة مكانتش اتشالت من التخزين بشكل نهائي.");
+    }
   }
 
   return warnings.length > 0 ? { warning: warnings.join(" ") } : {};

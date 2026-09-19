@@ -20,7 +20,11 @@ const WINDOW_MS = 60_000;
 
 function sanitizeBaseName(fileName: string): string {
   const base = fileName.replace(/\.[^.]+$/, "").toLowerCase();
-  const cleaned = base.replace(/[^a-z0-9-_]/g, "-").replace(/-+/g, "-").slice(0, 60);
+  const cleaned = base
+    .replace(/[^a-z0-9-_]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
   return cleaned || "image";
 }
 

@@ -5,9 +5,12 @@ import {
 } from "../storage/images";
 import {
   anyError,
+  cleanText,
   firstError,
+  sanitizeAndNormalizePhone,
   validateCategoryFields,
   validateCraftsmanFields,
+  validateEmail,
   validateName,
   validateSocialLinks,
 } from "../utils/validation";
@@ -488,9 +491,11 @@ function validateCraftsmanPayload(payload: CraftsmanInput): void {
 export async function createCraftsman(payload: CraftsmanInput): Promise<void> {
   validateCraftsmanPayload(payload);
   let imageUrl = payload.existingImageUrl ?? null;
+  let newlyUploadedUrl: string | null = null;
   if (payload.image) {
     const uploaded = await uploadCraftsmanImage(payload.image, "craftsmen");
     imageUrl = uploaded.url;
+    newlyUploadedUrl = uploaded.url;
   }
   const socialLinks = Array.isArray(payload.socialLinks)
     ? payload.socialLinks.map((link) => ({
@@ -501,13 +506,13 @@ export async function createCraftsman(payload: CraftsmanInput): Promise<void> {
   const { error } = await createSupabase()
     .from("craftsmen")
     .insert({
-      slug: payload.slug,
-      name: payload.name,
+      slug: cleanText(payload.slug),
+      name: cleanText(payload.name),
       category_id: payload.category_id,
       area_id: payload.area_id,
-      phone: payload.phone,
-      whatsapp: payload.whatsapp,
-      description: payload.description,
+      phone: sanitizeAndNormalizePhone(payload.phone),
+      whatsapp: payload.whatsapp ? sanitizeAndNormalizePhone(payload.whatsapp) : null,
+      description: payload.description ? cleanText(payload.description) : null,
       image_url: imageUrl,
       verified: payload.verified,
       is_published: payload.is_published,
@@ -516,7 +521,13 @@ export async function createCraftsman(payload: CraftsmanInput): Promise<void> {
     })
     .select("id")
     .single();
-  if (error) throw new Error("مقدرناش نضيف الصنايعي");
+
+  if (error) {
+    if (newlyUploadedUrl) {
+      await deleteImageByUrl(newlyUploadedUrl);
+    }
+    throw new Error("مقدرناش نضيف الصنايعي");
+  }
 }
 
 export async function updateCraftsman(
@@ -525,30 +536,42 @@ export async function updateCraftsman(
 ): Promise<void> {
   validateCraftsmanPayload(payload);
   let imageUrl = payload.existingImageUrl ?? null;
+  let newlyUploadedUrl: string | null = null;
   if (payload.image) {
     const uploaded = await uploadCraftsmanImage(payload.image, "craftsmen");
     imageUrl = uploaded.url;
-    if (payload.existingImageUrl) {
-      await deleteImageByUrl(payload.existingImageUrl);
-    }
+    newlyUploadedUrl = uploaded.url;
   }
   const { error } = await createSupabase()
     .from("craftsmen")
     .update({
-      slug: payload.slug,
-      name: payload.name,
+      slug: cleanText(payload.slug),
+      name: cleanText(payload.name),
       category_id: payload.category_id,
       area_id: payload.area_id,
-      phone: payload.phone,
-      whatsapp: payload.whatsapp,
-      description: payload.description,
+      phone: sanitizeAndNormalizePhone(payload.phone),
+      whatsapp: payload.whatsapp ? sanitizeAndNormalizePhone(payload.whatsapp) : null,
+      description: payload.description ? cleanText(payload.description) : null,
       image_url: imageUrl,
       verified: payload.verified,
       is_published: payload.is_published,
-      social_links: Array.isArray(payload.socialLinks) ? payload.socialLinks : [],
+      social_links: Array.isArray(payload.socialLinks)
+        ? payload.socialLinks.map((l) => ({ platform: l.platform, url: l.url.trim() }))
+        : [],
     })
     .eq("id", id);
-  assertNoError(error, "مقدرناش نحدّث الصنايعي");
+
+  if (error) {
+    if (newlyUploadedUrl) {
+      await deleteImageByUrl(newlyUploadedUrl);
+    }
+    assertNoError(error, "مقدرناش نحدّث الصنايعي");
+  }
+
+  // حذف الصورة القديمة فقط بعد نجاح تحديث السجل في قاعدة البيانات
+  if (newlyUploadedUrl && payload.existingImageUrl && payload.existingImageUrl !== newlyUploadedUrl) {
+    await deleteImageByUrl(payload.existingImageUrl);
+  }
 }
 
 export async function deleteCraftsman(
@@ -676,10 +699,11 @@ export async function linkCraftsmanAccount(
   craftsmanId: string,
   email: string
 ): Promise<void> {
-  const cleanEmail = email.trim().toLowerCase();
-  if (!cleanEmail || !cleanEmail.includes("@")) {
+  const emailError = validateEmail(email);
+  if (emailError) {
     throw new Error("يرجى إدخال بريد إلكتروني صحيح");
   }
+  const cleanEmail = cleanText(email).toLowerCase();
 
   const { error } = await createSupabase().rpc("link_craftsman_user", {
     craftsman_id_input: craftsmanId,

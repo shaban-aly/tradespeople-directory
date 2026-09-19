@@ -10,6 +10,7 @@ export const DATA_CACHE_KEYS = {
   categories: "data-categories",
   craftsmen: "data-craftsmen",
   areas: "data-areas",
+  stats: "data-stats",
 } as const;
 
 export const CACHE_TAGS = {

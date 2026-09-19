@@ -285,18 +285,33 @@ export const getAreas = unstable_cache(getAreasImpl, [
   DATA_CACHE_KEYS.areas,
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.areas, SEARCH_TAG] });
 
-export async function getStats() {
-  const [craftsmen, categories, areas] = await Promise.all([
-    getCraftsmen(),
+async function getPublishedCraftsmenCount(): Promise<number> {
+  const { count, error } = await createServerReadClient()
+    .from("craftsmen")
+    .select("id", { count: "exact", head: true })
+    .eq("is_published", true);
+  assertSelectOk("عدد الصنايعية", error);
+  return count ?? 0;
+}
+
+async function getStatsImpl(): Promise<{ craftsmen: number; categories: number; areas: number }> {
+  const [craftsmenCount, categories, areas] = await Promise.all([
+    getPublishedCraftsmenCount(),
     getCategories(),
     getAreas(),
   ]);
   return {
-    craftsmen: craftsmen.length,
+    craftsmen: craftsmenCount,
     categories: categories.length,
     areas: areas.length,
   };
 }
+
+export const getStats = unstable_cache(
+  getStatsImpl,
+  [DATA_CACHE_KEYS.stats],
+  { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.stats, CACHE_TAGS.craftsmenList] },
+);
 
 type StatsRow = { views: number; calls: number; whatsapp: number };
 

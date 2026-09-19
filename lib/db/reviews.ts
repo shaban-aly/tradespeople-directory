@@ -1,6 +1,7 @@
 import { createSupabase } from "./client";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
+import { cleanText, hasDangerousContent } from "../utils/validation";
 
 export interface ReviewItem {
   id: string;
@@ -152,21 +153,38 @@ export async function upsertReview(params: {
 }): Promise<{ success: boolean; error?: string }> {
   const { userId, craftsmanId, rating, comment } = params;
 
-  if (rating < 1 || rating > 5) {
-    return { success: false, error: "التقييم يجب أن يكون بين 1 و 5 نجوم" };
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return { success: false, error: "التقييم يجب أن يكون عدداً صحيحاً بين 1 و 5 نجوم" };
   }
 
-  if (comment && comment.length > 500) {
+  const cleanedComment = comment ? cleanText(comment) : null;
+  if (cleanedComment && hasDangerousContent(cleanedComment)) {
+    return { success: false, error: "التعليق يحتوي على محتوى غير مسموح به" };
+  }
+
+  if (cleanedComment && cleanedComment.length > 500) {
     return { success: false, error: "التعليق يجب ألا يتجاوز 500 حرف" };
   }
 
   const supabase = createSupabase();
+
+  // فحص منع التقييم الذاتي إذا كان المستخدم هو صاحب البروفايل كفني
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("craftsman_id")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (profile?.craftsman_id === craftsmanId) {
+    return { success: false, error: "لا يمكنك تقييم صفحتك الشخصية كفني" };
+  }
+
   const { error } = await supabase.from("reviews").upsert(
     {
       user_id: userId,
       craftsman_id: craftsmanId,
       rating,
-      comment: comment?.trim() || null,
+      comment: cleanedComment || null,
     },
     { onConflict: "user_id,craftsman_id" }
   );

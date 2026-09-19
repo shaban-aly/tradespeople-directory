@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Modal } from "@/components/admin/Modal";
 import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { linkCraftsmanAccount, type CraftsmanRow } from "@/lib/db/admin";
+import { validateEmail } from "@/lib/utils/validation";
 
 interface LinkAccountModalProps {
   craftsman: CraftsmanRow | null;
@@ -28,6 +29,12 @@ export function LinkAccountModal({
   async function handleLink(e: React.FormEvent) {
     e.preventDefault();
     if (!craftsman) return;
+
+    const emailError = validateEmail(email);
+    if (emailError) {
+      setError(emailError);
+      return;
+    }
 
     setLoading(true);
     setError(null);
