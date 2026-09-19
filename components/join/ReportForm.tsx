@@ -2,7 +2,7 @@
 
 import { useReportRequest } from "@/hooks/forms/useReportRequest";
 import { IconCheck } from "@/components/shared/icons";
-import { Button } from "@/components/shared/ui/Button";
+import { Button, ButtonLink } from "@/components/shared/ui/Button";
 import { Field, fieldErrorId } from "@/components/shared/form/Field";
 import { TextField } from "@/components/shared/form/TextField";
 import { TextArea } from "@/components/shared/form/TextArea";
@@ -18,18 +18,38 @@ export function ReportForm({ initialCraftsmanName = "" }: { initialCraftsmanName
     submitError,
     submitted,
     handleSubmit,
+    resetForm,
   } = useReportRequest(initialCraftsmanName);
 
   if (submitted) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-card">
-        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-action/10 text-action">
+      <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 text-center shadow-card">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-action/10 text-action ring-8 ring-action/5">
           <IconCheck className="h-8 w-8" />
         </div>
-        <h2 className="font-heading text-xl font-bold">تم استلام بلاغك</h2>
-        <p className="mt-2 text-base text-muted">
-          هنراجع البيانات ونعدّلها قريب. شكراً لمساعدتك!
+        <h2 className="font-heading text-2xl font-bold text-foreground sm:text-3xl">
+          تم استلام بلاغك بنجاح!
+        </h2>
+        <p className="mt-2 text-base text-muted max-w-md mx-auto leading-relaxed">
+          شكراً لحرصك ومساعدتنا في الحفاظ على دقة معلومات الدليل. سيقوم فريق الإدارة بمراجعة البيانات وتعديلها فوراً.
         </p>
+
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <ButtonLink href="/categories" variant="primary" className="w-full sm:w-auto">
+            تصفح دليل الفنيين
+          </ButtonLink>
+          <ButtonLink href="/" variant="ghost" className="w-full sm:w-auto">
+            الصفحة الرئيسية
+          </ButtonLink>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={resetForm}
+            className="w-full sm:w-auto"
+          >
+            إرسال بلاغ آخر
+          </Button>
+        </div>
       </div>
     );
   }

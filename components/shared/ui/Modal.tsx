@@ -1,11 +1,12 @@
 "use client";
 
-import { useId, type ReactNode } from "react";
+import { useId, useRef, type ReactNode } from "react";
 import { IconX } from "@/components/shared/icons";
 import { useBodyScrollLock } from "@/hooks/ui/useBodyScrollLock";
+import { useFocusTrap } from "@/hooks/ui/useFocusTrap";
 
 // مودال موحّد: خلفية معتمة + قفل سكرول الجسم + إغلاق بـ Escape
-// أو بالنقر خارجياً + هيدر بعنوان وإغلاق + جسم قابل للتمرير.
+// أو بالنقر خارجياً + هيدر بعنوان وإغلاق + جسم قابل للتمرير + مصيدة تركيز (Focus Trap).
 interface ModalProps {
   open: boolean;
   onClose: () => void;
@@ -28,7 +29,9 @@ export function Modal({
   size = "md",
 }: ModalProps) {
   const titleId = useId();
+  const cardRef = useRef<HTMLDivElement>(null);
   useBodyScrollLock(open);
+  useFocusTrap(cardRef, open, { onClose });
 
   if (!open) return null;
 
@@ -42,6 +45,7 @@ export function Modal({
       {/* خلفية */}
       <button
         type="button"
+        tabIndex={-1}
         aria-label="إغلاق"
         onClick={onClose}
         className="absolute inset-0 bg-black/60 backdrop-blur-xs"
@@ -49,7 +53,9 @@ export function Modal({
 
       {/* بطاقة المودال */}
       <div
-        className={`relative z-10 flex max-h-[85vh] w-full flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-card ${
+        ref={cardRef}
+        tabIndex={-1}
+        className={`relative z-10 flex max-h-[85vh] w-full flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-card focus:outline-none ${
           size === "lg" ? "max-w-2xl" : "max-w-lg"
         }`}
       >

@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSearchModal } from "@/hooks/search/useSearchModal";
 import { useSearch } from "@/hooks/search/useSearch";
 import { useRecentSearches } from "@/hooks/search/useRecentSearches";
+import { useFocusTrap } from "@/hooks/ui/useFocusTrap";
+import { useBodyScrollLock } from "@/hooks/ui/useBodyScrollLock";
 import { SearchResultsList } from "@/components/search/SearchResultsList";
 import { CategoryIcon } from "@/components/shared/ui/CategoryIcon";
 import { Button } from "@/components/shared/ui/Button";
@@ -33,7 +35,14 @@ export function SearchModal() {
   const { searches, addSearch, removeSearch, clearSearches } = useRecentSearches();
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const { suggestions, loading } = useSearch(isOpen ? query : "", isOpen);
+
+  useBodyScrollLock(isOpen);
+  useFocusTrap(containerRef, isOpen, {
+    initialFocusRef: inputRef,
+    onClose: closeSearch,
+  });
 
   // تصفير نص البحث عند فتح النافذة (ضبط الحالة أثناء الريندر بدل useEffect)
   const [prevOpen, setPrevOpen] = useState({ isOpen, initialQuery });
@@ -44,34 +53,6 @@ export function SearchModal() {
     setPrevOpen({ isOpen, initialQuery });
     setQuery(initialQuery || "");
   }
-
-  // التركيز التلقائي وقفل التمرير
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const timer = window.setTimeout(() => {
-      inputRef.current?.focus();
-      inputRef.current?.select();
-    }, 50);
-
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      window.clearTimeout(timer);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [isOpen]);
-
-  // إغلاق بـ Escape
-  useEffect(() => {
-    if (!isOpen) return;
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") closeSearch();
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [isOpen, closeSearch]);
 
   if (!isOpen) return null;
 
@@ -85,10 +66,12 @@ export function SearchModal() {
 
   return (
     <div
+      ref={containerRef}
       role="dialog"
       aria-modal="true"
       aria-label="نافذة البحث السريع"
-      className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-md"
+      tabIndex={-1}
+      className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-md focus:outline-none"
     >
       {/* رأس النافذة مع حقل البحث */}
       <div className="flex items-center gap-2 border-b border-border bg-card/80 px-4 py-3">

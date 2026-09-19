@@ -7,6 +7,7 @@ import { uploadCraftsmanImage, deleteImageByUrl } from "../storage/images";
 import {
   cleanText,
   sanitizeAndNormalizePhone,
+  validateName,
   validatePhone,
   validateDescription,
   validateSocialLinks,
@@ -56,6 +57,7 @@ export interface CraftsmanDashboardData {
 }
 
 export interface UpdateCraftsmanSelfInput {
+  name?: string;
   phone: string;
   whatsapp?: string;
   description?: string;
@@ -198,6 +200,7 @@ export async function updateCraftsmanSelfProfile(
   const supabase = createSupabase();
 
   // التحقق من صحة المدخلات
+  const nameError = payload.name !== undefined ? validateName(payload.name) : null;
   const phoneError = validatePhone(payload.phone);
   // الواتساب اختياري لكن إن وُجد يجب أن يكون رقم هاتف صالح
   const whatsappError = payload.whatsapp
@@ -206,7 +209,7 @@ export async function updateCraftsmanSelfProfile(
   const descError = validateDescription(payload.description ?? "");
   const linksError = validateSocialLinks(payload.socialLinks);
 
-  const errors = [phoneError, whatsappError, descError, linksError].filter(Boolean);
+  const errors = [nameError, phoneError, whatsappError, descError, linksError].filter(Boolean);
   if (errors.length > 0) {
     throw new Error(errors[0] as string);
   }
@@ -237,6 +240,7 @@ export async function updateCraftsmanSelfProfile(
   const { error: updateError } = await supabase
     .from("craftsmen")
     .update({
+      ...(payload.name ? { name: cleanText(payload.name) } : {}),
       phone: sanitizeAndNormalizePhone(payload.phone),
       whatsapp: payload.whatsapp ? sanitizeAndNormalizePhone(payload.whatsapp) : null,
       description: payload.description ? cleanText(payload.description) : null,

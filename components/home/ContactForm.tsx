@@ -18,18 +18,31 @@ export function ContactForm() {
     submitting,
     submitError,
     submitted,
+    resetForm,
   } = useContactForm();
 
   if (submitted) {
     return (
-      <div className="rounded-2xl border border-border bg-background p-6 text-center">
-        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-action/10 text-action">
+      <div className="rounded-2xl border border-border bg-background p-6 sm:p-8 text-center">
+        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-action/10 text-action ring-8 ring-action/5">
           <IconCheck className="h-8 w-8" />
         </div>
-        <h3 className="font-heading text-xl font-bold">وصلتنا رسالتك</h3>
-        <p className="mt-2 text-base text-muted">
-          شكراً ليك، هنرد عليك في أقرب وقت.
+        <h3 className="font-heading text-xl font-bold text-foreground">
+          وصلتنا رسالتك بنجاح!
+        </h3>
+        <p className="mt-2 text-base text-muted max-w-sm mx-auto leading-relaxed">
+          شكراً لتواصلك معنا، سيقوم فريق العمل بمراجعة استفسارك والرد عليك في أقرب وقت.
         </p>
+        <div className="mt-5">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={resetForm}
+            className="w-full sm:w-auto"
+          >
+            إرسال رسالة أخرى
+          </Button>
+        </div>
       </div>
     );
   }

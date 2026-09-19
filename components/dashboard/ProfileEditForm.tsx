@@ -88,7 +88,7 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
             />
           ) : (
             <CraftsmanAvatar
-              name={profile.name}
+              name={formData.name || profile.name}
               className="h-full w-full rounded-2xl text-2xl"
             />
           )}
@@ -175,6 +175,36 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
           )}
         </div>
       </section>
+
+      {/* اسم الصنايعي */}
+      <div>
+        <label
+          htmlFor="name-input"
+          className="mb-1.5 block text-sm font-bold text-foreground"
+        >
+          اسمك الكامل أو التجاري *
+        </label>
+        <input
+          id="name-input"
+          type="text"
+          required
+          maxLength={60}
+          value={formData.name}
+          onChange={(e) => handleFieldChange("name", e.target.value)}
+          onBlur={() => handleFieldBlur("name")}
+          placeholder="مثال: أحمد عبد الله"
+          className={`min-h-12 w-full rounded-xl border bg-background px-4 py-3 text-base text-foreground transition-colors focus:outline-none ${
+            getFieldError("name") ? "border-danger focus:border-danger" : "border-border"
+          }`}
+        />
+        {getFieldError("name") ? (
+          <p className="mt-1.5 text-sm font-semibold text-danger">{getFieldError("name")}</p>
+        ) : (
+          <p className="mt-1 text-xs text-muted">
+            الاسم الذي سيظهر للعملاء في الدليل وعند البحث
+          </p>
+        )}
+      </div>
 
       {/* أرقام التواصل (موبايل وواتساب) */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

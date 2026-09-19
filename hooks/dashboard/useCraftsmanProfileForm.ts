@@ -18,11 +18,13 @@ import {
   anyError,
   type FieldErrors,
   validateDescription,
+  validateName,
   validatePhone,
   validateSocialLinks,
 } from "@/lib/utils/validation";
 
 export interface ProfileFormData {
+  name: string;
   phone: string;
   whatsapp: string;
   description: string;
@@ -30,7 +32,7 @@ export interface ProfileFormData {
   socialLinks: DashboardSocialLink[];
 }
 
-export type ProfileFormFieldName = "phone" | "whatsapp" | "description" | "areaId";
+export type ProfileFormFieldName = "name" | "phone" | "whatsapp" | "description" | "areaId";
 export type ProfileFormErrors = FieldErrors<ProfileFormFieldName>;
 
 export interface AreaOption {
@@ -44,6 +46,7 @@ export function useCraftsmanProfileForm(
   initialAreas?: AreaOption[],
 ) {
   const [formData, setFormData] = useState<ProfileFormData>({
+    name: initialProfile?.name ?? "",
     phone: initialProfile?.phone ?? "",
     whatsapp: initialProfile?.whatsapp ?? "",
     description: initialProfile?.description ?? "",
@@ -137,6 +140,8 @@ export function useCraftsmanProfileForm(
 
   function validateField(field: ProfileFormFieldName, value: string): string | undefined {
     switch (field) {
+      case "name":
+        return validateName(value) ?? undefined;
       case "phone":
         return validatePhone(value) ?? undefined;
       case "whatsapp":
@@ -177,12 +182,13 @@ export function useCraftsmanProfileForm(
 
     // التحقق من صحة الحقول أولاً
     const nextErrors: ProfileFormErrors = {
+      name: validateName(formData.name) ?? undefined,
       phone: validatePhone(formData.phone) ?? undefined,
       whatsapp: formData.whatsapp.trim() ? (validatePhone(formData.whatsapp, false) ?? undefined) : undefined,
       description: formData.description.trim() ? (validateDescription(formData.description) ?? undefined) : undefined,
     };
     setFieldErrors(nextErrors);
-    setTouched({ phone: true, whatsapp: true, description: true, areaId: true });
+    setTouched({ name: true, phone: true, whatsapp: true, description: true, areaId: true });
 
     if (anyError(nextErrors)) {
       setError("يرجى مراجعة وتصحيح الحقول المحددة");
@@ -213,6 +219,7 @@ export function useCraftsmanProfileForm(
 
     try {
       const result = await updateCraftsmanSelfProfile(initialProfile.id, {
+        name: formData.name.trim(),
         phone: formData.phone,
         whatsapp: formData.whatsapp || undefined,
         description: formData.description || undefined,

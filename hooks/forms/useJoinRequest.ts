@@ -124,6 +124,25 @@ export function useJoinRequest(
     }
   }
 
+  function resetForm() {
+    setRegister({
+      name: "",
+      category: initialCategory,
+      area: initialArea,
+      phone: "",
+      whatsapp: "",
+      description: "",
+    });
+    setRegisterTouched({});
+    setRegisterErrors({});
+    setRegisterImage(null);
+    setRegisterSocialLinks([]);
+    setRegisterSocialError("");
+    setRegisterImageError("");
+    setSubmitError("");
+    setSubmitted(false);
+  }
+
   return {
     register,
     setRegisterField,
@@ -141,5 +160,6 @@ export function useJoinRequest(
     submitError,
     submitted,
     handleSubmit,
+    resetForm,
   };
 }

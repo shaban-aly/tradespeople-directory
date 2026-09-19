@@ -82,6 +82,18 @@ export function useContactForm() {
     }
   }
 
+  function resetForm() {
+    setForm({
+      name: "",
+      phone: "",
+      message: "",
+    });
+    setTouched({});
+    setErrors({});
+    setSubmitError("");
+    setSubmitted(false);
+  }
+
   return {
     form,
     handleChange,
@@ -91,5 +103,6 @@ export function useContactForm() {
     submitting,
     submitError,
     submitted,
+    resetForm,
   };
 }

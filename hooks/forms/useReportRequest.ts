@@ -80,6 +80,18 @@ export function useReportRequest(initialCraftsmanName = "") {
     }
   }
 
+  function resetForm() {
+    setReport({
+      craftsmanName: initialCraftsmanName,
+      phone: "",
+      message: "",
+    });
+    setReportTouched({});
+    setReportErrors({});
+    setSubmitError("");
+    setSubmitted(false);
+  }
+
   return {
     report,
     setReportField,
@@ -91,5 +103,6 @@ export function useReportRequest(initialCraftsmanName = "") {
     submitError,
     submitted,
     handleSubmit,
+    resetForm,
   };
 }

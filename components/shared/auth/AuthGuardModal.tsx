@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useRef } from "react";
 import { IconExternalLink, IconLock, IconX } from "@/components/shared/icons";
 import { GoogleSignInButton } from "@/components/shared/GoogleSignInButton";
 import { ButtonAnchor } from "@/components/shared/ui/Button";
 import { useExternalBrowserPrompt } from "@/hooks/ui/useExternalBrowserPrompt";
+import { useFocusTrap } from "@/hooks/ui/useFocusTrap";
 import {
   detectMobileBrowserKind,
   openInExternalBrowser,
@@ -29,15 +30,8 @@ export function AuthGuardModal({
   actionDescription,
 }: AuthGuardModalProps) {
   const { ua, shouldPrompt: mobileBrowser } = useExternalBrowserPrompt();
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  const cardRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(cardRef, open, { onClose });
 
   if (!open) return null;
 
@@ -51,13 +45,18 @@ export function AuthGuardModal({
       {/* خلفية معتمة قابلة للنقر للإغلاق */}
       <button
         type="button"
+        tabIndex={-1}
         aria-label="إغلاق النافذة"
         onClick={onClose}
         className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
       />
 
       {/* بطاقة المودال */}
-      <div className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-card text-center sm:p-8">
+      <div
+        ref={cardRef}
+        tabIndex={-1}
+        className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-card text-center sm:p-8 focus:outline-none"
+      >
         {/* زر إغلاق علوي */}
         <button
           type="button"

@@ -4,7 +4,7 @@ import type { Category } from "@/lib/data/craftsmen";
 import { useJoinRequest } from "@/hooks/forms/useJoinRequest";
 import { useImageUpload } from "@/hooks/forms/useImageUpload";
 import { IconCheck } from "@/components/shared/icons";
-import { Button } from "@/components/shared/ui/Button";
+import { Button, ButtonLink } from "@/components/shared/ui/Button";
 import { ImageUpload } from "@/components/join/ImageUpload";
 import { SocialLinksEditor } from "@/components/shared/ui/SocialLinksEditor";
 import { Field, fieldErrorId } from "@/components/shared/form/Field";
@@ -35,6 +35,7 @@ export function JoinForm({
     registerSocialError,
     changeRegisterSocialLinks,
     handleSubmit,
+    resetForm,
   } = useJoinRequest(categories[0]?.slug ?? "", areas[0] ?? "");
 
   async function handleSelectImage(file: File | undefined) {
@@ -49,15 +50,67 @@ export function JoinForm({
 
   if (submitted) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-card">
-        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-action/10 text-action">
+      <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 text-center shadow-card">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-action/10 text-action ring-8 ring-action/5">
           <IconCheck className="h-8 w-8" />
         </div>
-        <h2 className="font-heading text-xl font-bold">تم استلام بياناتك</h2>
-        <p className="mt-2 text-base text-muted">
-          هنراجعها ونضيف الصنايعي للدليل قريب. وحسابك هيتربط بيه —
-          هتلاقي بياناته تحت إدارتك.
+        <h2 className="font-heading text-2xl sm:text-3xl font-bold text-foreground">
+          تم استلام طلب إضافة الصنايعي بنجاح!
+        </h2>
+        <p className="mt-2.5 max-w-md mx-auto text-base text-muted leading-relaxed">
+          شكراً لمساهمتك في دعم وتطوير دليل صنايعية السويس. طلبك الآن قيد المراجعة والتدقيق.
         </p>
+
+        {/* خريطة الخطوات القادمة */}
+        <div className="my-6 rounded-2xl border border-border bg-background/60 p-4 text-start sm:p-5">
+          <h3 className="mb-3 font-heading text-sm font-bold text-foreground">
+            ماذا سيحدث بعد ذلك؟
+          </h3>
+          <ol className="space-y-2.5 text-sm text-muted">
+            <li className="flex items-start gap-2.5">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/10 font-bold text-xs text-accent">
+                1
+              </span>
+              <span>
+                <strong className="text-foreground">مراجعة المشرف:</strong> التحقق من صحة أرقام الهاتف والتخصص والمنطقة لضمان جودة الدليل.
+              </span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/10 font-bold text-xs text-accent">
+                2
+              </span>
+              <span>
+                <strong className="text-foreground">النشر والتوثيق:</strong> بمجرد الاعتماد، يظهر ملف الصنايعي في نتائج البحث وقوائم التخصص فوراً.
+              </span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/10 font-bold text-xs text-accent">
+                3
+              </span>
+              <span>
+                <strong className="text-foreground">إدارة الملف:</strong> حسابك أصبح مرتبطاً بهذا الصنايعي، وستتمكن من تعديل بياناته وصوره في أي وقت.
+              </span>
+            </li>
+          </ol>
+        </div>
+
+        {/* أزرار الإجراءات */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <ButtonLink href="/categories" variant="primary" className="w-full sm:w-auto">
+            تصفح دليل الفنيين
+          </ButtonLink>
+          <ButtonLink href="/" variant="ghost" className="w-full sm:w-auto">
+            الصفحة الرئيسية
+          </ButtonLink>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={resetForm}
+            className="w-full sm:w-auto"
+          >
+            إضافة صنايعي آخر
+          </Button>
+        </div>
       </div>
     );
   }
