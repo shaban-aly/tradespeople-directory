@@ -1,6 +1,8 @@
 // ---------------------------------------------------------------------------
 // 1. Firebase Background Messaging Module
 // ---------------------------------------------------------------------------
+// يُستورد أولاً حتى يبقى Firebase Messaging (الإشعارات الخلفية) يعمل عبر نفس
+// الـ Service Worker الموحد — لا يوجد SW ثانٍ ولا duplicate notifications.
 try {
   importScripts("/firebase-messaging-sw.js");
 } catch (err) {
@@ -8,54 +10,62 @@ try {
 }
 
 // ---------------------------------------------------------------------------
-// 2. PWA Caching & Lifecycle
+// 2. سياسة الكاش: لا Offline App إطلاقاً
 // ---------------------------------------------------------------------------
-const CACHE_VERSION = "v6"; // رُفع الإصدار لتحديث Service Worker وتجاوز كاش البرودكشن القديم
-const PRECACHE_NAME = `shell-${CACHE_VERSION}`;
-const RUNTIME_NAME = `runtime-${CACHE_VERSION}`;
+//   - صفحات الموقع والت navigation: NETWORK ONLY. عند تعذّر الاتصال فقط نعرض
+//     صفحة /offline الثابتة — لا نسخة قديمة من الصفحة المطلوبة أبداً.
+//   - طلبات `/api/*`: NETWORK ONLY — لا cache ولا fallback على بيانات قديمة.
+//   - بقية الموارد (_next/*, صور, خطوط...): NETWORK ONLY — لا runtime cache
+//     لصفحات الموقع أو بياناته إطلاقاً.
+//   - الوحيد المسموح به في Cache Storage هو صفحة /offline (ملف HTML مكتفٍ
+//     بذاته)، وتُخزَّن دون أي parsing لروابط أو قطع Next.js.
+const CACHE_VERSION = "v8"; // Migration: تجاوز shell-*/runtime-*/offline-v7 القديمة
+const OFFLINE_CACHE_NAME = `offline-${CACHE_VERSION}`;
 
 const isDev =
   self.location.hostname === "localhost" ||
   self.location.hostname === "127.0.0.1";
 
-const PRECACHE_URLS = [
-  "/",
-  "/categories",
-  "/site.webmanifest",
-  "/web-app-manifest-192x192.png",
-  "/web-app-manifest-512x512.png",
-  "/favicon.svg",
-];
+// بادئات الكاش الخاصة بهذا التطبيق فقط (كل الإصدارات، قديمة وحديثة).
+// نستخدمها عند activate لمسح ما أنشأه أي Service Worker سابق (shell-v*/runtime-v*/offline-v*)
+// دون لمس أي cache لا يخص التطبيق.
+const APP_CACHE_PREFIXES = ["shell-v", "runtime-v", "offline-v"];
 
-// دومينات Google التي يجب تركها تذهب للشبكة مباشرة (بدون cache أو تدخل)
-const BYPASS_HOSTS = [
-  "www.google-analytics.com",
-  "analytics.google.com",
-  "stats.g.doubleclick.net",
-  "www.googletagmanager.com",
-  "googletagmanager.com",
-  "pagead2.googlesyndication.com",
-  "googleads.g.doubleclick.net",
-  "tpc.googlesyndication.com",
-  "ep1.adtrafficquality.google",
-  "ep2.adtrafficquality.google",
-];
+function isAppCache(key) {
+  return APP_CACHE_PREFIXES.some((prefix) => key.startsWith(prefix));
+}
 
-function shouldBypass(url) {
-  return BYPASS_HOSTS.some((host) => url.hostname === host || url.hostname.endsWith(`.${host}`));
+// يجلب صفحة /offline (HTML مكتفٍ بذاته) ويخزّنها كمفتاح "/offline" فقط.
+async function prepareOfflinePage() {
+  const cache = await caches.open(OFFLINE_CACHE_NAME);
+  const offlineUrl = new URL("/offline", self.location.origin).href;
+
+  const response = await fetch(offlineUrl, {
+    credentials: "same-origin",
+    cache: "no-store",
+  });
+  if (!response.ok || response.type === "error") {
+    throw new Error(`/offline fetch failed: ${response.status}`);
+  }
+
+  await cache.put("/offline", response);
 }
 
 self.addEventListener("install", (event) => {
   if (isDev) {
-    // في وضع التطوير: تفعيل فوري بدون precaching لتجنب أي stale cache يعطل HMR
+    // في وضع التطوير: تفعيل فوري بدون أي precaching لمنع تعارض HMR.
     self.skipWaiting();
     return;
   }
   event.waitUntil(
-    caches
-      .open(PRECACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting()),
+    prepareOfflinePage()
+      .then(() => self.skipWaiting())
+      .catch((err) => {
+        console.error("[SW] Failed to precache offline page:", err);
+        // حتى لو فشل التحضير نكمل: الشبكة-only يعمل، وfallback الـ offline
+        // يتحول إلى صفحة خطأ المتصفح كأضعف حالة ممكنة.
+        self.skipWaiting();
+      }),
   );
 });
 
@@ -66,7 +76,7 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== PRECACHE_NAME && key !== RUNTIME_NAME)
+            .filter((key) => isAppCache(key) && key !== OFFLINE_CACHE_NAME)
             .map((key) => caches.delete(key)),
         ),
       )
@@ -78,73 +88,34 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
-  // تجاوز ملف تكوين Firebase حتى لا يُحفظ في الكاش ويبقى دائماً متجدداً
+  // لا نتدخل في ملف Firebase Messaging نفسه — يبقى Network-only دائماً.
   if (url.pathname === "/firebase-messaging-sw.js") return;
 
-  // تجاوز API routes دائماً
-  if (url.pathname.startsWith("/api/")) return;
-
-  // في وضع التطوير: اترك كل طلبات fetch تذهب للشبكة مباشرة لمنع أي تعارض مع HMR
-  if (isDev) return;
-
-  // تجاوز كل دومينات Google (Analytics, Ads, TagManager) — اتركها للشبكة مباشرة
-  if (shouldBypass(url)) return;
-
-  // تجاوز أي طلب غير GET (مثل POST)
-  if (request.method !== "GET") return;
-
-  // تجاوز ملفات الوسائط الكبيرة — Chrome يطبع log لكل respondWith لذا نتجنب الفيديو والصوت
-  const MEDIA_EXTENSIONS = [".mp4", ".webm", ".ogg", ".mp3", ".wav"];
-  if (MEDIA_EXTENSIONS.some((ext) => url.pathname.endsWith(ext))) return;
-
-  // تنقل بين الصفحات: شبكة أولاً ثم cache كاحتياطي
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.status === 200) {
-            const copy = response.clone();
-            caches.open(RUNTIME_NAME).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(() =>
-          caches.match(request).then((cached) => cached || caches.match("/")),
-        ),
-    );
-    return;
-  }
-
-  // باقي الموارد من نفس الأصل: cache أولاً ثم شبكة
+  // الموارد من جهات خارجية (Analytics, Ads, Firebase CDN, الخطوط البعيدة...)
+  // تذهب للشبكة مباشرة بدون أي تدخل.
   if (url.origin !== self.location.origin) return;
 
-  // موارد Next.js (_next/static/chunks): شبكة أولاً ثم كاش كاحتياطي
-  if (url.pathname.startsWith("/_next/")) {
+  if (isDev) return;
+
+  if (request.method !== "GET") return;
+
+  // API routes: NETWORK ONLY — لا cache ولا fallback على بيانات قديمة أبداً.
+  if (url.pathname.startsWith("/api/")) return;
+
+  // التنقل بين الصفحات (HTML): NETWORK ONLY مع fallback وحيد إلى /offline.
+  // لا نستخدم caches.match للصفحة المطلوبة إطلاقاً — فلا يمكن أن تظهر صفحة
+  // قديمة؛ الوحيد المخزّن هو صفحة /offline الثابتة.
+  if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.status === 200) {
-            const copy = response.clone();
-            caches.open(RUNTIME_NAME).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(() => caches.match(request)),
+      fetch(request).catch(async () => {
+        const cache = await caches.open(OFFLINE_CACHE_NAME);
+        return (await cache.match("/offline")) || Response.error();
+      }),
     );
     return;
   }
 
-  event.respondWith(
-    caches.match(request).then(
-      (cached) =>
-        cached ||
-        fetch(request).then((response) => {
-          if (response.status === 200) {
-            const copy = response.clone();
-            caches.open(RUNTIME_NAME).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        }),
-    ),
-  );
+  // باقي الموارد من نفس الأصل (_next/*, صور, ...): NETWORK ONLY.
+  // لا نستجيب للحدث — الطلب يذهب للشبكة مباشرة ولا يُخزّن أي شيء.
+  return;
 });
