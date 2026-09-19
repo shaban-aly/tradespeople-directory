@@ -111,10 +111,6 @@ export function IconShare(props: LucideProps) {
   return <Share {...props} />;
 }
 
-export function IconPlus(props: LucideProps) {
-  return <Plus {...props} />;
-}
-
 export function IconCamera(props: LucideProps) {
   return <Camera {...props} />;
 }
