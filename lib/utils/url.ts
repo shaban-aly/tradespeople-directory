@@ -40,7 +40,7 @@ export function craftsmanWhatsappMessage(
   categoryName?: string,
 ): string {
   const trade = categoryName && categoryName.trim() ? ` ${categoryName}` : "";
-  return `السلام عليكم يا أسطى ${name}، شفت رقمك على دليل الصنايعية بالسويس ومحتاج مساعدة في شغل${trade}.`;
+  return `السلام عليكم ${name}، شفت رقمك على دليل الصنايعية بالسويس ومحتاج مساعدة في شغل${trade}.`;
 }
 
 export function whatsappHref(number: string, message?: string): string {
