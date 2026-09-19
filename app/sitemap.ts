@@ -43,7 +43,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${siteUrl}/craftsman/${craftsman.slug}`,
     changeFrequency: "weekly",
     priority: 0.6,
-    lastModified: craftsman.addedAt,
+    lastModified: craftsman.updatedAt || craftsman.addedAt,
   }));
 
   return [...staticRoutes, ...categoryRoutes, ...craftsmanRoutes];

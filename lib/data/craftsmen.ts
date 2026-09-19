@@ -21,6 +21,7 @@ export type Craftsman = {
     totalReviews: number;
   };
   addedAt: string; // تاريخ الإضافة بصيغة ISO
+  updatedAt?: string; // تاريخ آخر تحديث بصيغة ISO
   socialLinks?: SocialLink[]; // روابط سوشيال اختيارية
 };
 

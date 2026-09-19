@@ -24,19 +24,26 @@ type AnalyticsEventParams = Record<string, string | number | boolean | null | un
 declare global {
   interface Window {
     dataLayer?: unknown[];
+    gtag?: (...args: unknown[]) => void;
   }
 }
 
 /**
- * يُطلق حدث GA4 عبر dataLayer (gtag جاهز من layout.tsx).
+ * يُطلق حدث GA4 عبر gtag أو dataLayer.
  * لا يفعل شيئاً على الخادم أو في بيئة بلا GA.
  */
 export function track(eventName: AnalyticsEventName, params?: AnalyticsEventParams): void {
   if (typeof window === "undefined") return;
-  const dl = window.dataLayer;
-  if (!Array.isArray(dl)) return;
 
-  // gtag() pushes to dataLayer — نستدعيها مباشرة عبر dataLayer.push
-  // لتجنب الحاجة إلى window.gtag غير الموثوق.
-  dl.push(["event", eventName, params ?? {}]);
+  const eventData = params ?? {};
+
+  if (typeof window.gtag === "function") {
+    window.gtag("event", eventName, eventData);
+    return;
+  }
+
+  const dl = window.dataLayer;
+  if (Array.isArray(dl)) {
+    dl.push({ event: eventName, ...eventData });
+  }
 }

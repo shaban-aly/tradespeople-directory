@@ -12,9 +12,9 @@ import { CACHE_TAGS, DATA_CACHE_KEYS, SEARCH_CACHE_KEYS, SEARCH_CACHE_REVALIDATE
 import { matchScore, matchesQuery, normalizeArabic, type SearchData } from "../search";
 
 const CRAFTSMAN_SELECT =
-  "id, slug, name, image_url, phone, whatsapp, description, verified, added_at, social_links, category:categories(slug, name, icon), area:areas(name)";
+  "id, slug, name, image_url, phone, whatsapp, description, verified, added_at, updated_at, social_links, category:categories(slug, name, icon), area:areas(name)";
 const CRAFTSMAN_BY_CATEGORY_SELECT =
-  "id, slug, name, image_url, phone, whatsapp, description, verified, added_at, social_links, category:categories!inner(slug, name, icon), area:areas(name), stats:craftsman_stats(views, calls, whatsapp)";
+  "id, slug, name, image_url, phone, whatsapp, description, verified, added_at, updated_at, social_links, category:categories!inner(slug, name, icon), area:areas(name), stats:craftsman_stats(views, calls, whatsapp)";
 
 /**
  * غلاف يكش لكل مماثلة (slug...) نسخة كاش منفصلة بمفتاح ووسم خاصين بها
@@ -60,6 +60,7 @@ type CraftsmanRow = {
   description: string | null;
   verified: boolean;
   added_at: string;
+  updated_at?: string | null;
   social_links: unknown;
   category: CategoryRow | null;
   area: AreaRow | null;
@@ -88,6 +89,7 @@ function mapCraftsman(row: CraftsmanRow): Craftsman {
     verified: row.verified,
     rating: { average: 0, totalReviews: 0 },
     addedAt: row.added_at,
+    updatedAt: row.updated_at ?? row.added_at,
     socialLinks,
   };
 }
@@ -159,6 +161,11 @@ async function getCategoryBySlugImpl(slug: string): Promise<Category | undefined
   return data ? mapCategory(data) : undefined;
 }
 
+/**
+ * جلب التخصص عبر الـ slug.
+ * ملاحظة: تقوم unstable_cache في Next.js بتضمين وسائط الدالة (slug) تلقائياً
+ * في مفتاح الكاش، لذا لكل slug كاش مستقل ومعزول.
+ */
 export const getCategoryBySlug = unstable_cache(getCategoryBySlugImpl, [
   "data-category-by-slug",
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.categories, SEARCH_TAG] });
@@ -210,6 +217,11 @@ async function getCraftsmenByCategoryImpl(slug: string): Promise<CraftsmanWithSt
   return attachRatings(craftsmen);
 }
 
+/**
+ * جلب الصنايعية حسب التخصص مع الإحصائيات.
+ * ملاحظة: تقوم unstable_cache بتضمين وسيط التخصص (slug) تلقائياً في مفتاح الكاش،
+ * بينما وسوم الكاش (tags) تُستخدم للإبطال الشامل عند تحديث أي صنايعي أو تصنيف.
+ */
 export const getCraftsmenByCategory = unstable_cache(getCraftsmenByCategoryImpl, [
   "data-craftsmen-by-category",
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.categories, CACHE_TAGS.stats, SEARCH_TAG] });
@@ -331,10 +343,14 @@ async function getFeaturedCraftsmenImpl(
   count: number,
   seed?: number,
 ): Promise<Craftsman[]> {
+  // نقيد الجلب بـ 80 مع ترتيب زمني لمنع الجلب اللامحدود مع نمو قاعدة البيانات،
+  // مع الاحتفاظ بتنوع كافٍ لـ pickDiverse لاختيار الصنايعية الأكثر تفاعلاً
   const { data, error } = await createServerReadClient()
     .from("craftsmen")
     .select(`${CRAFTSMAN_SELECT}, stats:craftsman_stats(views, calls, whatsapp)`)
-    .eq("is_published", true);
+    .eq("is_published", true)
+    .order("added_at", { ascending: false })
+    .limit(80);
 
   assertSelectOk("الصنايعية المميزة", error);
   const rows = data ?? [];
@@ -374,6 +390,7 @@ async function getRecommendationPoolImpl(
     .from("craftsmen")
     .select(`${CRAFTSMAN_SELECT}, stats:craftsman_stats(views, calls, whatsapp)`)
     .eq("is_published", true)
+    .order("added_at", { ascending: false })
     .limit(limit);
 
   assertSelectOk("مقترحات الصنايعية", error);
