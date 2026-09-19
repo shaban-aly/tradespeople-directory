@@ -1,9 +1,3 @@
-import { Header } from "@/components/shared/layout/Header";
-import { Footer } from "@/components/shared/layout/Footer";
-import { BottomNav } from "@/components/shared/layout/BottomNav";
-import { SearchModal } from "@/components/search/SearchModal";
-import { BackToTop } from "@/components/shared/ui/BackToTop";
-import { NotificationsToast } from "@/components/shared/ui/NotificationsToast";
 import { ButtonLink } from "@/components/shared/ui/Button";
 import { NotFoundTracker } from "@/components/shared/NotFoundTracker";
 import {
@@ -20,7 +14,6 @@ export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col pb-[calc(env(safe-area-inset-bottom)+56px)] sm:pb-0">
       <NotFoundTracker />
-      <Header />
       <main className="flex flex-1 items-center justify-center px-4 py-16">
         <div className="w-full max-w-2xl rounded-3xl border border-border bg-card p-8 text-center shadow-card sm:p-12">
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-accent/10 text-accent">
@@ -64,12 +57,6 @@ export default function NotFound() {
           </p>
         </div>
       </main>
-      <Footer />
-      <div className="h-[calc(env(safe-area-inset-bottom)+88px)] sm:hidden" aria-hidden />
-      <BottomNav />
-      <SearchModal />
-      <BackToTop />
-      <NotificationsToast />
     </div>
   );
 }
