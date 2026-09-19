@@ -5,6 +5,7 @@ import "./globals.css";
 import { PwaInstallBanner } from "@/components/shared/PwaInstallBanner";
 import { ExternalBrowserBanner } from "@/components/shared/auth/ExternalBrowserBanner";
 import { PwaRegister } from "@/components/shared/layout/PwaRegister";
+import { OfflineBanner } from "@/components/shared/ui/OfflineBanner";
 import { SessionProvider } from "@/hooks/auth/SessionProvider";
 import { PushAutoEnabler } from "@/components/notifications/PushAutoEnabler";
 import {
@@ -156,6 +157,7 @@ export default function RootLayout({
         <SessionProvider>
           <PushAutoEnabler />
           <PwaRegister />
+          <OfflineBanner />
           <PwaInstallBanner />
           <ExternalBrowserBanner delayMs={10_000} />
           {children}

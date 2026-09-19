@@ -107,6 +107,18 @@ const PAGE = `<!doctype html>
     <p>تحقق من اتصالك بالإنترنت وحاول مرة أخرى.</p>
     <a class="retry" href="/">إعادة المحاولة</a>
   </main>
+  <script>
+    window.addEventListener("online", function () {
+      var btn = document.querySelector(".retry");
+      if (btn) {
+        btn.textContent = "تم استعادة الاتصال... جارٍ التحديث";
+        btn.style.opacity = "0.7";
+      }
+      setTimeout(function () {
+        window.location.reload();
+      }, 500);
+    });
+  </script>
 </body>
 </html>`;
 
