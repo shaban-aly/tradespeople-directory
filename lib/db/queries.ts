@@ -440,32 +440,20 @@ async function searchCraftsmenImpl(
   area: string,
   sort: CraftsmanSort,
 ): Promise<Craftsman[]> {
-  const all = await getCraftsmen();
-  const q = normalizeArabic(query);
+  const { data, error } = await createServerReadClient()
+    .rpc("search_craftsmen", {
+      p_query: query || "",
+      p_category: category || "",
+      p_area: area || "",
+      p_sort: sort || "verified",
+      p_limit: 80,
+    });
 
-  let result = all;
-  if (q) {
-    result = result.filter((craftsman) =>
-      matchesQuery(q, craftsman.name, craftsman.category, craftsman.area, craftsman.description),
-    );
-  }
-  if (category) {
-    result = result.filter((craftsman) => craftsman.category === category);
-  }
-  if (area) {
-    result = result.filter((craftsman) => craftsman.area === area);
-  }
+  assertSelectOk("نتائج البحث", error);
 
-  return [...result].sort((a, b) => {
-    if (sort === "verified" && a.verified !== b.verified) {
-      return Number(b.verified) - Number(a.verified);
-    }
-    if (q) {
-      const scoreDiff = matchScore(q, b.name) - matchScore(q, a.name);
-      if (scoreDiff !== 0) return scoreDiff;
-    }
-    return new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime();
-  });
+  const rows = (data ?? []) as unknown as CraftsmanRow[];
+  const craftsmen = rows.map(mapCraftsman);
+  return attachRatings(craftsmen);
 }
 
 export const searchCraftsmen = unstable_cache(searchCraftsmenImpl, [

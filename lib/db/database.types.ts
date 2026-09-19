@@ -664,6 +664,7 @@ export type Database = {
         Returns: boolean
       }
       mark_notifications_read: { Args: { p_ids: string[] }; Returns: number }
+      normalize_arabic: { Args: { p_text: string }; Returns: string }
       notify_all_admins: {
         Args: {
           p_body: string
@@ -700,6 +701,32 @@ export type Database = {
         Args: { p_craftsman_id: string }
         Returns: undefined
       }
+      search_craftsmen: {
+        Args: {
+          p_area?: string
+          p_category?: string
+          p_limit?: number
+          p_query?: string
+          p_sort?: string
+        }
+        Returns: {
+          added_at: string
+          area: Json
+          category: Json
+          description: string
+          id: string
+          image_url: string
+          name: string
+          phone: string
+          slug: string
+          social_links: Json
+          updated_at: string
+          verified: boolean
+          whatsapp: string
+        }[]
+      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       unregister_anonymous_push: {
         Args: { p_token: string }
         Returns: undefined
