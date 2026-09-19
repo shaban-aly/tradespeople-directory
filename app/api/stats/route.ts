@@ -8,8 +8,8 @@ export const dynamic = "force-dynamic";
 
 const LIMIT = 60;
 const WINDOW_MS = 60_000;
-const MAX_SLUG_LENGTH = 60;
-const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const MAX_SLUG_LENGTH = 90;
+const SLUG_PATTERN = /^[a-z0-9\u0621-\u064A\u0660-\u0669]+(?:-[a-z0-9\u0621-\u064A\u0660-\u0669]+)*$/;
 
 type Metric = "view" | "call" | "whatsapp";
 type ErrorResponse = { error: string };

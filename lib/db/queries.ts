@@ -185,10 +185,16 @@ export const getCraftsmen = unstable_cache(getCraftsmenImpl, [
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.stats, SEARCH_TAG] });
 
 async function getCraftsmanBySlugImpl(slug: string): Promise<Craftsman | undefined> {
+  let normalizedSlug = slug;
+  try {
+    normalizedSlug = decodeURIComponent(slug);
+  } catch {
+    // الاحتفاظ بالرابط الأصلي في حال تعذر فك التشفير
+  }
   const { data, error } = await createServerReadClient()
     .from("craftsmen")
     .select(CRAFTSMAN_SELECT)
-    .eq("slug", slug)
+    .eq("slug", normalizedSlug)
     .eq("is_published", true)
     .maybeSingle();
   assertSelectOk("بيانات الصنايعي", error);

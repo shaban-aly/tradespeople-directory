@@ -2,7 +2,7 @@ export const FIELD_LIMITS = {
   nameMin: 2,
   nameMax: 60,
   slugMin: 3,
-  slugMax: 60,
+  slugMax: 90,
   descriptionMin: 10,
   descriptionMax: 1000,
   messageMin: 5,
@@ -31,7 +31,7 @@ const EGYPT_MOBILE = /^(?:\+?20|0020|0)?1[0-9]{9}$/;
 
 const INTERNATIONAL_PHONE = /^\+\d{8,14}$/;
 
-const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const SLUG_PATTERN = /^[a-z0-9\u0621-\u064A\u0660-\u0669]+(?:-[a-z0-9\u0621-\u064A\u0660-\u0669]+)*$/;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -96,7 +96,7 @@ export function validateSlug(value: string, required = true): string | null {
     return `الرابط لازم من ${FIELD_LIMITS.slugMin} لـ ${FIELD_LIMITS.slugMax} حرف`;
   }
   if (!SLUG_PATTERN.test(clean)) {
-    return "الرابط لازم أحرف إنجليزية وأرقام وشرطات بين الكلمات بس";
+    return "الرابط لازم أحرف عربية أو إنجليزية وأرقام وشرطات بين الكلمات بس";
   }
   return null;
 }
