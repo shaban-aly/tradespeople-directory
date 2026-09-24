@@ -84,6 +84,8 @@ export default async function SearchPage({
           craftsmen={craftsmen}
           categories={categories}
           query={query}
+          category={category}
+          area={area}
         />
       </section>
     </>

@@ -9,9 +9,9 @@ import {
 } from "@/lib/data/craftsmen";
 import { CraftsmanGrid } from "@/components/shared/ui/CraftsmanGrid";
 import { BottomSheet } from "@/components/shared/ui/BottomSheet";
-import { Button } from "@/components/shared/ui/Button";
+import { Button, ButtonLink } from "@/components/shared/ui/Button";
 import { EmptyState } from "@/components/shared/ui/EmptyState";
-import { IconChevronDown, IconSliders } from "@/components/shared/icons";
+import { IconChevronDown, IconSliders, IconUserPlus } from "@/components/shared/icons";
 import { toArabicDigits } from "@/lib/utils/format";
 
 const sortOptions: { value: CraftsmanSort; label: string }[] = [
@@ -215,14 +215,21 @@ export function CraftsmanList({
           description={
             hasFilters
               ? "جرّب اختيار منطقة أخرى أو إزالة الفلاتر."
-              : "سجّل أول من ينضم لهذا التخصص."
+              : `لم ينضم أي صنايعي إلى تخصص ${category?.name ?? "هذا المجال"} بعد — ساهم معنا وكن أول المسجلين!`
           }
           action={
             hasFilters ? (
               <Button type="button" onClick={() => setArea("all")}>
                 عرض كل المناطق
               </Button>
-            ) : undefined
+            ) : (
+              <ButtonLink href="/join" variant="action" size="md">
+                <span className="flex items-center gap-2">
+                  <IconUserPlus className="h-4 w-4" />
+                  <span>سجّل كأول صنايعي في هذا التخصص</span>
+                </span>
+              </ButtonLink>
+            )
           }
         />
       ) : (

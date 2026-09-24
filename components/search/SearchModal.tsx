@@ -144,13 +144,78 @@ export function SearchModal() {
               </Button>
             </div>
           ) : (
-            <div className="py-12 text-center">
-              <p className="text-base font-bold text-foreground">
-                لم نجد نتائج مطابقة لـ «{query.trim()}»
-              </p>
-              <p className="mt-1 text-sm text-muted">
-                جرّب البحث بكلمات أخرى أو اختر من التخصصات الشائعة بالأسفل.
-              </p>
+            <div className="py-8 text-center space-y-6">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+                <IconSearch className="h-7 w-7" />
+              </div>
+
+              <div>
+                <p className="text-base font-bold text-foreground sm:text-lg">
+                  لم نجد نتائج مطابقة لـ «{query.trim()}»
+                </p>
+                <p className="mt-1.5 text-sm text-muted">
+                  جرّب البحث بكلمة مختلفة أو اختر تخصصاً من التخصصات الشائعة بالأسفل.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2.5 sm:flex-row sm:justify-center">
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={() => submit()}
+                  className="w-full sm:w-auto"
+                >
+                  البحث الشامل لـ «{query.trim()}»
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setQuery("")}
+                  className="w-full sm:w-auto"
+                >
+                  مسح كلمة البحث
+                </Button>
+              </div>
+
+              {/* التخصصات الأكثر طلباً */}
+              <div className="pt-2 text-start">
+                <p className="mb-3 text-xs font-bold text-muted uppercase tracking-wider">
+                  التخصصات الأكثر طلباً في السويس
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {QUICK_CATEGORIES.map((cat) => {
+                    const color = categoryColor(cat.slug);
+                    return (
+                      <Link
+                        key={cat.slug}
+                        href={categoryHref(cat.slug)}
+                        onClick={() => {
+                          addSearch(cat.name);
+                          closeSearch();
+                        }}
+                        className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2 text-sm font-bold text-foreground transition-all hover:border-accent hover:bg-accent/5 active:scale-95 shadow-xs"
+                      >
+                        <span style={{ color }}>
+                          <CategoryIcon name={cat.slug} className="h-4 w-4" />
+                        </span>
+                        <span>{cat.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* اقتراح إضافة فني جديد */}
+              <div className="flex items-center justify-between rounded-xl border border-border/80 bg-background/60 p-3 text-start text-xs text-muted">
+                <span>مش لاقي الصنايعي المطلوب؟</span>
+                <Link
+                  href="/join"
+                  onClick={closeSearch}
+                  className="font-bold text-accent hover:underline flex items-center gap-1"
+                >
+                  أضف صنايعي جديد للدليل
+                </Link>
+              </div>
             </div>
           )
         ) : (
