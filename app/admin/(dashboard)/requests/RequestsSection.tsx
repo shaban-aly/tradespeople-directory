@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { DashboardLoading } from "@/components/admin/DashboardLoading";
 import { EmptyState } from "@/components/admin/EmptyState";
@@ -11,15 +10,8 @@ import { RequestCard } from "@/components/admin/requests/RequestCard";
 import { RequestDetailsDrawer } from "@/components/admin/requests/RequestDetailsDrawer";
 import { RequestFilters } from "@/components/admin/requests/RequestFilters";
 import { IconInbox } from "@/components/shared/icons";
-import {
-  type JoinRequestRow,
-} from "@/lib/db/admin";
-import {
-  filterRequests,
-  type RequestStatusFilter,
-} from "@/lib/db/admin-selectors";
+import { type JoinRequestRow } from "@/lib/db/admin";
 import { useAdminRequests } from "@/hooks/admin/useAdminRequests";
-import { useToast } from "@/hooks/ui/useToast";
 import { toArabicDigits } from "@/lib/utils/format";
 
 export function RequestsSection({
@@ -27,63 +19,30 @@ export function RequestsSection({
 }: {
   initialRequests: JoinRequestRow[];
 }) {
-  const { toast } = useToast();
   const {
     requests,
+    filteredRequests,
+    pendingCount,
+    rejectedCount,
+    statusFilter,
+    setStatusFilter,
+    approveTarget,
+    setApproveTarget,
+    rejectTarget,
+    setRejectTarget,
+    deleteTarget,
+    setDeleteTarget,
+    detailsTarget,
+    setDetailsTarget,
+    handleApprove,
+    handleReject,
+    handleDelete,
     loading,
-    error,
     busyKey,
-    approveRequest,
-    rejectRequest,
-    deleteRequest,
     refresh,
   } = useAdminRequests(initialRequests);
-  const [statusFilter, setStatusFilter] = useState<RequestStatusFilter>("pending");
-  const [approveTarget, setApproveTarget] = useState<JoinRequestRow | null>(null);
-  const [rejectTarget, setRejectTarget] = useState<JoinRequestRow | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<JoinRequestRow | null>(null);
-  const [detailsTarget, setDetailsTarget] = useState<JoinRequestRow | null>(null);
-
-  useEffect(() => {
-    if (error) toast("error", error);
-  }, [error, toast]);
-
-  const pendingCount = requests.filter((item) => item.status === "pending").length;
-  const rejectedCount = requests.filter((item) => item.status === "rejected").length;
-
-  const filteredRequests = useMemo(
-    () => filterRequests(requests, statusFilter),
-    [requests, statusFilter],
-  );
 
   if (loading) return <DashboardLoading />;
-
-  async function handleApprove() {
-    if (!approveTarget) return;
-    const ok = await approveRequest(approveTarget);
-    if (ok) {
-      toast("success", "تمت الموافقة ونشر الصنايعي في الدليل");
-      setApproveTarget(null);
-    }
-  }
-
-  async function handleReject() {
-    if (!rejectTarget) return;
-    const ok = await rejectRequest(rejectTarget.id);
-    if (ok) {
-      toast("success", "تم رفض الطلب");
-      setRejectTarget(null);
-    }
-  }
-
-  async function handleDelete() {
-    if (!deleteTarget) return;
-    const ok = await deleteRequest(deleteTarget.id);
-    if (ok) {
-      toast("success", "تم حذف الطلب نهائياً");
-      setDeleteTarget(null);
-    }
-  }
 
   return (
     <div className="grid gap-6">

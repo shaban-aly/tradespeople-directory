@@ -19,16 +19,15 @@ import { toArabicDigits } from "@/lib/utils/format";
 
 export type { AdminNavCounts } from "@/lib/db/admin";
 
-type NavItem = {
+export type NavItem = {
   href: string;
   label: string;
   icon: (props: LucideProps) => React.JSX.Element;
   countKey?: keyof AdminNavCounts;
 };
 
-type NavGroup = {
+export type NavGroup = {
   id: string;
-  /** عناوين المجموعات — الأولى بلا عنوان (نظرة عامة منفردة). */
   label?: string;
   items: NavItem[];
 };
@@ -59,17 +58,14 @@ export const ADMIN_NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-/** قائمة مسطّحة للتوافق (عنوان الصفحة الحالي في AdminShell). */
 export const ADMIN_NAV_ITEMS: NavItem[] = ADMIN_NAV_GROUPS.flatMap(
   (group) => group.items,
 );
 
-/** هل المسار الحالي يطابق رابط عنصر تنقّل؟ (مصدر واحد مشترك بين الـ sidebar والشريط العلوي) */
 export function isAdminNavActive(href: string, pathname: string) {
   return pathname === href || (href !== "/admin" && pathname.startsWith(href));
 }
 
-/** عنوان الصفحة الحالية من عناصر التنقل — يستخدمه الشريط العلوي في AdminShell. */
 export function getAdminNavTitle(pathname: string) {
   return (
     ADMIN_NAV_ITEMS.find((item) => isAdminNavActive(item.href, pathname))?.label ??
@@ -81,10 +77,12 @@ function NavItemLink({
   item,
   pathname,
   counts,
+  collapsed,
 }: {
   item: NavItem;
   pathname: string;
   counts?: AdminNavCounts;
+  collapsed?: boolean;
 }) {
   const isActive = isAdminNavActive(item.href, pathname);
   const Icon = item.icon;
@@ -94,33 +92,61 @@ function NavItemLink({
   return (
     <Link
       href={item.href}
+      title={collapsed ? item.label : undefined}
       aria-current={isActive ? "page" : undefined}
-      className={`flex min-h-12 items-center gap-3 rounded-xl px-3 text-base font-bold transition-colors ${
+      className={`group relative flex min-h-10 items-center rounded-xl text-sm font-semibold transition-all duration-150 ${
+        collapsed
+          ? "justify-center p-2.5"
+          : "gap-3 px-3 py-2"
+      } ${
         isActive
-          ? "bg-accent/10 text-accent"
-          : "text-muted hover:bg-background hover:text-foreground"
+          ? "bg-accent text-accent-foreground shadow-xs font-bold"
+          : "text-muted hover:bg-card hover:text-foreground"
       }`}
     >
-      <Icon className="h-5 w-5 shrink-0" />
-      <span className="min-w-0 flex-1 truncate">{item.label}</span>
-{showBadge && (
-        <Badge variant="accent">
-          {toArabicDigits(count)}
-        </Badge>
+      <div className="relative shrink-0">
+        <Icon className={`h-5 w-5 transition-transform duration-150 ${isActive ? "" : "group-hover:scale-105"}`} />
+        {collapsed && showBadge && (
+          <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-extrabold text-white">
+            {count > 99 ? "99+" : toArabicDigits(count)}
+          </span>
+        )}
+      </div>
+
+      {!collapsed && (
+        <>
+          <span className="min-w-0 flex-1 truncate">{item.label}</span>
+          {showBadge && (
+            <Badge variant={isActive ? "neutral" : "accent"}>
+              {toArabicDigits(count)}
+            </Badge>
+          )}
+        </>
       )}
     </Link>
   );
 }
 
-export function AdminNav({ counts }: { counts?: AdminNavCounts }) {
+export function AdminNav({
+  counts,
+  collapsed = false,
+}: {
+  counts?: AdminNavCounts;
+  collapsed?: boolean;
+}) {
   const pathname = usePathname();
 
   return (
-    <nav className="grid gap-5" aria-label="التنقل الرئيسي للوحة التحكم">
-      {ADMIN_NAV_GROUPS.map((group) => (
+    <nav className="grid gap-3.5" aria-label="التنقل الرئيسي للوحة التحكم">
+      {ADMIN_NAV_GROUPS.map((group, idx) => (
         <div key={group.id} className="grid gap-1">
-          {group.label && (
-            <p className="px-3 text-sm font-bold text-muted">{group.label}</p>
+          {group.label && !collapsed && (
+            <p className="px-3 text-[11px] font-bold text-muted/70 uppercase tracking-wider mb-0.5">
+              {group.label}
+            </p>
+          )}
+          {group.label && collapsed && idx > 0 && (
+            <hr className="my-1.5 border-border/60 mx-2" />
           )}
           {group.items.map((item) => (
             <NavItemLink
@@ -128,6 +154,7 @@ export function AdminNav({ counts }: { counts?: AdminNavCounts }) {
               item={item}
               pathname={pathname}
               counts={counts}
+              collapsed={collapsed}
             />
           ))}
         </div>

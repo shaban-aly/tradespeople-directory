@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { DashboardLoading } from "@/components/admin/DashboardLoading";
 import { EmptyState } from "@/components/admin/EmptyState";
@@ -8,89 +7,34 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { RefreshButton } from "@/components/admin/RefreshButton";
 import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { CategoriesTable } from "@/components/admin/categories/CategoriesTable";
-import {
-  CategoryFormModal,
-  type CategoryFormValues,
-} from "@/components/admin/categories/CategoryFormModal";
+import { CategoryFormModal } from "@/components/admin/categories/CategoryFormModal";
 import { IconPlus, IconTags } from "@/components/shared/icons";
-import type { CategoryRow } from "@/lib/db/admin";
 import {
   useAdminCategories,
   type AdminCategoriesData,
 } from "@/hooks/admin/useAdminCategories";
-import { useToast } from "@/hooks/ui/useToast";
-import { toArabicDigits } from "@/lib/utils/format";
 
 export function CategoriesSection({
   initialData,
 }: {
   initialData: AdminCategoriesData;
 }) {
-  const { toast } = useToast();
   const {
     categories,
     categoryCounts,
     loading,
-    error,
     busyKey,
-    addCategory,
-    updateCategory,
-    deleteCategory,
-    toggleCategoryActive,
+    formTarget,
+    setFormTarget,
+    deleteTarget,
+    setDeleteTarget,
+    handleSubmit,
+    handleToggle,
+    handleDelete,
     refresh,
   } = useAdminCategories(initialData);
-  const [formTarget, setFormTarget] = useState<CategoryRow | "new" | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<CategoryRow | null>(null);
-
-  useEffect(() => {
-    if (error) toast("error", error);
-  }, [error, toast]);
 
   if (loading) return <DashboardLoading />;
-
-  async function handleSubmit(payload: CategoryFormValues): Promise<boolean> {
-    if (formTarget === "new") {
-      const ok = await addCategory(payload);
-      if (ok) {
-        toast("success", "تمت إضافة التخصص");
-        setFormTarget(null);
-      }
-      return ok;
-    }
-    if (formTarget) {
-      const ok = await updateCategory(formTarget.id, payload);
-      if (ok) {
-        toast("success", "تم حفظ تعديلات التخصص");
-        setFormTarget(null);
-      }
-      return ok;
-    }
-    return false;
-  }
-
-  async function handleToggle(category: CategoryRow) {
-    const ok = await toggleCategoryActive(category);
-    if (ok) {
-      toast("success", category.is_active ? "تم إخفاء التخصص" : "تم إظهار التخصص");
-    }
-  }
-
-  async function handleDelete() {
-    if (!deleteTarget) return;
-    if ((categoryCounts[deleteTarget.slug] ?? 0) > 0) {
-      toast(
-        "error",
-        `لا يمكن حذف تخصص عليه ${toArabicDigits(categoryCounts[deleteTarget.slug] ?? 0)} صنايعي`,
-      );
-      setDeleteTarget(null);
-      return;
-    }
-    const ok = await deleteCategory(deleteTarget.id);
-    if (ok) {
-      toast("success", "تم حذف التخصص");
-      setDeleteTarget(null);
-    }
-  }
 
   return (
     <div className="grid gap-6">
@@ -111,7 +55,7 @@ export function CategoriesSection({
         }
       />
 
-      <section className="grid gap-4 rounded-2xl border border-border bg-card p-6 shadow-card">
+      <section className="grid gap-4 rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-card">
         {categories.length === 0 ? (
           <EmptyState
             icon={<IconTags className="h-8 w-8" />}
@@ -124,7 +68,7 @@ export function CategoriesSection({
             counts={categoryCounts}
             busyKey={busyKey}
             onEdit={setFormTarget}
-            onToggle={(category) => void handleToggle(category)}
+            onToggle={handleToggle}
             onDelete={setDeleteTarget}
           />
         )}

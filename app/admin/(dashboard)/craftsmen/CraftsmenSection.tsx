@@ -1,7 +1,5 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { CraftsmanForm } from "@/components/admin/CraftsmanForm";
 import { DashboardLoading } from "@/components/admin/DashboardLoading";
@@ -15,19 +13,9 @@ import { CraftsmenFilters } from "@/components/admin/craftsmen/CraftsmenFilters"
 import { CraftsmenTable } from "@/components/admin/craftsmen/CraftsmenTable";
 import { LinkAccountModal } from "@/components/admin/craftsmen/LinkAccountModal";
 import { IconPlus, IconUsers } from "@/components/shared/icons";
-import {
-  type CraftsmanInput,
-  type CraftsmanRow,
-} from "@/lib/db/admin";
-import {
-  filterCraftsmen,
-  paginate,
-  type CraftsmanFilter,
-} from "@/lib/db/admin-selectors";
+import { type CraftsmanFilter } from "@/lib/db/admin-selectors";
 import { useAdminCraftsmen, type AdminCraftsmenData } from "@/hooks/admin/useAdminCraftsmen";
 import { useToast } from "@/hooks/ui/useToast";
-
-const PAGE_SIZE = 8;
 
 export function CraftsmenSection({
   initialData,
@@ -42,163 +30,34 @@ export function CraftsmenSection({
     totalCount: number;
   };
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const {
     categories,
     areas,
-    craftsmen,
+    pageItems,
+    page,
+    pageCount,
+    totalDisplayCount,
     loading,
-    error,
     busyKey,
-    toggleCraftsmanVerified,
-    toggleCraftsmanPublished,
-    createCraftsman,
-    updateCraftsman,
-    deleteCraftsman,
+    isPending,
+    filter,
+    formTarget,
+    deleteTarget,
+    linkTarget,
+    setFormTarget,
+    setDeleteTarget,
+    setLinkTarget,
+    handleFilterChange,
+    handlePageChange,
+    handleSubmit,
+    handleToggleVerified,
+    handleTogglePublished,
+    handleDelete,
     refresh,
-  } = useAdminCraftsmen(initialData);
-
-  const [filter, setFilter] = useState<CraftsmanFilter>(
-    initialFilter ?? {
-      search: "",
-      category: "all",
-      published: "all",
-      verified: "all",
-    },
-  );
-  const [page, setPage] = useState(initialPagination?.page ?? 1);
-  const [formTarget, setFormTarget] = useState<CraftsmanRow | null | "new">(null);
-  const [deleteTarget, setDeleteTarget] = useState<CraftsmanRow | null>(null);
-  const [linkTarget, setLinkTarget] = useState<CraftsmanRow | null>(null);
-
-  useEffect(() => {
-    if (error) toast("error", error);
-  }, [error, toast]);
-
-  useEffect(() => {
-    if (initialFilter) {
-      setFilter(initialFilter);
-    }
-  }, [initialFilter]);
-
-  useEffect(() => {
-    if (initialPagination?.page) {
-      setPage(initialPagination.page);
-    }
-  }, [initialPagination?.page]);
-
-  const isServerPaginated = Boolean(initialPagination);
-
-  const updateQuery = useCallback(
-    (newFilter: CraftsmanFilter, newPage: number) => {
-      const q = new URLSearchParams();
-      if (newPage > 1) q.set("page", String(newPage));
-      if (newFilter.search.trim()) q.set("search", newFilter.search.trim());
-      if (newFilter.category !== "all") q.set("category", newFilter.category);
-      if (newFilter.published !== "all") q.set("published", newFilter.published);
-      if (newFilter.verified !== "all") q.set("verified", newFilter.verified);
-
-      const qs = q.toString();
-      const targetUrl = `/admin/craftsmen${qs ? `?${qs}` : ""}`;
-      startTransition(() => {
-        router.replace(targetUrl, { scroll: false });
-      });
-    },
-    [router],
-  );
-
-  // تحديث الـ URL بعد توقف الكتابة في حقل البحث
-  useEffect(() => {
-    if (!isServerPaginated) return;
-    const timer = setTimeout(() => {
-      if (filter.search !== (initialFilter?.search ?? "")) {
-        updateQuery(filter, 1);
-      }
-    }, 350);
-    return () => clearTimeout(timer);
-  }, [filter.search, initialFilter?.search, isServerPaginated, updateQuery, filter]);
-
-  const handleFilterChange = (next: Partial<CraftsmanFilter>) => {
-    const updated = { ...filter, ...next };
-    setFilter(updated);
-    setPage(1);
-    if (!("search" in next) && isServerPaginated) {
-      updateQuery(updated, 1);
-    }
-  };
-
-  const handlePageChange = (nextPage: number) => {
-    setPage(nextPage);
-    if (isServerPaginated) {
-      updateQuery(filter, nextPage);
-    }
-  };
-
-  // عند تفعيل التقسيم الخادمي، تكون craftsmen من السيرفر هي صفحة العرض مباشرة
-  const pageItems = isServerPaginated
-    ? craftsmen
-    : paginate(filterCraftsmen(craftsmen, filter), page, PAGE_SIZE).pageItems;
-  const pageCount = isServerPaginated
-    ? (initialPagination?.pageCount ?? 1)
-    : paginate(filterCraftsmen(craftsmen, filter), page, PAGE_SIZE).pageCount;
-  const safePage = isServerPaginated
-    ? page
-    : paginate(filterCraftsmen(craftsmen, filter), page, PAGE_SIZE).page;
-  const totalDisplayCount = isServerPaginated
-    ? (initialPagination?.totalCount ?? craftsmen.length)
-    : filterCraftsmen(craftsmen, filter).length;
+  } = useAdminCraftsmen({ initialData, initialFilter, initialPagination });
 
   if (loading) return <DashboardLoading />;
-
-  async function handleSubmit(payload: CraftsmanInput): Promise<boolean> {
-    if (formTarget === "new") {
-      const ok = await createCraftsman(payload);
-      if (ok) {
-        toast("success", "تمت إضافة الصنايعي");
-        setFormTarget(null);
-        router.refresh();
-      }
-      return ok;
-    }
-    if (formTarget) {
-      const ok = await updateCraftsman(formTarget.id, payload);
-      if (ok) {
-        toast("success", "تم حفظ التعديلات");
-        setFormTarget(null);
-        router.refresh();
-      }
-      return ok;
-    }
-    return false;
-  }
-
-  async function handleToggleVerified(craftsman: CraftsmanRow) {
-    const ok = await toggleCraftsmanVerified(craftsman);
-    if (ok) {
-      toast("success", craftsman.verified ? "تم إلغاء التوثيق" : "تم توثيق الصنايعي");
-      router.refresh();
-    }
-  }
-
-  async function handleTogglePublished(craftsman: CraftsmanRow) {
-    const ok = await toggleCraftsmanPublished(craftsman);
-    if (ok) {
-      toast("success", craftsman.is_published ? "تم إخفاء الصنايعي" : "تم نشر الصنايعي");
-      router.refresh();
-    }
-  }
-
-  async function handleDelete() {
-    if (!deleteTarget) return;
-    const ok = await deleteCraftsman(deleteTarget.id);
-    if (ok) {
-      toast("success", "تم حذف الصنايعي");
-      setDeleteTarget(null);
-      router.refresh();
-    }
-  }
 
   return (
     <div className="grid gap-6">
@@ -207,12 +66,7 @@ export function CraftsmenSection({
         description={`إدارة ${totalDisplayCount} صنايعي في الدليل.`}
         actions={
           <>
-            <RefreshButton
-              onRefresh={() => {
-                void refresh();
-                router.refresh();
-              }}
-            />
+            <RefreshButton onRefresh={refresh} />
             <AdminButton
               type="button"
               onClick={() => setFormTarget("new")}
@@ -254,7 +108,7 @@ export function CraftsmenSection({
               onView={(slug) => window.open(`/craftsman/${slug}`, "_blank")}
             />
             <Pagination
-              page={safePage}
+              page={page}
               pageCount={pageCount}
               onPageChange={handlePageChange}
             />

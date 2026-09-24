@@ -11,6 +11,7 @@ import {
   Check,
   ChevronDown,
   ChevronLeft,
+  ChevronRight,
   Clock,
   Copy,
   Crop,
@@ -390,4 +391,9 @@ export function IconZoomOut(props: LucideProps) {
 export function IconMaximize(props: LucideProps) {
   return <Maximize2 {...props} />;
 }
+
+export function IconChevronRight(props: LucideProps) {
+  return <ChevronRight {...props} />;
+}
+
 

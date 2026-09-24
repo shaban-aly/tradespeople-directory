@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { DashboardLoading } from "@/components/admin/DashboardLoading";
 import { EmptyState } from "@/components/admin/EmptyState";
@@ -11,12 +10,7 @@ import { ReportDetailsDrawer } from "@/components/admin/reports/ReportDetailsDra
 import { ReportFilters } from "@/components/admin/reports/ReportFilters";
 import { IconAlert } from "@/components/shared/icons";
 import type { ReportRow } from "@/lib/db/admin";
-import {
-  filterReports,
-  type ReportStatusFilter,
-} from "@/lib/db/admin-selectors";
 import { useAdminReports } from "@/hooks/admin/useAdminReports";
-import { useToast } from "@/hooks/ui/useToast";
 import { toArabicDigits } from "@/lib/utils/format";
 
 export function ReportsSection({
@@ -24,54 +18,27 @@ export function ReportsSection({
 }: {
   initialReports: ReportRow[];
 }) {
-  const { toast } = useToast();
   const {
     reports,
+    filteredReports,
+    pendingCount,
+    reviewedCount,
+    dismissedCount,
+    statusFilter,
+    setStatusFilter,
+    deleteTarget,
+    setDeleteTarget,
+    detailsTarget,
+    setDetailsTarget,
+    handleReview,
+    handleDismiss,
+    handleDelete,
     loading,
-    error,
     busyKey,
-    reviewReport,
-    dismissReport,
-    removeReport,
     refresh,
   } = useAdminReports(initialReports);
-  const [statusFilter, setStatusFilter] = useState<ReportStatusFilter>("pending");
-  const [deleteTarget, setDeleteTarget] = useState<ReportRow | null>(null);
-  const [detailsTarget, setDetailsTarget] = useState<ReportRow | null>(null);
-
-  useEffect(() => {
-    if (error) toast("error", error);
-  }, [error, toast]);
-
-  const pendingCount = reports.filter((item) => item.status === "pending").length;
-  const reviewedCount = reports.filter((item) => item.status === "reviewed").length;
-  const dismissedCount = reports.filter((item) => item.status === "dismissed").length;
-
-  const filteredReports = useMemo(
-    () => filterReports(reports, statusFilter),
-    [reports, statusFilter],
-  );
 
   if (loading) return <DashboardLoading />;
-
-  async function handleReview(report: ReportRow) {
-    const ok = await reviewReport(report);
-    if (ok) toast("success", "تم اعتبار البلاغ مُراجَعاً");
-  }
-
-  async function handleDismiss(report: ReportRow) {
-    const ok = await dismissReport(report.id);
-    if (ok) toast("success", "تم إغلاق البلاغ");
-  }
-
-  async function handleDelete() {
-    if (!deleteTarget) return;
-    const ok = await removeReport(deleteTarget.id);
-    if (ok) {
-      toast("success", "تم حذف البلاغ نهائياً");
-      setDeleteTarget(null);
-    }
-  }
 
   return (
     <div className="grid gap-6">

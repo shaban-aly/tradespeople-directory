@@ -1,63 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { AdminNav, getAdminNavTitle } from "@/components/admin/AdminNav";
+import { getAdminNavTitle } from "@/components/admin/AdminNav";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AdminDrawer } from "@/components/admin/AdminDrawer";
 import { TopbarAttentionChip } from "@/components/admin/overview/TopbarAttentionChip";
 import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { useAdminNavCounts } from "@/hooks/admin/useAdminNavCounts";
+import { useAdminSidebar } from "@/hooks/admin/useAdminSidebar";
 import { ToastProvider } from "@/components/admin/ToastProvider";
 import { NotificationsToast } from "@/components/shared/ui/NotificationsToast";
-import { IconLogOut, IconMenu, IconX } from "@/components/shared/icons";
+import { IconMenu } from "@/components/shared/icons";
 import { ThemeToggle } from "@/components/shared/ui/ThemeToggle";
 import { useSession } from "@/hooks/auth/useSession";
 import { useBodyScrollLock } from "@/hooks/ui/useBodyScrollLock";
 import type { AdminNavCounts } from "@/lib/db/admin";
-
-function Brand() {
-  return (
-    <Link href="/admin" className="block rounded-xl px-3 py-2">
-      <span className="block font-heading text-xl font-extrabold text-foreground">
-        دليل الصنايعية
-      </span>
-      <span className="text-sm font-bold text-muted">لوحة التحكم</span>
-    </Link>
-  );
-}
-
-function AdminSidebar({
-  onSignOut,
-  email,
-  counts,
-}: {
-  onSignOut: () => void;
-  email?: string;
-  counts?: AdminNavCounts;
-}) {
-  return (
-    <div className="flex h-full flex-col gap-6 p-4">
-      <Brand />
-      <AdminNav counts={counts} />
-      <div className="mt-auto grid gap-3 border-t border-border pt-4">
-        <div className="grid gap-1">
-          <p className="text-base font-bold text-foreground">المشرف</p>
-          <p className="text-sm text-muted" dir="ltr">
-            {email}
-          </p>
-        </div>
-        <AdminButton
-          type="button"
-          variant="dangerHover"
-          onClick={onSignOut}
-        >
-          <IconLogOut className="h-5 w-5" />
-          تسجيل الخروج
-        </AdminButton>
-      </div>
-    </div>
-  );
-}
 
 export function AdminShell({
   children,
@@ -72,6 +30,8 @@ export function AdminShell({
   const pathname = usePathname();
   const { user, isAdmin, loading, signOut } = useSession();
   const { counts, refresh: refreshNavCounts } = useAdminNavCounts(initialCounts);
+  const { collapsed, toggleCollapsed } = useAdminSidebar();
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerClosing, setDrawerClosing] = useState(false);
   useBodyScrollLock(drawerOpen);
@@ -169,55 +129,32 @@ export function AdminShell({
   return (
     <ToastProvider>
       <div className="flex min-h-screen bg-background">
-        <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-e border-border bg-elevated lg:flex">
+        {/* Desktop Collapsible Sidebar */}
+        <aside
+          className={`sticky top-0 hidden h-screen shrink-0 border-e border-border bg-elevated transition-all duration-300 ease-in-out lg:flex ${
+            collapsed ? "w-20" : "w-64"
+          }`}
+        >
           <AdminSidebar
             onSignOut={() => void handleSignOut()}
             email={displayEmail}
             counts={counts ?? undefined}
+            collapsed={collapsed}
+            onToggleCollapse={toggleCollapsed}
           />
         </aside>
 
-        {drawerOpen && (
-          <div
-            className={`fixed inset-0 z-50 lg:hidden ${
-              drawerClosing ? "pointer-events-none" : ""
-            }`}
-          >
-            <button
-              type="button"
-              aria-label="إغلاق القائمة"
-              onClick={closeDrawer}
-              className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${
-                drawerClosing ? "opacity-0" : "opacity-100"
-              }`}
-            />
-            <aside
-              className={`absolute inset-y-0 right-0 flex w-72 max-w-[85vw] flex-col border-e border-border bg-elevated shadow-card transition-transform duration-300 ease-out ${
-                drawerClosing ? "translate-x-full" : "translate-x-0"
-              }`}
-            >
-              <div className="flex items-center justify-between border-b border-border px-4 py-3">
-                <Brand />
-                <button
-                  type="button"
-                  aria-label="إغلاق القائمة"
-                  onClick={closeDrawer}
-                  className="rounded-lg p-2 text-muted hover:text-foreground"
-                >
-                  <IconX className="h-5 w-5" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto">
-                <AdminSidebar
-                  onSignOut={() => void handleSignOut()}
-                  email={displayEmail}
-                  counts={counts ?? undefined}
-                />
-              </div>
-            </aside>
-          </div>
-        )}
+        {/* Mobile Clean Drawer */}
+        <AdminDrawer
+          isOpen={drawerOpen}
+          isClosing={drawerClosing}
+          onClose={closeDrawer}
+          onSignOut={() => void handleSignOut()}
+          email={displayEmail}
+          counts={counts ?? undefined}
+        />
 
+        {/* Main Content Area */}
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-background/90 px-4 py-3 backdrop-blur">
             <div className="flex items-center gap-3">
@@ -225,7 +162,7 @@ export function AdminShell({
                 type="button"
                 aria-label="فتح القائمة"
                 onClick={openDrawer}
-                className="rounded-lg border border-border p-2 text-foreground lg:hidden"
+                className="rounded-lg border border-border p-2 text-foreground hover:bg-card lg:hidden"
               >
                 <IconMenu className="h-5 w-5" />
               </button>
@@ -238,7 +175,8 @@ export function AdminShell({
               <ThemeToggle />
             </div>
           </header>
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 lg:py-8">
+
+          <main className="mx-auto w-full max-w-6xl flex-1 px-3 sm:px-4 py-4 sm:py-6 lg:py-8">
             {children}
           </main>
         </div>

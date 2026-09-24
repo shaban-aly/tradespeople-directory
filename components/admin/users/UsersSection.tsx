@@ -1,63 +1,40 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { UsersTable } from "@/components/admin/users/UsersTable";
 import { IconSearch, IconUser } from "@/components/shared/icons";
+import { useAdminUsers } from "@/hooks/admin/useAdminUsers";
 import type { AdminUserRow } from "@/lib/db/admin";
 import { toArabicDigits } from "@/lib/utils/format";
-
-type RoleFilter = "all" | "client" | "craftsman" | "admin";
 
 interface UsersSectionProps {
   initialUsers: AdminUserRow[];
 }
 
 export function UsersSection({ initialUsers }: UsersSectionProps) {
-  const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
-
-  const filteredUsers = useMemo(() => {
-    return initialUsers.filter((user) => {
-      if (roleFilter !== "all" && user.role !== roleFilter) {
-        return false;
-      }
-      if (search.trim()) {
-        const query = search.trim().toLowerCase();
-        const matchesName = user.displayName.toLowerCase().includes(query);
-        const matchesEmail = user.email?.toLowerCase().includes(query);
-        const matchesCraftsman = user.craftsmanName?.toLowerCase().includes(query);
-        const matchesId = user.id.toLowerCase().includes(query);
-        if (!matchesName && !matchesEmail && !matchesCraftsman && !matchesId) return false;
-      }
-      return true;
-    });
-  }, [initialUsers, search, roleFilter]);
-
-  const clientCount = initialUsers.filter((u) => u.role === "client").length;
-  const craftsmanCount = initialUsers.filter((u) => u.role === "craftsman").length;
-  const adminCount = initialUsers.filter((u) => u.role === "admin").length;
-
-  const filters: { value: RoleFilter; label: string; count: number }[] = [
-    { value: "all", label: "الكل", count: initialUsers.length },
-    { value: "client", label: "عملاء", count: clientCount },
-    { value: "craftsman", label: "فنيين / صنايعية", count: craftsmanCount },
-    { value: "admin", label: "مشرفين", count: adminCount },
-  ];
+  const {
+    users,
+    filteredUsers,
+    search,
+    setSearch,
+    roleFilter,
+    setRoleFilter,
+    roleCounters,
+  } = useAdminUsers(initialUsers);
 
   return (
     <div className="grid gap-4 sm:gap-6">
       <PageHeader
         title="المستخدمين"
-        description={`إجمالي ${toArabicDigits(initialUsers.length)} حساب مسجل في الدليل.`}
+        description={`إجمالي ${toArabicDigits(users.length)} حساب مسجل في الدليل.`}
       />
 
       {/* شريط الفلترة والبحث */}
       <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-3.5 sm:p-4 sm:flex-row sm:items-center sm:justify-between w-full max-w-full overflow-hidden">
         {/* أزرار الفلترة حسب الدور */}
         <div className="flex flex-wrap items-center gap-1">
-          {filters.map((f) => {
+          {roleCounters.map((f) => {
             const active = roleFilter === f.value;
             return (
               <button
