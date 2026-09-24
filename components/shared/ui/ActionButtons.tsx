@@ -14,6 +14,7 @@ export function ActionButtons({
   phone,
   whatsapp,
   size = "md",
+  craftsmanId,
   craftsmanSlug,
   craftsmanName,
   categoryName,
@@ -23,6 +24,7 @@ export function ActionButtons({
   phone: string;
   whatsapp: string;
   size?: "sm" | "md" | "lg";
+  craftsmanId?: string;
   craftsmanSlug?: string;
   craftsmanName?: string;
   categoryName?: string;
@@ -51,6 +53,12 @@ export function ActionButtons({
           if (craftsmanSlug) {
             counterTrack(craftsmanSlug, "call", categorySlug);
             track("click_phone", { craftsman_slug: craftsmanSlug, category: categoryName });
+            track("contact_click", {
+              craftsman_id: craftsmanId,
+              craftsman_slug: craftsmanSlug,
+              craftsman_name: craftsmanName,
+              contact_method: "phone",
+            });
           }
         }}
         aria-label="اتصال هاتفي"
@@ -69,6 +77,12 @@ export function ActionButtons({
           if (craftsmanSlug) {
             counterTrack(craftsmanSlug, "whatsapp", categorySlug);
             track("click_whatsapp", { craftsman_slug: craftsmanSlug, category: categoryName });
+            track("contact_click", {
+              craftsman_id: craftsmanId,
+              craftsman_slug: craftsmanSlug,
+              craftsman_name: craftsmanName,
+              contact_method: "whatsapp",
+            });
           }
         }}
         aria-label="مراسلة واتساب"

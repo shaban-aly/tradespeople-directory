@@ -25,6 +25,14 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
                 fill
                 sizes="(max-width: 640px) 64px, 80px"
                 className="object-cover"
+                style={{
+                  objectPosition: `${profile.avatarPosition?.x ?? 50}% ${profile.avatarPosition?.y ?? 50}%`,
+                  transform:
+                    (profile.avatarPosition?.zoom ?? 1) > 1
+                      ? `scale(${profile.avatarPosition?.zoom})`
+                      : undefined,
+                  transformOrigin: `${profile.avatarPosition?.x ?? 50}% ${profile.avatarPosition?.y ?? 50}%`,
+                }}
               />
             ) : (
               <CraftsmanAvatar name={profile.name} className="h-full w-full rounded-2xl text-xl" />

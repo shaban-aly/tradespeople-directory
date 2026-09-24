@@ -243,6 +243,7 @@ export type Database = {
         Row: {
           added_at: string
           area_id: string
+          avatar_position: Json
           category_id: string
           created_at: string
           description: string | null
@@ -262,6 +263,7 @@ export type Database = {
         Insert: {
           added_at?: string
           area_id: string
+          avatar_position?: Json
           category_id: string
           created_at?: string
           description?: string | null
@@ -281,6 +283,7 @@ export type Database = {
         Update: {
           added_at?: string
           area_id?: string
+          avatar_position?: Json
           category_id?: string
           created_at?: string
           description?: string | null
@@ -343,6 +346,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "favorites_craftsman_id_fkey"
+            columns: ["craftsman_id"]
+            isOneToOne: false
+            referencedRelation: "craftsmen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interaction_logs: {
+        Row: {
+          contact_method: string
+          craftsman_id: string
+          created_at: string
+          id: number
+          metadata: Json | null
+          user_id: string | null
+          user_status: string
+        }
+        Insert: {
+          contact_method: string
+          craftsman_id: string
+          created_at?: string
+          id?: never
+          metadata?: Json | null
+          user_id?: string | null
+          user_status?: string
+        }
+        Update: {
+          contact_method?: string
+          craftsman_id?: string
+          created_at?: string
+          id?: never
+          metadata?: Json | null
+          user_id?: string | null
+          user_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interaction_logs_craftsman_id_fkey"
             columns: ["craftsman_id"]
             isOneToOne: false
             referencedRelation: "craftsmen"
@@ -634,6 +675,21 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_admin_activity_feed: {
+        Args: { p_limit?: number; p_offset?: number; p_timeframe?: string }
+        Returns: {
+          contact_method: string
+          craftsman_id: string
+          craftsman_name: string
+          craftsman_slug: string
+          created_at: string
+          log_id: number
+          metadata: Json
+          user_status: string
+        }[]
+      }
+      get_admin_breakdown_counts: { Args: never; Returns: Json }
+      get_admin_nav_counts: { Args: never; Returns: Json }
       get_admin_user_ids: {
         Args: never
         Returns: {
@@ -655,7 +711,13 @@ export type Database = {
       get_my_role: { Args: never; Returns: string }
       get_site_stats: { Args: never; Returns: Json }
       increment_craftsman_stats: {
-        Args: { p_action: string; p_ip?: string; p_slug: string }
+        Args: {
+          p_action: string
+          p_ip?: string
+          p_slug: string
+          p_user_id?: string
+          p_user_status?: string
+        }
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
@@ -674,6 +736,10 @@ export type Database = {
           p_type: string
         }
         Returns: undefined
+      }
+      purge_old_interaction_logs: {
+        Args: { p_max_age_days?: number }
+        Returns: number
       }
       purge_old_notifications: {
         Args: { p_max_age_days?: number }
@@ -697,21 +763,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      get_admin_nav_counts: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          pendingRequests: number
-          pendingReports: number
-          unreadMessages: number
-        }
-      }
-      get_admin_breakdown_counts: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          byCategory: Record<string, number>
-          byArea: Record<string, number>
-        }
-      }
       reject_craftsman_application: {
         Args: { p_craftsman_id: string }
         Returns: undefined
@@ -727,6 +778,7 @@ export type Database = {
         Returns: {
           added_at: string
           area: Json
+          avatar_position: Json
           category: Json
           description: string
           id: string

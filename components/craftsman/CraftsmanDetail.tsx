@@ -63,15 +63,35 @@ export function CraftsmanDetail({
         <Suspense
           fallback={
             craftsman.image ? (
-              <div className="relative h-64 sm:h-80">
-                <Image
-                  src={craftsman.image}
-                  alt={craftsman.name}
-                  fill
-                  priority
-                  sizes="(min-width: 640px) 56rem, 100vw"
-                  className="object-cover"
-                />
+              <div className="relative flex h-64 w-full items-center justify-center overflow-hidden bg-neutral-900/90 sm:h-80">
+                <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+                  <Image
+                    src={craftsman.image}
+                    alt=""
+                    fill
+                    sizes="100vw"
+                    className="scale-125 object-cover opacity-40 blur-2xl filter"
+                  />
+                  <div className="absolute inset-0 bg-black/25 backdrop-blur-xs" />
+                </div>
+                <div className="relative flex h-full aspect-4/3 items-center justify-center overflow-hidden shadow-2xl">
+                  <Image
+                    src={craftsman.image}
+                    alt={craftsman.name}
+                    fill
+                    priority
+                    sizes="(min-width: 640px) 480px, 100vw"
+                    className="object-cover"
+                    style={{
+                      objectPosition: `${craftsman.avatarPosition?.x ?? 50}% ${craftsman.avatarPosition?.y ?? 50}%`,
+                      transform:
+                        (craftsman.avatarPosition?.zoom ?? 1) > 1
+                          ? `scale(${craftsman.avatarPosition?.zoom})`
+                          : undefined,
+                      transformOrigin: `${craftsman.avatarPosition?.x ?? 50}% ${craftsman.avatarPosition?.y ?? 50}%`,
+                    }}
+                  />
+                </div>
               </div>
             ) : (
               <div className="flex h-44 items-center justify-center bg-linear-to-br from-accent/10 via-card to-accent/10 sm:h-52">
@@ -84,7 +104,11 @@ export function CraftsmanDetail({
             )
           }
         >
-          <CraftsmanHeroImage image={craftsman.image} name={craftsman.name} />
+          <CraftsmanHeroImage
+            image={craftsman.image}
+            name={craftsman.name}
+            avatarPosition={craftsman.avatarPosition}
+          />
         </Suspense>
         <div className="p-6 sm:p-8">
           <div className="flex flex-wrap items-center gap-2">
@@ -123,6 +147,7 @@ export function CraftsmanDetail({
               phone={craftsman.phone}
               whatsapp={craftsman.whatsapp}
               size="lg"
+              craftsmanId={craftsman.id}
               craftsmanSlug={craftsman.slug}
               craftsmanName={craftsman.name}
               categoryName={category?.name}
@@ -192,6 +217,7 @@ export function CraftsmanDetail({
       <StickyCallBar
         phone={craftsman.phone}
         whatsapp={craftsman.whatsapp}
+        craftsmanId={craftsman.id}
         craftsmanSlug={craftsman.slug}
         craftsmanName={craftsman.name}
         categoryName={category?.name}

@@ -12,6 +12,7 @@ import {
   validateDescription,
   validateSocialLinks,
 } from "../utils/validation";
+import type { AvatarPosition } from "../data/craftsmen";
 
 export interface DashboardSocialLink {
   platform: "facebook" | "instagram" | "tiktok" | "other";
@@ -26,6 +27,7 @@ export interface CraftsmanSelfProfile {
   whatsapp: string | null;
   description: string | null;
   imageUrl: string | null;
+  avatarPosition?: AvatarPosition | null;
   verified: boolean;
   isPublished: boolean;
   categoryName: string;
@@ -51,10 +53,19 @@ export interface CraftsmanDashboardStats {
   }>;
 }
 
+export interface CraftsmanActivityItem {
+  id: number;
+  contactMethod: "phone" | "whatsapp";
+  userStatus: "authenticated" | "anonymous";
+  createdAt: string;
+}
+
 export interface CraftsmanDashboardData {
   profile: CraftsmanSelfProfile;
   stats: CraftsmanDashboardStats;
+  recentInteractions: CraftsmanActivityItem[];
 }
+
 
 export interface UpdateCraftsmanSelfInput {
   name?: string;
@@ -65,6 +76,7 @@ export interface UpdateCraftsmanSelfInput {
   image?: File | null;
   removeImage?: boolean;
   existingImageUrl?: string | null;
+  avatarPosition?: AvatarPosition | null;
   socialLinks: DashboardSocialLink[];
 }
 
@@ -99,6 +111,7 @@ export async function getCraftsmanDashboardData(
       whatsapp,
       description,
       image_url,
+      avatar_position,
       verified,
       is_published,
       area_id,
@@ -123,12 +136,13 @@ export async function getCraftsmanDashboardData(
       )
     : [];
 
-  // 3. جلب الإحصائيات والمفضلة والتقييمات بالتوازي
+  // 3. جلب الإحصائيات والمفضلة والتقييمات وسجل التفاعلات الأخير بالتوازي
   const [
     { data: statsData },
     favoritesCount,
     ratingSummary,
     reviewsList,
+    interactionsResult,
   ] = await Promise.all([
     client
       .from("craftsman_stats")
@@ -138,6 +152,12 @@ export async function getCraftsmanDashboardData(
     getCraftsmanFavoritesCount(craftsmanId, client),
     getCraftsmanRatingSummary(craftsmanId, client),
     getCraftsmanReviews(craftsmanId, 30, client),
+    client
+      .from("interaction_logs")
+      .select("id, contact_method, user_status, created_at")
+      .eq("craftsman_id", craftsmanId)
+      .order("created_at", { ascending: false })
+      .limit(15),
   ]);
 
   const views = statsData?.views ?? 0;
@@ -161,6 +181,15 @@ export async function getCraftsmanDashboardData(
     date: r.createdAt,
   }));
 
+  const recentInteractions: CraftsmanActivityItem[] = (
+    (interactionsResult as { data: Array<{ id: number; contact_method: string; user_status: string; created_at: string }> | null })?.data || []
+  ).map((row) => ({
+    id: row.id,
+    contactMethod: row.contact_method as "phone" | "whatsapp",
+    userStatus: row.user_status as "authenticated" | "anonymous",
+    createdAt: row.created_at,
+  }));
+
   const categoryName = (craftsman.category as unknown as { name: string } | null)?.name ?? "";
   const areaName = (craftsman.area as unknown as { name: string } | null)?.name ?? "";
 
@@ -173,6 +202,11 @@ export async function getCraftsmanDashboardData(
       whatsapp: craftsman.whatsapp,
       description: craftsman.description,
       imageUrl: craftsman.image_url,
+      avatarPosition: craftsman.avatar_position ? {
+        x: Number((craftsman.avatar_position as Record<string, unknown>).x) || 50,
+        y: Number((craftsman.avatar_position as Record<string, unknown>).y) || 50,
+        zoom: Number((craftsman.avatar_position as Record<string, unknown>).zoom) || 1,
+      } : null,
       verified: craftsman.verified,
       isPublished: craftsman.is_published,
       categoryName,
@@ -187,6 +221,131 @@ export async function getCraftsmanDashboardData(
       rating,
       reviews,
     },
+    recentInteractions,
+  };
+}
+
+/**
+ * جلب سجل التفاعلات الحديثة لصانع محدد
+ */
+export async function getCraftsmanRecentInteractions(
+  craftsmanId: string,
+  client: SupabaseClient<Database> = createSupabase(),
+  limit = 20,
+): Promise<CraftsmanActivityItem[]> {
+  const { data, error } = await client
+    .from("interaction_logs")
+    .select("id, contact_method, user_status, created_at")
+    .eq("craftsman_id", craftsmanId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("[craftsman-dashboard] getCraftsmanRecentInteractions error:", error);
+    return [];
+  }
+
+  return (data || []).map((row) => ({
+    id: row.id,
+    contactMethod: row.contact_method as "phone" | "whatsapp",
+    userStatus: row.user_status as "authenticated" | "anonymous",
+    createdAt: row.created_at,
+  }));
+}
+
+
+/**
+ * تحديث موضع الصورة وبؤرتها للصانع
+ */
+export async function updateCraftsmanAvatarPosition(
+  craftsmanId: string,
+  position: AvatarPosition
+): Promise<void> {
+  const supabase = createSupabase();
+  const { error } = await supabase
+    .from("craftsmen")
+    .update({
+      avatar_position: {
+        x: position.x,
+        y: position.y,
+        zoom: position.zoom ?? 1,
+      },
+    })
+    .eq("id", craftsmanId);
+
+  if (error) {
+    throw new Error("حدث خطأ أثناء حفظ موضع الصورة: " + error.message);
+  }
+}
+
+export interface SaveCraftsmanAvatarInput {
+  craftsmanId: string;
+  imageFile?: File | null;
+  position: AvatarPosition;
+  existingImageUrl?: string | null;
+}
+
+export interface SaveCraftsmanAvatarResult {
+  imageUrl: string | null;
+  avatarPosition: AvatarPosition;
+  warning?: string;
+}
+
+/**
+ * تدفق مستقل ومخصص لحفظ صورة الصانع وموضعها
+ * يرفع الصورة الجديدة إن وُجدت، ويحدث قاعدة البيانات، ويحذف الصورة القديمة بأمان
+ */
+export async function saveCraftsmanAvatarStandalone({
+  craftsmanId,
+  imageFile,
+  position,
+  existingImageUrl,
+}: SaveCraftsmanAvatarInput): Promise<SaveCraftsmanAvatarResult> {
+  const supabase = createSupabase();
+
+  let finalImageUrl = existingImageUrl ?? null;
+  let newlyUploadedUrl: string | null = null;
+  let warning: string | undefined;
+
+  // 1. إذا وُجد ملف جديد: رفعه إلى التخزين
+  if (imageFile) {
+    const uploaded = await uploadCraftsmanImage(imageFile, "craftsmen");
+    finalImageUrl = uploaded.url;
+    newlyUploadedUrl = uploaded.url;
+  }
+
+  // 2. تحديث جدول craftsmen بالرابط وموضع وبؤرة الصورة
+  const { error: updateError } = await supabase
+    .from("craftsmen")
+    .update({
+      ...(imageFile ? { image_url: finalImageUrl } : {}),
+      avatar_position: {
+        x: position.x,
+        y: position.y,
+        zoom: position.zoom ?? 1,
+      },
+    })
+    .eq("id", craftsmanId);
+
+  if (updateError) {
+    if (newlyUploadedUrl) {
+      await deleteImageByUrl(newlyUploadedUrl);
+    }
+    throw new Error("حدث خطأ أثناء حفظ الصورة: " + updateError.message);
+  }
+
+  // 3. حذف الصورة القديمة فقط بعد نجاح التحديث في قاعدة البيانات
+  if (newlyUploadedUrl && existingImageUrl && existingImageUrl !== newlyUploadedUrl) {
+    const removed = await deleteImageByUrl(existingImageUrl);
+    if (removed && !removed.ok) {
+      warning = "الصورة القديمة لم تُحذف من التخزين بشكل نهائي.";
+    }
+  }
+
+  return {
+    imageUrl: finalImageUrl,
+    avatarPosition: position,
+    warning,
   };
 }
 
@@ -246,6 +405,7 @@ export async function updateCraftsmanSelfProfile(
       description: payload.description ? cleanText(payload.description) : null,
       area_id: payload.areaId || undefined,
       image_url: imageUrl,
+      ...(payload.avatarPosition !== undefined ? { avatar_position: payload.avatarPosition } : {}),
       social_links: socialLinksJson,
     })
     .eq("id", craftsmanId);

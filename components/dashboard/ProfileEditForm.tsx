@@ -14,12 +14,15 @@ import { Button } from "@/components/shared/ui/Button";
 import {
   IconCamera,
   IconCheck,
+  IconCrop,
   IconMaximize,
   IconSave,
   IconUndo,
 } from "@/components/shared/icons";
 import type { CraftsmanSelfProfile } from "@/lib/db/craftsman-dashboard";
-import { ACCEPTED_IMAGE_TYPES } from "@/lib/storage/images";
+import type { AvatarPosition } from "@/lib/data/craftsmen";
+import { ACCEPTED_IMAGE_TYPES, validateImage } from "@/lib/storage/images";
+import { ImagePositionEditor } from "@/components/dashboard/ImagePositionEditor";
 
 interface ProfileEditFormProps {
   profile: CraftsmanSelfProfile;
@@ -30,6 +33,26 @@ interface ProfileEditFormProps {
 export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [isPositionEditorOpen, setIsPositionEditorOpen] = useState(false);
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | null>(
+    profile.imageUrl ?? null,
+  );
+  const [currentAvatarPos, setCurrentAvatarPos] = useState<AvatarPosition | null>(
+    profile.avatarPosition ?? null,
+  );
+  const [selectedNewFile, setSelectedNewFile] = useState<File | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+
+  const handleFilePicked = (file: File) => {
+    setAvatarError(null);
+    const validationErr = validateImage(file);
+    if (validationErr) {
+      setAvatarError(validationErr);
+      return;
+    }
+    setSelectedNewFile(file);
+    setIsPositionEditorOpen(true);
+  };
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -113,33 +136,50 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
         </div>
       )}
 
+      {avatarError && (
+        <div
+          role="alert"
+          className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs font-semibold text-red-600"
+        >
+          {avatarError}
+        </div>
+      )}
+
       {/* قسم الصورة الشخصية */}
       <section className="flex flex-col items-center gap-3 border-b border-border pb-6 sm:flex-row sm:items-center sm:gap-6">
         <div
           onClick={() => {
-            if (previewUrl) handleOpenViewer();
+            if (currentAvatarUrl) handleOpenViewer();
           }}
           className={`group relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl border-2 border-dashed border-border sm:h-28 sm:w-28 ${
-            previewUrl ? "cursor-pointer transition-transform hover:scale-102 focus-visible:ring-2 focus-visible:ring-accent" : ""
+            currentAvatarUrl ? "cursor-pointer transition-transform hover:scale-102 focus-visible:ring-2 focus-visible:ring-accent" : ""
           }`}
-          title={previewUrl ? "اضغط لمعاينة الصورة بحجم كامل" : undefined}
-          role={previewUrl ? "button" : undefined}
-          tabIndex={previewUrl ? 0 : undefined}
+          title={currentAvatarUrl ? "اضغط لمعاينة الصورة بحجم كامل" : undefined}
+          role={currentAvatarUrl ? "button" : undefined}
+          tabIndex={currentAvatarUrl ? 0 : undefined}
           onKeyDown={(e) => {
-            if (previewUrl && (e.key === "Enter" || e.key === " ")) {
+            if (currentAvatarUrl && (e.key === "Enter" || e.key === " ")) {
               e.preventDefault();
               handleOpenViewer();
             }
           }}
         >
-          {previewUrl ? (
+          {currentAvatarUrl ? (
             <>
               <Image
-                src={previewUrl}
+                src={currentAvatarUrl}
                 alt={profile.name}
                 fill
                 sizes="(max-width: 640px) 96px, 112px"
                 className="object-cover"
+                style={{
+                  objectPosition: `${currentAvatarPos?.x ?? 50}% ${currentAvatarPos?.y ?? 50}%`,
+                  transform:
+                    (currentAvatarPos?.zoom ?? 1) > 1
+                      ? `scale(${currentAvatarPos?.zoom})`
+                      : undefined,
+                  transformOrigin: `${currentAvatarPos?.x ?? 50}% ${currentAvatarPos?.y ?? 50}%`,
+                }}
               />
               <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                 <IconMaximize className="h-6 w-6 text-white" />
@@ -168,7 +208,8 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file) void handleImageChange(file);
+              if (file) handleFilePicked(file);
+              e.target.value = "";
             }}
           />
 
@@ -179,22 +220,29 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
               className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-base font-semibold text-foreground transition-colors hover:bg-card active:scale-98"
             >
               <IconCamera className="h-5 w-5" />
-              <span>{previewUrl ? "تغيير الصورة" : "رفع صورة"}</span>
+              <span>{currentAvatarUrl ? "تغيير الصورة" : "رفع صورة"}</span>
             </button>
 
-            {hasNewImage && (
+            {currentAvatarUrl && (
               <button
                 type="button"
-                onClick={handleRevertImage}
-                className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-base font-medium text-amber-600 hover:bg-amber-500/10 active:scale-98"
-                title="التراجع عن الصورة المختارة والعودة للصورة الحالية"
+                onClick={() => {
+                  setSelectedNewFile(null);
+                  setIsPositionEditorOpen((prev) => !prev);
+                }}
+                className={`flex min-h-12 items-center justify-center gap-2 rounded-xl border px-3.5 py-2 text-base font-semibold transition-all active:scale-98 ${
+                  isPositionEditorOpen && !selectedNewFile
+                    ? "border-accent bg-accent text-white"
+                    : "border-border text-foreground hover:bg-card"
+                }`}
+                title="تنسيق وتوسيط إطار الصورة"
               >
-                <IconUndo className="h-5 w-5" />
-                <span>تراجع عن الاختيار</span>
+                <IconCrop className="h-4 w-4" />
+                <span>تنسيق الصورة</span>
               </button>
             )}
 
-            {previewUrl && (
+            {currentAvatarUrl && (
               <button
                 type="button"
                 onClick={handleOpenViewer}
@@ -206,14 +254,31 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
               </button>
             )}
           </div>
-
-          {hasNewImage && (
-            <p className="mt-1 text-xs text-action font-medium">
-              تم اختيار صورة جديدة. سيتم رفعها وحفظها عند الضغط على زر «حفظ التعديلات» بالأسفل.
-            </p>
-          )}
         </div>
       </section>
+
+      {/* محرر تنسيق وبؤرة الصورة (سواء لصورة جديدة تم اختيارها أو للصورة الحالية) */}
+      {isPositionEditorOpen && (selectedNewFile || currentAvatarUrl) && (
+        <section className="border-b border-border pb-6 animate-in fade-in duration-200">
+          <ImagePositionEditor
+            craftsmanId={profile.id}
+            slug={profile.slug}
+            imageFile={selectedNewFile}
+            imageUrl={currentAvatarUrl}
+            initialPosition={currentAvatarPos}
+            onSaved={(result) => {
+              setCurrentAvatarUrl(result.imageUrl);
+              setCurrentAvatarPos(result.position);
+              setSelectedNewFile(null);
+              setIsPositionEditorOpen(false);
+            }}
+            onClose={() => {
+              setSelectedNewFile(null);
+              setIsPositionEditorOpen(false);
+            }}
+          />
+        </section>
+      )}
 
       {/* اسم الصنايعي */}
       <div>

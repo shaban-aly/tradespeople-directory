@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useStats } from "@/hooks/useStats";
 import { track } from "@/lib/analytics/track";
+import { recordUniqueCraftsmanView } from "@/lib/utils/view-dedup";
 
 export function ViewTracker({
   slug,
@@ -19,7 +20,12 @@ export function ViewTracker({
   useEffect(() => {
     if (!slug || sentSlug.current === slug) return;
     sentSlug.current = slug;
-    counterTrack(slug, "view", categorySlug);
+
+    // احتساب مشاهدة فريدة واحدة فقط لكل 24 ساعة لنفس الفني
+    if (recordUniqueCraftsmanView(slug)) {
+      counterTrack(slug, "view", categorySlug);
+    }
+
     track("view_craftsman", {
       craftsman_slug: slug,
       category_slug: categorySlug,

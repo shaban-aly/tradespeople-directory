@@ -13,6 +13,7 @@ export type AnalyticsEventName =
   | "search_no_results"
   | "click_phone"
   | "click_whatsapp"
+  | "contact_click"
   | "login"
   | "sign_up"
   | "in_app_browser_notice"

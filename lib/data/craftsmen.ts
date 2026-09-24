@@ -5,12 +5,19 @@ export type SocialLink = {
   url: string;
 };
 
+export type AvatarPosition = {
+  x: number;
+  y: number;
+  zoom?: number;
+};
+
 export type Craftsman = {
   id: string;
   slug: string;
   name: string;
   category: string; // slug زي 'plumbing'
   image: string; // رابط الصورة (في Supabase Storage أو خارجي)
+  avatarPosition?: AvatarPosition | null; // موضع وبؤرة الصورة
   phone: string; // بصيغة +20...
   whatsapp: string;
   area: string; // اسم المنطقة

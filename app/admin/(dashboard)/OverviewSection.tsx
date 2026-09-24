@@ -20,6 +20,8 @@ import {
 import { useAnalytics } from "@/hooks/admin/useAnalytics";
 import { useToast } from "@/hooks/ui/useToast";
 import type { AnalyticsOverview } from "@/lib/db/analytics";
+import { ActivityFeed, type Timeframe } from "@/components/admin/ActivityFeed";
+import type { ActivityFeedItem } from "@/lib/db/admin";
 
 type OverviewTab = "summary" | "analytics" | "manage";
 
@@ -66,9 +68,13 @@ const linkActionClass = "w-full sm:w-auto";
 export function OverviewSection({
   initialData,
   initialAnalytics,
+  activityFeed,
+  timeframe = "today",
 }: {
   initialData: AdminOverviewData;
   initialAnalytics: AnalyticsOverview;
+  activityFeed?: ActivityFeedItem[];
+  timeframe?: Timeframe;
 }) {
   const { toast } = useToast();
   const {
@@ -111,6 +117,8 @@ return (
 
       {tab === "summary" && (
         <div className="grid gap-4 sm:gap-6">
+          <ActivityFeed items={activityFeed} timeframe={timeframe} />
+
           <section className="grid gap-4 lg:grid-cols-2">
             <PendingRequestsList
               requests={metrics.pendingRequests}

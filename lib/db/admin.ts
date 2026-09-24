@@ -763,3 +763,45 @@ export async function linkCraftsmanAccount(
     throw new Error(error.message || "تعذر ربط الحساب — تأكد من أن المستخدم قد سجل دخوله بالموقع أولاً");
   }
 }
+
+// ------------------------------ سجل النشاط اللحظي (Activity Feed) ------------------------------
+
+export type ActivityFeedItem = {
+  logId: number;
+  craftsmanId: string;
+  craftsmanName: string;
+  craftsmanSlug: string;
+  contactMethod: "phone" | "whatsapp";
+  userStatus: "authenticated" | "anonymous";
+  metadata: Json | null;
+  createdAt: string;
+};
+
+export async function fetchAdminActivityFeed(
+  supabase: SupabaseClient<Database>,
+  timeframe: "today" | "week" | "month" = "today",
+  limit = 50,
+): Promise<ActivityFeedItem[]> {
+  const { data, error } = await supabase.rpc("get_admin_activity_feed", {
+    p_timeframe: timeframe,
+    p_limit: limit,
+    p_offset: 0,
+  });
+
+  if (error) {
+    console.error("[admin] fetchAdminActivityFeed error:", error);
+    return [];
+  }
+
+  return (data || []).map((row) => ({
+    logId: row.log_id,
+    craftsmanId: row.craftsman_id,
+    craftsmanName: row.craftsman_name,
+    craftsmanSlug: row.craftsman_slug,
+    contactMethod: row.contact_method as "phone" | "whatsapp",
+    userStatus: row.user_status as "authenticated" | "anonymous",
+    metadata: row.metadata,
+    createdAt: row.created_at,
+  }));
+}
+

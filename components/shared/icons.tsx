@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   Clock,
   Copy,
+  Crop,
   Download,
   ExternalLink,
   Eye,
@@ -245,6 +246,10 @@ export function IconBookmark(props: LucideProps) {
 
 export function IconEdit(props: LucideProps) {
   return <Pencil {...props} />;
+}
+
+export function IconCrop(props: LucideProps) {
+  return <Crop {...props} />;
 }
 
 export function IconTrash(props: LucideProps) {

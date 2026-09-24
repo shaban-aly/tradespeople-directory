@@ -13,6 +13,7 @@ import {
 export function StickyCallBar({
   phone,
   whatsapp,
+  craftsmanId,
   craftsmanSlug,
   craftsmanName,
   categoryName,
@@ -20,6 +21,7 @@ export function StickyCallBar({
 }: {
   phone: string;
   whatsapp: string;
+  craftsmanId?: string;
   craftsmanSlug?: string;
   craftsmanName?: string;
   categoryName?: string;
@@ -47,6 +49,12 @@ export function StickyCallBar({
               if (craftsmanSlug) {
                 counterTrack(craftsmanSlug, "call", categorySlug);
                 track("click_phone", { craftsman_slug: craftsmanSlug, category: categoryName });
+                track("contact_click", {
+                  craftsman_id: craftsmanId,
+                  craftsman_slug: craftsmanSlug,
+                  craftsman_name: craftsmanName,
+                  contact_method: "phone",
+                });
               }
             }}
             variant="primary"
@@ -65,6 +73,12 @@ export function StickyCallBar({
                 if (craftsmanSlug) {
                   counterTrack(craftsmanSlug, "whatsapp", categorySlug);
                   track("click_whatsapp", { craftsman_slug: craftsmanSlug, category: categoryName });
+                  track("contact_click", {
+                    craftsman_id: craftsmanId,
+                    craftsman_slug: craftsmanSlug,
+                    craftsman_name: craftsmanName,
+                    contact_method: "whatsapp",
+                  });
                 }
               }}
               variant="action"

@@ -4,9 +4,12 @@ import { getCraftsmanDashboardData } from "@/lib/db/craftsman-dashboard";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { CraftsmanStatsGrid } from "@/components/dashboard/CraftsmanStatsGrid";
+import { CraftsmanActivityFeed } from "@/components/dashboard/CraftsmanActivityFeed";
 import { ReviewsSection } from "@/components/dashboard/ReviewsSection";
 import { ButtonLink } from "@/components/shared/ui/Button";
 import { IconUser } from "@/components/shared/icons";
+
+export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const { supabase, user } = await getServerSession();
@@ -45,6 +48,7 @@ export default async function DashboardPage() {
       <DashboardHeader profile={data.profile} />
       <DashboardNav />
       <CraftsmanStatsGrid stats={data.stats} />
+      <CraftsmanActivityFeed items={data.recentInteractions} />
       <ReviewsSection rating={data.stats.rating} reviews={data.stats.reviews} />
     </>
   );

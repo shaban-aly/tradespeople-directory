@@ -12,6 +12,9 @@ import { craftsmanHref } from "@/lib/utils/url";
 
 function CraftsmanImage({ craftsman }: { craftsman: Craftsman }) {
   if (craftsman.image) {
+    const posX = craftsman.avatarPosition?.x ?? 50;
+    const posY = craftsman.avatarPosition?.y ?? 50;
+    const zoom = craftsman.avatarPosition?.zoom ?? 1;
     return (
       <Image
         src={craftsman.image}
@@ -19,6 +22,11 @@ function CraftsmanImage({ craftsman }: { craftsman: Craftsman }) {
         fill
         sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
         className="object-cover transition-transform duration-500 group-hover:scale-105"
+        style={{
+          objectPosition: `${posX}% ${posY}%`,
+          transform: zoom > 1 ? `scale(${zoom})` : undefined,
+          transformOrigin: `${posX}% ${posY}%`,
+        }}
         loading="lazy"
       />
     );
@@ -83,6 +91,7 @@ export function CraftsmanCard({
       <div className="border-t border-border bg-background/50 p-2" data-tour="card-contact">
         <ActionButtons
           size="sm"
+          craftsmanId={craftsman.id}
           phone={craftsman.phone}
           whatsapp={craftsman.whatsapp}
           craftsmanSlug={craftsman.slug}

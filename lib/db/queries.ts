@@ -12,9 +12,9 @@ import { CACHE_TAGS, DATA_CACHE_KEYS, SEARCH_CACHE_KEYS, SEARCH_CACHE_REVALIDATE
 import { matchScore, matchesQuery, normalizeArabic, type SearchData } from "../search";
 
 const CRAFTSMAN_SELECT =
-  "id, slug, name, image_url, phone, whatsapp, description, verified, added_at, updated_at, social_links, category:categories(slug, name, icon), area:areas(name)";
+  "id, slug, name, image_url, avatar_position, phone, whatsapp, description, verified, added_at, updated_at, social_links, category:categories(slug, name, icon), area:areas(name)";
 const CRAFTSMAN_BY_CATEGORY_SELECT =
-  "id, slug, name, image_url, phone, whatsapp, description, verified, added_at, updated_at, social_links, category:categories!inner(slug, name, icon), area:areas(name), stats:craftsman_stats(views, calls, whatsapp)";
+  "id, slug, name, image_url, avatar_position, phone, whatsapp, description, verified, added_at, updated_at, social_links, category:categories!inner(slug, name, icon), area:areas(name), stats:craftsman_stats(views, calls, whatsapp)";
 
 /**
  * غلاف يكش لكل مماثلة (slug...) نسخة كاش منفصلة بمفتاح ووسم خاصين بها
@@ -55,6 +55,7 @@ type CraftsmanRow = {
   slug: string | null;
   name: string;
   image_url: string | null;
+  avatar_position?: unknown;
   phone: string;
   whatsapp: string | null;
   description: string | null;
@@ -76,12 +77,24 @@ function mapCraftsman(row: CraftsmanRow): Craftsman {
           typeof item.url === "string",
       )
     : [];
+
+  const rawPosition = row.avatar_position as { x?: number; y?: number; zoom?: number } | null | undefined;
+  const avatarPosition =
+    rawPosition && typeof rawPosition === "object"
+      ? {
+          x: typeof rawPosition.x === "number" ? rawPosition.x : 50,
+          y: typeof rawPosition.y === "number" ? rawPosition.y : 50,
+          zoom: typeof rawPosition.zoom === "number" ? rawPosition.zoom : 1,
+        }
+      : null;
+
   return {
     id: row.id,
     slug: row.slug ?? "",
     name: row.name,
     category: row.category?.slug ?? "",
     image: row.image_url ?? "",
+    avatarPosition,
     phone: row.phone,
     whatsapp: row.whatsapp ?? "",
     area: row.area?.name ?? "",
