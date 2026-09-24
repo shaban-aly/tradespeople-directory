@@ -39,6 +39,8 @@ export interface CraftsmanSelfProfile {
 export interface CraftsmanDashboardStats {
   views: number;
   totalContacts: number; // مجموع الاتصال والواتساب (المتواصلين)
+  calls?: number;
+  whatsapp?: number;
   favoritesCount: number; // عدد من وضعه في المفضلة
   rating: {
     average: number;
@@ -214,6 +216,8 @@ export async function getCraftsmanDashboardData(
     stats: {
       views,
       totalContacts,
+      calls,
+      whatsapp,
       favoritesCount,
       rating,
       reviews,

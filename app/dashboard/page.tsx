@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getServerSession } from "@/lib/db/server";
 import { getCraftsmanDashboardData } from "@/lib/db/craftsman-dashboard";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { ProfileCompletionCard } from "@/components/dashboard/ProfileCompletionCard";
 import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { CraftsmanStatsGrid } from "@/components/dashboard/CraftsmanStatsGrid";
 import { CraftsmanActivityFeed } from "@/components/dashboard/CraftsmanActivityFeed";
@@ -46,10 +47,15 @@ export default async function DashboardPage() {
   return (
     <>
       <DashboardHeader profile={data.profile} />
+      <ProfileCompletionCard profile={data.profile} />
       <DashboardNav />
       <CraftsmanStatsGrid stats={data.stats} />
       <CraftsmanActivityFeed items={data.recentInteractions} />
-      <ReviewsSection rating={data.stats.rating} reviews={data.stats.reviews} />
+      <ReviewsSection
+        rating={data.stats.rating}
+        reviews={data.stats.reviews}
+        slug={data.profile.slug}
+      />
     </>
   );
 }
