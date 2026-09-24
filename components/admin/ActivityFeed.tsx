@@ -163,11 +163,15 @@ export function ActivityFeed({
                       <span
                         className={`inline-block rounded-md px-1.5 py-0.5 text-[11px] font-medium ${
                           isAuthenticated
-                            ? "bg-accent/15 text-accent"
+                            ? "bg-accent/15 text-accent font-semibold"
                             : "bg-muted/15 text-muted"
                         }`}
                       >
-                        {isAuthenticated ? "مستخدم مسجل" : "زائر مجهول"}
+                        {isAuthenticated
+                          ? item.userDisplayName
+                            ? `المستخدم: ${item.userDisplayName}`
+                            : "مستخدم مسجل"
+                          : "زائر مجهول"}
                       </span>
                       <span>تواصل مع</span>
                       <Link

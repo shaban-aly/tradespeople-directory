@@ -30,11 +30,20 @@ export function AnalyticsStats({
   loading,
   error,
   totals,
+  ga4,
+  ga4Loading,
 }: {
   analytics: AnalyticsOverview | null;
   loading: boolean;
   error: string;
   totals: { calls: number; whatsapp: number; views: number };
+  ga4?: {
+    sessionsToday: number;
+    activeUsersToday: number;
+    pageViewsToday: number;
+    newUsersToday: number;
+  } | null;
+  ga4Loading?: boolean;
 }) {
   const ready = analytics && !loading;
   const value = (raw: number | undefined) => (ready ? toArabicDigits(raw ?? 0) : "—");
@@ -54,20 +63,68 @@ export function AnalyticsStats({
     ? toArabicDigits(Number(analytics?.averageRating?.toFixed(1) ?? "0"))
     : "—";
 
+  const ga4Value = (n: number | undefined) =>
+    ga4Loading ? "—" : toArabicDigits(n ?? 0);
+
   return (
     <AdminSection
       title="حقائق الموقع والتفاعل"
       description={
         error ||
-        "عدّادات اليوم وخط الزمن لآخر 7 أيام من قاعدة البيانات مباشرة — سلوك الزوار (بحث، جلسات، مصادر) يُقاس في Google Analytics 4"
+        "بيانات مباشرة من قاعدة البيانات (تفاعل الصنايعية) وGoogle Analytics 4 (جلسات الزوار)"
       }
       icon={<IconChart className="h-6 w-6" />}
     >
+      {/* ── قسم GA4: زيارات الموقع الحقيقية ── */}
+      <div className="mb-4 rounded-2xl border border-border bg-card p-4 shadow-card sm:p-5">
+        <div className="mb-3 flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-2.5 py-1 text-xs font-bold text-accent">
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-8v4h4l-5 8z" />
+            </svg>
+            Google Analytics 4
+          </span>
+          <span className="text-xs text-muted">زيارات الموقع الفعلية اليوم</span>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-xl border border-border bg-background/60 p-3 text-center">
+            <div className="text-xs text-muted mb-1">جلسات اليوم</div>
+            <div className="font-heading text-2xl font-extrabold text-foreground">
+              {ga4Value(ga4?.sessionsToday)}
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-background/60 p-3 text-center">
+            <div className="text-xs text-muted mb-1">زوار نشطون</div>
+            <div className="font-heading text-2xl font-extrabold text-foreground">
+              {ga4Value(ga4?.activeUsersToday)}
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-background/60 p-3 text-center">
+            <div className="text-xs text-muted mb-1">زوار جدد</div>
+            <div className="font-heading text-2xl font-extrabold text-foreground">
+              {ga4Value(ga4?.newUsersToday)}
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-background/60 p-3 text-center">
+            <div className="text-xs text-muted mb-1">مشاهدات كل الصفحات</div>
+            <div className="font-heading text-2xl font-extrabold text-foreground">
+              {ga4Value(ga4?.pageViewsToday)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── قسم Supabase: تفاعل الصنايعية ── */}
       <div className="grid gap-3 sm:gap-4 lg:grid-cols-3">
         {/* هيرو اليوم */}
         <div className="grid gap-3 rounded-2xl border border-border bg-card p-4 shadow-card sm:gap-4 sm:p-5 lg:col-span-1">
           <div>
-            <p className="text-sm leading-snug text-muted">مشاهدات اليوم</p>
+            <div className="mb-2 flex items-center gap-1.5">
+              <span className="inline-flex rounded-full bg-muted/20 px-2 py-0.5 text-xs font-bold text-muted">
+                Supabase DB
+              </span>
+            </div>
+            <p className="text-sm leading-snug text-muted">مشاهدات صفحات الصنايعية اليوم</p>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <span className="font-heading text-4xl font-extrabold leading-none text-foreground sm:text-5xl">
                 {value(analytics?.viewsToday)}

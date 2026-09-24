@@ -57,6 +57,7 @@ export interface CraftsmanActivityItem {
   id: number;
   contactMethod: "phone" | "whatsapp";
   userStatus: "authenticated" | "anonymous";
+  userDisplayName?: string | null;
   createdAt: string;
 }
 
@@ -152,12 +153,7 @@ export async function getCraftsmanDashboardData(
     getCraftsmanFavoritesCount(craftsmanId, client),
     getCraftsmanRatingSummary(craftsmanId, client),
     getCraftsmanReviews(craftsmanId, 30, client),
-    client
-      .from("interaction_logs")
-      .select("id, contact_method, user_status, created_at")
-      .eq("craftsman_id", craftsmanId)
-      .order("created_at", { ascending: false })
-      .limit(15),
+    client.rpc("get_craftsman_activity_feed", { p_limit: 15 }),
   ]);
 
   const views = statsData?.views ?? 0;
@@ -182,11 +178,12 @@ export async function getCraftsmanDashboardData(
   }));
 
   const recentInteractions: CraftsmanActivityItem[] = (
-    (interactionsResult as { data: Array<{ id: number; contact_method: string; user_status: string; created_at: string }> | null })?.data || []
+    interactionsResult?.data || []
   ).map((row) => ({
-    id: row.id,
+    id: row.log_id,
     contactMethod: row.contact_method as "phone" | "whatsapp",
     userStatus: row.user_status as "authenticated" | "anonymous",
+    userDisplayName: row.user_display_name,
     createdAt: row.created_at,
   }));
 

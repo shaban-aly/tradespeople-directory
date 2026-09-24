@@ -874,6 +874,7 @@ export type ActivityFeedItem = {
   craftsmanSlug: string;
   contactMethod: "phone" | "whatsapp";
   userStatus: "authenticated" | "anonymous";
+  userDisplayName?: string | null;
   metadata: Json | null;
   createdAt: string;
 };
@@ -901,6 +902,7 @@ export async function fetchAdminActivityFeed(
     craftsmanSlug: row.craftsman_slug,
     contactMethod: row.contact_method as "phone" | "whatsapp",
     userStatus: row.user_status as "authenticated" | "anonymous",
+    userDisplayName: row.user_display_name,
     metadata: row.metadata,
     createdAt: row.created_at,
   }));
@@ -1078,4 +1080,42 @@ export async function fetchAdminOverviewMetrics(
     mostContacted: statsOverview.mostContacted,
   };
 }
+
+// ------------------------------ إدارة المستخدمين ------------------------------
+
+export type AdminUserRow = {
+  id: string;
+  displayName: string;
+  email: string | null;
+  avatarUrl: string | null;
+  role: "client" | "craftsman" | "admin";
+  craftsmanId: string | null;
+  craftsmanName?: string | null;
+  craftsmanSlug?: string | null;
+  createdAt: string;
+};
+
+export async function fetchAdminUsers(
+  client: SupabaseClient<Database> = createSupabase(),
+): Promise<AdminUserRow[]> {
+  const { data, error } = await client.rpc("get_admin_users");
+
+  if (error) {
+    console.error("[admin] fetchAdminUsers error:", error);
+    return [];
+  }
+
+  return (data || []).map((row) => ({
+    id: row.id,
+    displayName: row.display_name || "بدون اسم",
+    email: row.email,
+    avatarUrl: row.avatar_url,
+    role: (row.role as AdminUserRow["role"]) || "client",
+    craftsmanId: row.craftsman_id,
+    craftsmanName: row.craftsman_name,
+    craftsmanSlug: row.craftsman_slug,
+    createdAt: row.created_at,
+  }));
+}
+
 

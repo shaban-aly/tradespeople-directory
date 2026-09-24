@@ -15,6 +15,13 @@ export function useAdminQuery<T>(
   const [loading, setLoading] = useState(!hasInitialData);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    if (initialData !== undefined) {
+      setData(initialData);
+      setLoading(false);
+    }
+  }, [initialData]);
+
   const refresh = useCallback(async () => {
     setLoading(true);
     setError("");

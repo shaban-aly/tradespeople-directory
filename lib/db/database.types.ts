@@ -685,6 +685,7 @@ export type Database = {
           created_at: string
           log_id: number
           metadata: Json
+          user_display_name: string | null
           user_status: string
         }[]
       }
@@ -694,6 +695,30 @@ export type Database = {
         Args: never
         Returns: {
           user_id: string
+        }[]
+      }
+      get_admin_users: {
+        Args: never
+        Returns: {
+          avatar_url: string | null
+          craftsman_id: string | null
+          craftsman_name: string | null
+          craftsman_slug: string | null
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          role: string
+        }[]
+      }
+      get_craftsman_activity_feed: {
+        Args: { p_limit?: number }
+        Returns: {
+          contact_method: string
+          created_at: string
+          log_id: number
+          user_display_name: string | null
+          user_status: string
         }[]
       }
       get_craftsman_favorites_count: {

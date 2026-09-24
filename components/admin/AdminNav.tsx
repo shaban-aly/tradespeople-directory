@@ -10,6 +10,7 @@ import {
   IconMail,
   IconPin,
   IconTags,
+  IconUser,
   IconUsers,
 } from "@/components/shared/icons";
 import { Badge } from "@/components/shared/ui/Badge";
@@ -51,6 +52,7 @@ export const ADMIN_NAV_GROUPS: NavGroup[] = [
     label: "إدارة الدليل",
     items: [
       { href: "/admin/craftsmen", label: "الصنايعية", icon: IconUsers },
+      { href: "/admin/users", label: "المستخدمين", icon: IconUser },
       { href: "/admin/categories", label: "التصنيفات", icon: IconTags },
       { href: "/admin/areas", label: "المناطق", icon: IconPin },
     ],

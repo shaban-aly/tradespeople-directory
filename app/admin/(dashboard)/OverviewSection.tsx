@@ -19,9 +19,11 @@ import {
 } from "@/hooks/admin/useAdminOverview";
 import type { OverviewMetrics } from "@/lib/db/admin-selectors";
 import { useAnalytics } from "@/hooks/admin/useAnalytics";
+import { useGA4Summary } from "@/hooks/admin/useGA4Summary";
 import { useToast } from "@/hooks/ui/useToast";
 import type { AnalyticsOverview } from "@/lib/db/analytics";
 import { ActivityFeed, type Timeframe } from "@/components/admin/ActivityFeed";
+import { OverviewTrafficBanner } from "@/components/admin/overview/OverviewTrafficBanner";
 import type { ActivityFeedItem } from "@/lib/db/admin";
 
 type OverviewTab = "summary" | "analytics" | "manage";
@@ -96,6 +98,11 @@ export function OverviewSection({
     error: analyticsError,
   } = useAnalytics(initialAnalytics);
 
+  const {
+    data: ga4Data,
+    loading: ga4Loading,
+  } = useGA4Summary();
+
   const [tab, setTab] = useState<OverviewTab>("summary");
 
   useEffect(() => {
@@ -118,6 +125,13 @@ return (
 
       {tab === "summary" && (
         <div className="grid gap-4 sm:gap-6">
+          <OverviewTrafficBanner
+            ga4={ga4Data}
+            ga4Loading={ga4Loading}
+            viewsToday={analytics?.viewsToday ?? 0}
+            callsToday={analytics?.callsToday ?? 0}
+            whatsappToday={analytics?.whatsappToday ?? 0}
+          />
           <ActivityFeed items={activityFeed} timeframe={timeframe} />
 
           <section className="grid gap-4 lg:grid-cols-2">
@@ -167,6 +181,8 @@ return (
             whatsapp: metrics.totalWhatsapp,
             views: metrics.totalViews,
           }}
+          ga4={ga4Data}
+          ga4Loading={ga4Loading}
         />
       )}
 
