@@ -33,137 +33,153 @@ export const CORE_TOUR_STEPS: TourStep[] = [
   {
     id: "intro",
     tour: "core",
-    title: "أهلاً بيك في دليل الصنايعية",
+    title: "أهلاً بيك في دليل الصنايعية 👋",
     description:
-      "هنا هتلاقي كل المهن في السويس — سباكة، كهرباء، تكييف، نجارة وأكتر. الجولة قصيرة هتعرّفك إزاي تلاقي الصنايعي اللي يناسبك وتكلمه في أقل من دقيقة.",
+      "هنا هتلاقي صنايعية من مختلف التخصصات في السويس. الجولة دي هتعرّفك بسرعة إزاي تدور، تختار، وتتواصل مع الصنايعي المناسب.",
   },
+
   {
     id: "hero-search",
     tour: "core",
-    title: "ابدأ بالبحث",
+    title: "دَوّر على اللي محتاجه",
     description:
-      "دوس على زرار البحث ده وجرّب تكتب أي كلمة — مثلاً (سباك) — وهتلاقي النتايج قدامك فوراً.",
+      "اكتب اسم المهنة أو الخدمة اللي محتاجها، زي «سباك» أو «كهربائي»، وهتظهرلك النتائج المناسبة.",
     target: '[data-tour="hero-search"]',
     interaction: "click-target",
   },
+
   {
     id: "hero-search-tags",
     tour: "core",
-    title: "أو اختار تخصص جاهز",
+    title: "مش عارف تكتب إيه؟",
     description:
-      "تحت البحث في تخصصات مختارة جاهزة — دوس على أي واحد وهيبني لك البحث بنفسه.",
+      "اختار أي تخصص من الاختيارات الجاهزة، وهندخلك على النتائج مباشرة.",
     target: '[data-tour="hero-search-tags"]',
   },
+
   {
     id: "home-categories",
     tour: "core",
-    title: "الكل مصنّف قدامك",
+    title: "كل التخصصات قدامك",
     description:
-      "كل التخصصات الخدمية مقسمة في صور مصغرة واضحة — لو مش عارف تبدأ منين، ابدأ من هنا.",
+      "التخصصات متقسمة بشكل واضح عشان تلاقي اللي محتاجه بسهولة. اختار التخصص وابدأ التصفح.",
     target: '[data-tour="home-categories"]',
   },
+
   {
     id: "craftsman-card",
     tour: "core",
-    title: "ده كارت الصنايعي",
+    title: "اتعرّف على الصنايعي",
     description:
-      "كل صنايعي ليه كارت فيه اسمه، تخصصه، منطقته، وتقييم العملاء. دوس على الكارت تفتح كل تفاصيله.",
+      "كل صنايعي ليه كارت يوضح اسمه، تخصصه، منطقته وتقييماته. اضغط على الكارت عشان تشوف التفاصيل.",
     target: '[data-tour="craftsman-card-link"]',
     interaction: "manual",
   },
+
   {
     id: "card-contact",
     tour: "core",
-    title: "تصل وتكلم فوراً",
+    title: "اتصل بيه مباشرة",
     description:
-      "زرار الاتصال ده بيدينك رقم الصنايعي مباشرة — من غير وسيط ولا عمولة. دوس عليه وجرّب.",
+      "لما تلاقي الصنايعي المناسب، اضغط اتصال عشان تكلمه مباشرة.",
     target: '[data-tour="card-call"]',
     interaction: "click-target",
   },
+
   {
     id: "card-whatsapp",
     tour: "core",
-    title: "وكمان واتساب جاهز",
+    title: "أو ابعتله على واتساب",
     description:
-      "الزرار الأخضر ده بيفتحلك محادثة واتساب مع الصنايعي برسالة جاهزة — لو مفضل تراسل بدل ما تتصل.",
+      "لو تفضل المراسلة، افتح واتساب وتواصل مع الصنايعي مباشرة.",
     target: '[data-tour="card-whatsapp"]',
     interaction: "click-target",
     optional: true,
   },
+
   {
     id: "card-favorite",
     tour: "core",
-    title: "احفظ اللي عجبك",
+    title: "احفظه عندك",
     description:
-      "علامة النجمة دي بتضيف الصنايعي لمفضلتك — ترجعله في أي وقت من غير ما تدور عليه تاني. ولو حسابك متسجل، مفضلتك بتتزامن على كل أجهزتك.",
+      "اضغط على علامة النجمة عشان تضيف الصنايعي لمفضلتك وترجعله بسهولة بعدين.",
     target: '[data-tour="card-favorite"]',
     interaction: "click-target",
   },
+
   {
     id: "trust-strip",
     tour: "core",
-    title: "ليه تثق فينا؟",
+    title: "معلومة مهمة",
     description:
-      "الخدمة مجانية بالكامل، وأرقام الصنايعية بيتم مراجعتها بنفسنا — الرقم اللي هتشوفه رقم شغال فعلاً.",
+      "دليل الصنايعية خدمة مجانية، وبيتم مراجعة بيانات وأرقام الصنايعية قبل نشرها.",
     target: '[data-tour="trust-strip"]',
   },
+
   {
     id: "navigation",
     tour: "core",
-    title: "تنقّل بسهولة",
+    title: "كل حاجة قريبة منك",
     description:
-      "من القائمة دي فوق تقدر تتنقل بين الرئيسية والتصنيفات والمفضلة وحسابك.",
+      "من هنا تقدر تتنقل بسهولة بين الرئيسية، التصنيفات، المفضلة وحسابك.",
     mobileDescription:
-      "الشريط ده تحت بيبقى معاك في كل صفحة — الرئيسية، التصنيفات، البحث، مفضلتك، وحسابك.",
+      "الشريط ده هيساعدك تتنقل بين الرئيسية، التصنيفات، البحث، المفضلة وحسابك.",
     target: (isMobile) =>
       isMobile ? '[data-tour="bottom-nav"]' : '[data-tour="header-nav"]',
     skipScroll: true,
   },
+
   {
     id: "open-details",
     tour: "core",
-    title: "خلينا نشوف صفحة الصنايعي",
+    title: "تعالى نشوف التفاصيل",
     description:
-      "كل صنايعي ليه صفحة كاملة فيها بياناته وتقييماته. اضغط متابعة وهنفتحلك صفحة أول صنايعي شفته.",
+      "دلوقتي هنفتح صفحة صنايعي عشان نشوف البيانات والتقييمات وطرق التواصل.",
     transition: true,
   },
+
   {
     id: "details-header",
     tour: "core",
-    title: "صفحة الصنايعي",
+    title: "كل بيانات الصنايعي هنا",
     description:
-      "هنا بتلاقي صورة الصنايعي، اسمه، تخصصه، ومنطقته — وكمان علامة التوثيق لو موثّق.",
+      "هنا هتلاقي اسمه، صورته، تخصصه، منطقته، وحالة التوثيق لو كان موثّق.",
     target: '[data-tour="details-header"]',
   },
+
   {
     id: "details-contact",
     tour: "core",
-    title: "كلمه بزرار الاتصال",
+    title: "تواصل معاه بسهولة",
     description:
-      "من زرار الاتصال ده توصل للرقم مباشرة — وفي الموبايل بيظهرلك شريط اتصال ثابت تحت طول ما بتتصفح.",
+      "اضغط اتصال عشان تكلمه مباشرة. وعلى الموبايل هتلاقي زر الاتصال ثابت قدامك أثناء التصفح.",
     target: (isMobile) =>
       isMobile ? '[data-tour="sticky-call-call"]' : '[data-tour="details-call"]',
     skipScroll: false,
     interaction: "click-target",
   },
+
   {
     id: "details-whatsapp",
     tour: "core",
-    title: "ولو تحب تراسل واتساب",
+    title: "واتساب كمان متاح",
     description:
-      "الزرار ده بيفتح محادثة واتساب برسالة جاهزة فيها اسم الصنايعي والتخصص — واتصالك بيترصد عشان تتأكد إن الرقم شغال.",
+      "تقدر تبعتله رسالة على واتساب مباشرة لو المراسلة أنسب ليك.",
     target: (isMobile) =>
-      isMobile ? '[data-tour="sticky-call-whatsapp"]' : '[data-tour="details-whatsapp"]',
+      isMobile
+        ? '[data-tour="sticky-call-whatsapp"]'
+        : '[data-tour="details-whatsapp"]',
     skipScroll: false,
     interaction: "click-target",
     optional: true,
   },
+
   {
     id: "details-reviews",
     tour: "core",
-    title: "آراء العملاء بتفرق",
+    title: "شوف تقييمات الناس",
     description:
-      "تقييمات هنا من ناس اشتغلت معاه من قبلك — اقريها قبل ما تدوس اتصال، ولو عندك تجربة شاركها مع أهل السويس.",
+      "اقرأ تجارب وتقييمات العملاء قبل ما تتواصل مع الصنايعي. ولو جربته، شارك تجربتك وساعد غيرك.",
     target: '[data-tour="details-reviews"]',
   },
 ];
@@ -172,34 +188,37 @@ export const ACCOUNT_TOUR_STEPS: TourStep[] = [
   {
     id: "account-bell",
     tour: "account",
-    title: "الإشعارات بتوصل هنا",
+    title: "هنا هتلاقي إشعاراتك",
     description:
-      "أي حاجة جديدة — رد على تقييمك، أو صنايعي جديد في تخصصك — بتظهرلك هنا أول ما تدخل.",
+      "أي تحديث يخص حسابك، زي الردود أو النشاطات الجديدة، هتلاقيه هنا.",
     target: '[data-tour="notifications-bell"]',
     skipScroll: true,
     interaction: "click-target",
   },
+
   {
     id: "account-favorites",
     tour: "account",
-    title: "مفضلتك معاك في كل مكان",
+    title: "مفضلتك محفوظة",
     description:
-      "الصنايعية اللي حفظتها بقت متزامنة مع حسابك — جرب تحفظ صنايعي من أي جهاز وهتلاقيه موجود هنا.",
+      "الصنايعية اللي حفظتهم هتلاقيهم هنا، وتقدر ترجع لهم في أي وقت.",
     target: '[data-tour="nav-favorites"]',
     optional: true,
     skipScroll: true,
     interaction: "click-target",
   },
+
   {
     id: "account-navigation",
     tour: "account",
-    title: "حسابك فيه أكتر",
+    title: "حسابك فيه كل اللي يخصك",
     description:
-      "من حسابك هتلاقي سجل نشاطاتك، إعداداتك، ومفضلتك — ولو فني، لوحة التحكم دي بتبقى من هنا.",
+      "من هنا تقدر تراجع نشاطك، تدير إعداداتك ومفضلتك، ولو أنت صنايعي هتلاقي لوحة التحكم الخاصة بيك.",
     target: '[data-tour="nav-profile"]',
     skipScroll: true,
   },
 ];
+
 
 export const TOURS: Record<TourId, TourStep[]> = {
   core: CORE_TOUR_STEPS,
