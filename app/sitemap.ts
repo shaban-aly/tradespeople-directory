@@ -1,8 +1,10 @@
 import type { MetadataRoute } from "next";
 import { getCategories, getCraftsmen } from "@/lib/db/queries";
 import { siteUrl } from "@/lib/data/site";
+import { LONG_CACHE_REVALIDATE } from "@/lib/db/cache";
 
-export const revalidate = 3600;
+// Sitemap يكفيه تحديث يومي — لا علاقة مباشرة بأحداث الـ webhook
+export const revalidate = LONG_CACHE_REVALIDATE;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [categories, craftsmen] = await Promise.all([

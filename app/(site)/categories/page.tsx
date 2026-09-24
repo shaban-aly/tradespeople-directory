@@ -5,7 +5,8 @@ import { CategoryGrid } from "@/components/categories/CategoryGrid";
 import { JsonLd } from "@/components/shared/seo/JsonLd";
 import { allCategoriesSchema } from "@/lib/seo/schema";
 
-export const revalidate = 3600;
+// لا تحديث دوري — يُبطَّل الكاش عبر Supabase Webhook → /api/webhooks/supabase
+export const revalidate = false;
 
 export const metadata: Metadata = {
   title: "كل التصنيفات",

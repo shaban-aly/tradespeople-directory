@@ -2,7 +2,7 @@
 
 import { revalidateTag } from "next/cache";
 import { getServerSession } from "@/lib/db/server";
-import { SEARCH_CACHE_REVALIDATE, SEARCH_TAG } from "@/lib/db/cache";
+import { SEARCH_TAG } from "@/lib/db/cache";
 
 /**
  * إبطال كاش الموقع العام بعد تعديل الفني لبياناته في لوحة التحكم.
@@ -17,6 +17,6 @@ export async function revalidateProfileAfterSave(): Promise<void> {
     .eq("id", user.id)
     .maybeSingle();
   if (profile?.craftsman_id) {
-    revalidateTag(SEARCH_TAG, { expire: SEARCH_CACHE_REVALIDATE });
+    revalidateTag(SEARCH_TAG, {});
   }
 }

@@ -49,6 +49,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  revalidateTag(tag, { expire: 60 });
+  revalidateTag(tag, {});
   return NextResponse.json({ revalidated: true, tag });
 }

@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { getAreas, getCategories } from "@/lib/db/queries";
 import { JoinForm } from "@/components/join/JoinForm";
 
-export const revalidate = 3600;
+// لا تحديث دوري — التصنيفات والمناطق تُبطَّل عبر Supabase Webhook
+export const revalidate = false;
 
 export const metadata: Metadata = {
   title: "أضف صنايعي",

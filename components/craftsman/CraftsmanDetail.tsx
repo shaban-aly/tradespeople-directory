@@ -19,6 +19,7 @@ import { ViewTracker } from "@/components/craftsman/ViewTracker";
 import { CraftsmanReviewsSection } from "@/components/craftsman/CraftsmanReviewsSection";
 import { CraftsmanHeroImage } from "@/components/craftsman/CraftsmanHeroImage";
 import { categoryHref } from "@/lib/utils/url";
+import { ViewsCounter } from "@/components/craftsman/ViewsCounter";
 
 export function CraftsmanDetail({
   craftsman,
@@ -98,6 +99,7 @@ export function CraftsmanDetail({
               <IconPin className="h-4 w-4 shrink-0" />
               {craftsman.area}
             </span>
+            <ViewsCounter craftsmanId={craftsman.id} />
           </div>
 
           <div

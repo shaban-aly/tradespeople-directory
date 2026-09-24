@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { ReportForm } from "@/components/join/ReportForm";
 
-export const revalidate = 3600;
+// صفحة ثابتة تماماً — لا تحديث دوري ولا webhook مطلوب
+export const revalidate = false;
 
 export const metadata: Metadata = {
   title: "أبلغ عن بيانات خاطئة",

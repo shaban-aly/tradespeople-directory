@@ -1,7 +1,9 @@
 import { getCategories, getCraftsmen } from "@/lib/db/queries";
 import { siteDescription, siteName, siteUrl } from "@/lib/data/site";
+import { LONG_CACHE_REVALIDATE } from "@/lib/db/cache";
 
-export const revalidate = 3600;
+// llms.txt يكفيه تحديث يومي
+export const revalidate = LONG_CACHE_REVALIDATE;
 
 const shortDescription = (text: string, max = 120): string =>
   text.length > max ? `${text.slice(0, max).trim()}...` : text;
