@@ -7,8 +7,6 @@ import { FaqSection } from "@/components/home/FaqSection";
 import { faqSchema, homeSchema } from "@/lib/seo/schema";
 import { GoogleOneTap } from "@/components/shared/auth/GoogleOneTap";
 
-// لا تحديث دوري — يُبطَّل الكاش عبر Supabase Webhook → /api/webhooks/supabase
-export const revalidate = false;
 
 export default function Home() {
   return (

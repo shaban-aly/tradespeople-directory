@@ -16,8 +16,6 @@ import { getCraftsmanRatingSummary } from "@/lib/db/reviews";
 import { PushActivationLayer } from "@/components/notifications/PushActivationLayer";
 import { siteUrl } from "@/lib/data/site";
 
-// لا تحديث دوري — يُبطَّل الكاش عبر Supabase Webhook → /api/webhooks/supabase
-export const revalidate = false;
 
 export async function generateStaticParams() {
   const craftsmen = await getCraftsmen();

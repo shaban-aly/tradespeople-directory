@@ -2,15 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerReadClient } from "@/lib/db/client";
 
 export const runtime = "nodejs";
-/**
- * revalidate = 300: Vercel يحتفظ بالنتيجة 5 دقائق ويوزعها على الزوار
- * بدلاً من ضرب Supabase في كل طلب. العدادات تُعرض بتأخير أقصاه 5 دقائق.
- *
- * لماذا 300 وليس false؟
- * لأن العدادات لا ترتبط بـ webhook (تتغير بكثرة ولا نريد ISR Write في كل زيارة)،
- * لذا نقبل تأخيراً بسيطاً مع حماية Supabase من الضغط المباشر.
- */
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 const MAX_ID_LENGTH = 36; // UUID v4
 
@@ -40,8 +32,13 @@ export async function GET(
     return NextResponse.json({ error: "فشل جلب الإحصائيات" }, { status: 500 });
   }
 
-  // إذا لم يكن للصنايعي سجل بعد → أعِد أصفاراً
-  return NextResponse.json(
+  // Cache-Control: Vercel CDN يكَّش الرد 5 دقائق، المتصفح لا يكَّش (no-store)
+  const response = NextResponse.json(
     data ?? { views: 0, calls: 0, whatsapp: 0, updated_at: null },
   );
+  response.headers.set(
+    "Cache-Control",
+    "public, s-maxage=300, stale-while-revalidate=600",
+  );
+  return response;
 }
