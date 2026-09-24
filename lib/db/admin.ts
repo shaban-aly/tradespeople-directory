@@ -18,6 +18,11 @@ import { createSupabase } from "./client";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 import type { Json } from "./database.types";
+import type {
+  CategoryChartItem,
+  MostContactedItem,
+  OverviewMetrics,
+} from "./admin-selectors";
 
 export const CATEGORY_ICON_OPTIONS = [
   "plumbing",
@@ -308,6 +313,89 @@ export async function fetchCraftsmen(
     .order("created_at", { ascending: false });
   if (error) throw new Error("مقدرناش نحمّل بيانات لوحة التحكم");
   return (data ?? []).map(mapCraftsmanSocialLinks);
+}
+
+export type CraftsmanFilterOptions = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  category?: string;
+  published?: "all" | "published" | "hidden";
+  verified?: "all" | "verified" | "unverified";
+};
+
+export type PaginatedCraftsmenResult = {
+  craftsmen: CraftsmanRow[];
+  totalCount: number;
+  page: number;
+  pageCount: number;
+};
+
+/** جلب الصنايعية خادمياً مع التقسيم لصفحات والفلترة في SQL بدلاً من تحميل كل الصفوف */
+export async function fetchPaginatedCraftsmen(
+  client: SupabaseClient<Database> = createSupabase(),
+  options: CraftsmanFilterOptions = {},
+  categoriesList?: CategoryRow[],
+): Promise<PaginatedCraftsmenResult> {
+  const page = Math.max(1, options.page ?? 1);
+  const pageSize = options.pageSize ?? 8;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = client
+    .from("craftsmen")
+    .select(CRAFTSMEN_ADMIN_SELECT, { count: "exact" })
+    .eq("status", "approved");
+
+  if (options.search?.trim()) {
+    const q = options.search.trim();
+    query = query.or(`name.ilike.%${q}%,phone.ilike.%${q}%`);
+  }
+
+  if (options.category && options.category !== "all") {
+    let catId: string | undefined;
+    if (categoriesList && categoriesList.length > 0) {
+      catId = categoriesList.find((c) => c.slug === options.category)?.id;
+    }
+    if (!catId) {
+      const { data: catData } = await client
+        .from("categories")
+        .select("id")
+        .eq("slug", options.category)
+        .maybeSingle();
+      catId = catData?.id;
+    }
+    if (catId) {
+      query = query.eq("category_id", catId);
+    }
+  }
+
+  if (options.published === "published") {
+    query = query.eq("is_published", true);
+  } else if (options.published === "hidden") {
+    query = query.eq("is_published", false);
+  }
+
+  if (options.verified === "verified") {
+    query = query.eq("verified", true);
+  } else if (options.verified === "unverified") {
+    query = query.eq("verified", false);
+  }
+
+  query = query.order("created_at", { ascending: false }).range(from, to);
+
+  const { data, count, error } = await query;
+  if (error) throw new Error("مقدرناش نحمّل قائمة الصنايعية");
+
+  const totalCount = count ?? 0;
+  const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
+
+  return {
+    craftsmen: (data ?? []).map(mapCraftsmanSocialLinks),
+    totalCount,
+    page: Math.min(page, pageCount),
+    pageCount,
+  };
 }
 
 export async function fetchMessages(
@@ -628,11 +716,17 @@ export async function deleteCraftsman(
   craftsmen: CraftsmanRow[],
 ): Promise<void> {
   const target = craftsmen.find((craftsman) => craftsman.id === id);
-  if (target?.image_url) {
-    await deleteImageByUrl(target.image_url);
-  }
   const { error } = await createSupabase().from("craftsmen").delete().eq("id", id);
   assertNoError(error, "مقدرناش نحذف الصنايعي");
+
+  // حذف الصورة القديمة فقط بعد نجاح حذف السجل في قاعدة البيانات
+  if (target?.image_url) {
+    try {
+      await deleteImageByUrl(target.image_url);
+    } catch {
+      // فشل حذف الصورة التخزينية لا يمنع استكمال العملية طالما السجل حُذف
+    }
+  }
 }
 
 // ------------------------------ عمليات الطلبات ------------------------------
@@ -679,11 +773,18 @@ export async function deleteJoinRequest(requestId: string): Promise<void> {
     .eq("id", requestId)
     .single();
   if (fetchError || !data) return;
-  if (data.image_url) {
-    await deleteImageByUrl(data.image_url);
-  }
+
   const { error } = await supabase.from("craftsmen").delete().eq("id", requestId);
   if (error) throw new Error(error.message);
+
+  // حذف الصورة من مجلد الطلبات فقط بعد نجاح حذف السجل
+  if (data.image_url) {
+    try {
+      await deleteImageByUrl(data.image_url);
+    } catch {
+      // فشل حذف الصورة التخزينية لا يمنع نجاح حذف السجل
+    }
+  }
 }
 
 // ------------------------------ عمليات البلاغات ------------------------------
@@ -778,7 +879,7 @@ export type ActivityFeedItem = {
 };
 
 export async function fetchAdminActivityFeed(
-  supabase: SupabaseClient<Database>,
+  supabase: SupabaseClient<Database> = createSupabase(),
   timeframe: "today" | "week" | "month" = "today",
   limit = 50,
 ): Promise<ActivityFeedItem[]> {
@@ -803,5 +904,178 @@ export async function fetchAdminActivityFeed(
     metadata: row.metadata,
     createdAt: row.created_at,
   }));
+}
+
+// ------------------------------ دوال مخصصة لترشيد صفحة النظرة العامة ------------------------------
+
+/** جلب الطلبات المعلقة فقط بحد أقصى (بدون تحميل كافة الصنايعية والطلبات القديمة) */
+export async function fetchPendingRequests(
+  client: SupabaseClient<Database> = createSupabase(),
+  limit = 5,
+): Promise<JoinRequestRow[]> {
+  const { data, error } = await client
+    .from("craftsmen")
+    .select(REQUESTS_SELECT)
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error("مقدرناش نحمّل الطلبات المعلقة");
+  return (data ?? []).map(mapRequestRow);
+}
+
+/** جلب البلاغات المعلقة فقط بحد أقصى */
+export async function fetchPendingReports(
+  client: SupabaseClient<Database> = createSupabase(),
+  limit = 5,
+): Promise<ReportRow[]> {
+  const { data, error } = await client
+    .from("reports")
+    .select("id, craftsman_name, phone, message, status, reporter_user_id, created_at, updated_at")
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error("مقدرناش نحمّل البلاغات المعلقة");
+  return (data ?? []).map((row) => ({
+    ...row,
+    status: row.status as ReportRow["status"],
+  }));
+}
+
+/** جلب أحدث الصنايعية المعتمدين فقط بحد أقصى */
+export async function fetchRecentCraftsmen(
+  client: SupabaseClient<Database> = createSupabase(),
+  limit = 5,
+): Promise<CraftsmanRow[]> {
+  const { data, error } = await client
+    .from("craftsmen")
+    .select(CRAFTSMEN_ADMIN_SELECT)
+    .eq("status", "approved")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error("مقدرناش نحمّل أحدث الصنايعية");
+  return (data ?? []).map(mapCraftsmanSocialLinks);
+}
+
+/** تجميع إحصائيات الصنايعية الشاملة وجلب الأعلى تواصلاً دون تحميل جداول الصنايعية الكاملة */
+export async function fetchCraftsmanStatsOverview(
+  client: SupabaseClient<Database> = createSupabase(),
+  topLimit = 5,
+): Promise<{
+  totalCalls: number;
+  totalWhatsapp: number;
+  totalViews: number;
+  mostContacted: MostContactedItem[];
+}> {
+  const { data: statsRows, error } = await client
+    .from("craftsman_stats")
+    .select("craftsman_id, calls, whatsapp, views");
+
+  if (error || !statsRows || statsRows.length === 0) {
+    return { totalCalls: 0, totalWhatsapp: 0, totalViews: 0, mostContacted: [] };
+  }
+
+  let totalCalls = 0;
+  let totalWhatsapp = 0;
+  let totalViews = 0;
+  const sortedStats: { craftsmanId: string; contacts: number }[] = [];
+
+  for (const row of statsRows) {
+    const calls = row.calls ?? 0;
+    const whatsapp = row.whatsapp ?? 0;
+    const views = row.views ?? 0;
+    totalCalls += calls;
+    totalWhatsapp += whatsapp;
+    totalViews += views;
+    const contacts = calls + whatsapp;
+    if (contacts > 0) {
+      sortedStats.push({ craftsmanId: row.craftsman_id, contacts });
+    }
+  }
+
+  sortedStats.sort((a, b) => b.contacts - a.contacts);
+  const topSlice = sortedStats.slice(0, topLimit);
+
+  if (topSlice.length === 0) {
+    return { totalCalls, totalWhatsapp, totalViews, mostContacted: [] };
+  }
+
+  const ids = topSlice.map((s) => s.craftsmanId);
+  const { data: craftsmenData } = await client
+    .from("craftsmen")
+    .select(CRAFTSMEN_ADMIN_SELECT)
+    .in("id", ids);
+
+  const mapped = (craftsmenData ?? []).map(mapCraftsmanSocialLinks);
+  const craftsmenMap = new Map(mapped.map((c) => [c.id, c]));
+
+  const mostContacted: MostContactedItem[] = [];
+  for (const item of topSlice) {
+    const craftsman = craftsmenMap.get(item.craftsmanId);
+    if (craftsman) {
+      mostContacted.push({ craftsman, contacts: item.contacts });
+    }
+  }
+
+  return { totalCalls, totalWhatsapp, totalViews, mostContacted };
+}
+
+/** تجميع مقاييس النظرة العامة للوحة المشرف بكفاءة عبر RPCs واستعلامات مجتزأة */
+export async function fetchAdminOverviewMetrics(
+  client: SupabaseClient<Database> = createSupabase(),
+): Promise<OverviewMetrics> {
+  const [
+    navCounts,
+    breakdown,
+    categories,
+    areas,
+    pendingRequests,
+    pendingReports,
+    recentCraftsmen,
+    statsOverview,
+    siteStatsRes,
+  ] = await Promise.all([
+    fetchAdminNavCounts(client),
+    fetchAdminBreakdownCounts(client),
+    fetchCategories(client),
+    fetchAreas(client),
+    fetchPendingRequests(client, 5),
+    fetchPendingReports(client, 5),
+    fetchRecentCraftsmen(client, 5),
+    fetchCraftsmanStatsOverview(client, 5),
+    client.rpc("get_site_stats"),
+  ]);
+
+  const categoryChart: CategoryChartItem[] = categories
+    .filter((item) => item.is_active)
+    .map((category) => ({
+      name: category.name,
+      count: breakdown.byCategory[category.slug] ?? 0,
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  const maxCount = Math.max(1, ...categoryChart.map((item) => item.count));
+
+  const siteStatsData = (siteStatsRes.data ?? {}) as Record<string, unknown>;
+  const publishedCraftsmen = Number(siteStatsData.publishedCraftsmen) || 0;
+  const totalCraftsmen = publishedCraftsmen + navCounts.pendingRequests;
+
+  return {
+    publishedCraftsmen,
+    totalCraftsmen,
+    pendingRequests,
+    pendingReports,
+    activeCategories: categories.filter((item) => item.is_active).length,
+    totalCategories: categories.length,
+    activeAreas: areas.filter((item) => item.is_active).length,
+    totalAreas: areas.length,
+    unreadMessages: navCounts.unreadMessages,
+    recentCraftsmen,
+    categoryChart,
+    maxCount,
+    totalCalls: statsOverview.totalCalls,
+    totalWhatsapp: statsOverview.totalWhatsapp,
+    totalViews: statsOverview.totalViews,
+    mostContacted: statsOverview.mostContacted,
+  };
 }
 

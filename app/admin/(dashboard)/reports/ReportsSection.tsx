@@ -77,7 +77,11 @@ export function ReportsSection({
     <div className="grid gap-6">
       <PageHeader
         title="البلاغات"
-        description={`${toArabicDigits(pendingCount)} بلاغ معلّق بانتظار المراجعة.`}
+        description={
+          pendingCount === 0
+            ? "لا توجد بلاغات معلّقة بانتظار المراجعة."
+            : `${toArabicDigits(pendingCount)} بلاغ معلّق بانتظار المراجعة.`
+        }
         actions={<RefreshButton onRefresh={() => void refresh()} />}
       />
 

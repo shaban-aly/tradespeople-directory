@@ -1,6 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { IconPhone, IconWhatsApp } from "@/components/shared/icons";
-import type { ActivityFeedItem } from "@/lib/db/admin";
+import { fetchAdminActivityFeed, type ActivityFeedItem } from "@/lib/db/admin";
 import { formatRelativeTimeArabic } from "@/lib/utils/format";
 
 export type Timeframe = "today" | "week" | "month";
@@ -9,7 +12,6 @@ interface ActivityFeedProps {
   timeframe?: Timeframe;
   items?: ActivityFeedItem[];
 }
-
 
 const TIMEFRAME_OPTIONS: { value: Timeframe; label: string }[] = [
   { value: "today", label: "اليوم" },
@@ -21,7 +23,27 @@ export function ActivityFeed({
   timeframe = "today",
   items = [],
 }: ActivityFeedProps) {
-  const feedList = items || [];
+  const [activeTimeframe, setActiveTimeframe] = useState<Timeframe>(timeframe);
+  const [feedList, setFeedList] = useState<ActivityFeedItem[]>(items);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleTimeframeChange = async (newTimeframe: Timeframe) => {
+    if (newTimeframe === activeTimeframe || isLoading) return;
+    setActiveTimeframe(newTimeframe);
+    setIsLoading(true);
+    try {
+      if (typeof window !== "undefined") {
+        window.history.replaceState(null, "", `/admin?timeframe=${newTimeframe}`);
+      }
+      const newItems = await fetchAdminActivityFeed(undefined, newTimeframe);
+      setFeedList(newItems);
+    } catch (err) {
+      console.error("فشل جلب سجل التفاعلات:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const totalCount = feedList.length;
   const whatsappCount = feedList.filter((i) => i.contactMethod === "whatsapp").length;
   const phoneCount = feedList.filter((i) => i.contactMethod === "phone").length;
@@ -32,7 +54,11 @@ export function ActivityFeed({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span
+              className={`flex h-2.5 w-2.5 rounded-full ${
+                isLoading ? "bg-amber-500 animate-spin" : "bg-emerald-500 animate-pulse"
+              }`}
+            />
             <h2 className="text-lg font-bold text-foreground sm:text-xl">
               سجل التفاعلات اللحظي (Activity Feed)
             </h2>
@@ -42,23 +68,24 @@ export function ActivityFeed({
           </p>
         </div>
 
-        {/* أزرار الفلترة بالرابط */}
+        {/* أزرار الفلترة اللحظية بلا إعادة تحميل الصفحة */}
         <div className="flex items-center gap-1 rounded-2xl border border-border bg-background p-1 self-start sm:self-auto">
           {TIMEFRAME_OPTIONS.map((opt) => {
-            const isActive = timeframe === opt.value;
+            const isActive = activeTimeframe === opt.value;
             return (
-              <Link
+              <button
                 key={opt.value}
-                href={`/admin?timeframe=${opt.value}`}
-                scroll={false}
-                className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all sm:text-sm ${
+                type="button"
+                onClick={() => void handleTimeframeChange(opt.value)}
+                disabled={isLoading}
+                className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all sm:text-sm cursor-pointer disabled:opacity-60 ${
                   isActive
                     ? "bg-accent text-accent-contrast shadow-sm"
                     : "text-muted hover:text-foreground hover:bg-card"
                 }`}
               >
                 {opt.label}
-              </Link>
+              </button>
             );
           })}
         </div>
@@ -100,7 +127,11 @@ export function ActivityFeed({
           </p>
         </div>
       ) : (
-        <div className="mt-4 divide-y divide-border/60">
+        <div
+          className={`mt-4 divide-y divide-border/60 transition-opacity duration-200 ${
+            isLoading ? "opacity-50 pointer-events-none" : "opacity-100"
+          }`}
+        >
           {feedList.map((item) => {
             const isWhatsapp = item.contactMethod === "whatsapp";
             const isAuthenticated = item.userStatus === "authenticated";

@@ -17,6 +17,7 @@ import {
   useAdminOverview,
   type AdminOverviewData,
 } from "@/hooks/admin/useAdminOverview";
+import type { OverviewMetrics } from "@/lib/db/admin-selectors";
 import { useAnalytics } from "@/hooks/admin/useAnalytics";
 import { useToast } from "@/hooks/ui/useToast";
 import type { AnalyticsOverview } from "@/lib/db/analytics";
@@ -71,7 +72,7 @@ export function OverviewSection({
   activityFeed,
   timeframe = "today",
 }: {
-  initialData: AdminOverviewData;
+  initialData: AdminOverviewData | OverviewMetrics;
   initialAnalytics: AnalyticsOverview;
   activityFeed?: ActivityFeedItem[];
   timeframe?: Timeframe;

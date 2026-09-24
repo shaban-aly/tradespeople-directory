@@ -1,14 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
 import {
   approveJoinRequest,
-  fetchAreas,
+  fetchAdminOverviewMetrics,
   fetchCategories,
+  fetchAreas,
   fetchCraftsmen,
   fetchMessages,
-  fetchReports,
-  fetchRequests,
   rejectJoinRequest,
   deleteReport,
   updateReportStatus,
@@ -28,25 +26,17 @@ export interface AdminOverviewData {
   messages: Awaited<ReturnType<typeof fetchMessages>>;
 }
 
-export function useAdminOverview(initialData?: AdminOverviewData) {
-  const { data, loading, error: loadError, refresh } = useAdminQuery(async () => {
-    const [requests, reports, categories, areas, craftsmen, messages] =
-      await Promise.all([
-        fetchRequests(),
-        fetchReports(),
-        fetchCategories(),
-        fetchAreas(),
-        fetchCraftsmen(),
-        fetchMessages(),
-      ]);
-    return { requests, reports, categories, areas, craftsmen, messages };
-  }, initialData);
-  const { busyKey, error: actionError, run } = useAdminAction();
+export function useAdminOverview(initialData?: OverviewMetrics | AdminOverviewData) {
+  const initialMetrics =
+    initialData && "requests" in initialData
+      ? buildOverviewMetrics(initialData)
+      : (initialData as OverviewMetrics | undefined);
 
-  const metrics = useMemo<OverviewMetrics | null>(
-    () => (data ? buildOverviewMetrics(data) : null),
-    [data],
+  const { data: metrics, loading, error: loadError, refresh } = useAdminQuery(
+    () => fetchAdminOverviewMetrics(),
+    initialMetrics,
   );
+  const { busyKey, error: actionError, run } = useAdminAction();
 
   const approveRequest = (request: JoinRequestRow) =>
     run(`approve-${request.id}`, () => approveJoinRequest(request), refresh);

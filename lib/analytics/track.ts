@@ -11,7 +11,9 @@ export type AnalyticsEventName =
   | "view_category"
   | "search"
   | "search_no_results"
+  /** @deprecated استخدم contact_click مع contact_method: "phone" */
   | "click_phone"
+  /** @deprecated استخدم contact_click مع contact_method: "whatsapp" */
   | "click_whatsapp"
   | "contact_click"
   | "login"

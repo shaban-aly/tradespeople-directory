@@ -12,8 +12,8 @@ import {
  * عند الحاجة عبر `refresh()` — يستدعيها AdminShell عند تغيّر المسار وعند
  * حدث `admin-nav-refresh` (بعد أي عملية متابعة ناجحة من useAdminAction).
  */
-export function useAdminNavCounts() {
-  const [counts, setCounts] = useState<AdminNavCounts | null>(null);
+export function useAdminNavCounts(initialCounts?: AdminNavCounts) {
+  const [counts, setCounts] = useState<AdminNavCounts | null>(initialCounts ?? null);
   const [error, setError] = useState("");
 
   const refresh = useCallback(async () => {
@@ -26,6 +26,7 @@ export function useAdminNavCounts() {
   }, []);
 
   useEffect(() => {
+    if (initialCounts && counts) return;
     let cancelled = false;
     void fetchAdminNavCounts()
       .then((next) => {
@@ -39,7 +40,7 @@ export function useAdminNavCounts() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialCounts]);
 
   return { counts, error, refresh };
 }

@@ -48,11 +48,11 @@ export function StickyCallBar({
             onClick={() => {
               if (craftsmanSlug) {
                 counterTrack(craftsmanSlug, "call", categorySlug);
-                track("click_phone", { craftsman_slug: craftsmanSlug, category: categoryName });
                 track("contact_click", {
                   craftsman_id: craftsmanId,
                   craftsman_slug: craftsmanSlug,
                   craftsman_name: craftsmanName,
+                  category: categoryName,
                   contact_method: "phone",
                 });
               }
@@ -72,11 +72,11 @@ export function StickyCallBar({
               onClick={() => {
                 if (craftsmanSlug) {
                   counterTrack(craftsmanSlug, "whatsapp", categorySlug);
-                  track("click_whatsapp", { craftsman_slug: craftsmanSlug, category: categoryName });
                   track("contact_click", {
                     craftsman_id: craftsmanId,
                     craftsman_slug: craftsmanSlug,
                     craftsman_name: craftsmanName,
+                    category: categoryName,
                     contact_method: "whatsapp",
                   });
                 }

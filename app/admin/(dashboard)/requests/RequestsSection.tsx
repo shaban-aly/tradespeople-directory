@@ -89,7 +89,11 @@ export function RequestsSection({
     <div className="grid gap-6">
       <PageHeader
         title="الطلبات"
-        description={`${toArabicDigits(pendingCount)} طلب معلق بانتظار المراجعة.`}
+        description={
+          pendingCount === 0
+            ? "لا توجد طلبات معلقة بانتظار المراجعة."
+            : `${toArabicDigits(pendingCount)} طلب معلق بانتظار المراجعة.`
+        }
         actions={<RefreshButton onRefresh={() => void refresh()} />}
       />
 

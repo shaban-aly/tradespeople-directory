@@ -59,23 +59,34 @@ function AdminSidebar({
   );
 }
 
-export function AdminShell({ children }: { children: React.ReactNode }) {
+export function AdminShell({
+  children,
+  userEmail,
+  initialCounts,
+}: {
+  children: React.ReactNode;
+  userEmail?: string;
+  initialCounts?: AdminNavCounts;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, isAdmin, loading, signOut } = useSession();
-  const { counts, refresh: refreshNavCounts } = useAdminNavCounts();
+  const { counts, refresh: refreshNavCounts } = useAdminNavCounts(initialCounts);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerClosing, setDrawerClosing] = useState(false);
   useBodyScrollLock(drawerOpen);
 
+  const displayEmail = userEmail || user?.email;
+  const isServerVerified = Boolean(userEmail);
+
   // تحديث عدّادات الـ sidebar أثناء التنقل بين الأقسام
   useEffect(() => {
-    if (loading || !user) return;
+    if (loading || (!user && !isServerVerified)) return;
     const timer = window.setTimeout(() => {
       void refreshNavCounts();
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [pathname, loading, user, refreshNavCounts]);
+  }, [pathname, loading, user, isServerVerified, refreshNavCounts]);
 
   // إنعاش العدّادات بعد أي عملية متابعة ناجحة (approve/reject/review/dismiss/read)
   useEffect(() => {
@@ -98,10 +109,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user && !isServerVerified) {
       router.replace("/login?reason=admin&next=/admin");
     }
-  }, [loading, user, router]);
+  }, [loading, user, isServerVerified, router]);
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -126,7 +137,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     await signOut("/login?reason=admin&next=/admin");
   }
 
-  if (loading) {
+  if (loading && !isServerVerified) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="grid w-full max-w-sm gap-4 rounded-2xl border border-border bg-card p-6 shadow-card">
@@ -138,9 +149,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) return null;
+  if (!isServerVerified && !user) return null;
 
-  if (!isAdmin) {
+  if (!loading && user && !isAdmin) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="grid w-full max-w-sm gap-4 rounded-2xl border border-border bg-card p-6 shadow-card">
@@ -161,7 +172,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-e border-border bg-elevated lg:flex">
           <AdminSidebar
             onSignOut={() => void handleSignOut()}
-            email={user.email}
+            email={displayEmail}
             counts={counts ?? undefined}
           />
         </aside>
@@ -199,7 +210,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <div className="flex-1 overflow-y-auto">
                 <AdminSidebar
                   onSignOut={() => void handleSignOut()}
-                  email={user.email}
+                  email={displayEmail}
                   counts={counts ?? undefined}
                 />
               </div>

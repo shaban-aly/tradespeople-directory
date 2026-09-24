@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { CraftsmanForm } from "@/components/admin/CraftsmanForm";
 import { DashboardLoading } from "@/components/admin/DashboardLoading";
@@ -28,7 +29,21 @@ import { useToast } from "@/hooks/ui/useToast";
 
 const PAGE_SIZE = 8;
 
-export function CraftsmenSection({ initialData }: { initialData: AdminCraftsmenData }) {
+export function CraftsmenSection({
+  initialData,
+  initialFilter,
+  initialPagination,
+}: {
+  initialData: AdminCraftsmenData;
+  initialFilter?: CraftsmanFilter;
+  initialPagination?: {
+    page: number;
+    pageCount: number;
+    totalCount: number;
+  };
+}) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const {
     categories,
@@ -44,13 +59,16 @@ export function CraftsmenSection({ initialData }: { initialData: AdminCraftsmenD
     deleteCraftsman,
     refresh,
   } = useAdminCraftsmen(initialData);
-  const [filter, setFilter] = useState<CraftsmanFilter>({
-    search: "",
-    category: "all",
-    published: "all",
-    verified: "all",
-  });
-  const [page, setPage] = useState(1);
+
+  const [filter, setFilter] = useState<CraftsmanFilter>(
+    initialFilter ?? {
+      search: "",
+      category: "all",
+      published: "all",
+      verified: "all",
+    },
+  );
+  const [page, setPage] = useState(initialPagination?.page ?? 1);
   const [formTarget, setFormTarget] = useState<CraftsmanRow | null | "new">(null);
   const [deleteTarget, setDeleteTarget] = useState<CraftsmanRow | null>(null);
   const [linkTarget, setLinkTarget] = useState<CraftsmanRow | null>(null);
@@ -59,8 +77,78 @@ export function CraftsmenSection({ initialData }: { initialData: AdminCraftsmenD
     if (error) toast("error", error);
   }, [error, toast]);
 
-  const filtered = filterCraftsmen(craftsmen, filter);
-  const { page: safePage, pageCount, pageItems } = paginate(filtered, page, PAGE_SIZE);
+  useEffect(() => {
+    if (initialFilter) {
+      setFilter(initialFilter);
+    }
+  }, [initialFilter]);
+
+  useEffect(() => {
+    if (initialPagination?.page) {
+      setPage(initialPagination.page);
+    }
+  }, [initialPagination?.page]);
+
+  const isServerPaginated = Boolean(initialPagination);
+
+  const updateQuery = useCallback(
+    (newFilter: CraftsmanFilter, newPage: number) => {
+      const q = new URLSearchParams();
+      if (newPage > 1) q.set("page", String(newPage));
+      if (newFilter.search.trim()) q.set("search", newFilter.search.trim());
+      if (newFilter.category !== "all") q.set("category", newFilter.category);
+      if (newFilter.published !== "all") q.set("published", newFilter.published);
+      if (newFilter.verified !== "all") q.set("verified", newFilter.verified);
+
+      const qs = q.toString();
+      const targetUrl = `/admin/craftsmen${qs ? `?${qs}` : ""}`;
+      startTransition(() => {
+        router.replace(targetUrl, { scroll: false });
+      });
+    },
+    [router],
+  );
+
+  // تحديث الـ URL بعد توقف الكتابة في حقل البحث
+  useEffect(() => {
+    if (!isServerPaginated) return;
+    const timer = setTimeout(() => {
+      if (filter.search !== (initialFilter?.search ?? "")) {
+        updateQuery(filter, 1);
+      }
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [filter.search, initialFilter?.search, isServerPaginated, updateQuery, filter]);
+
+  const handleFilterChange = (next: Partial<CraftsmanFilter>) => {
+    const updated = { ...filter, ...next };
+    setFilter(updated);
+    setPage(1);
+    if (!("search" in next) && isServerPaginated) {
+      updateQuery(updated, 1);
+    }
+  };
+
+  const handlePageChange = (nextPage: number) => {
+    setPage(nextPage);
+    if (isServerPaginated) {
+      updateQuery(filter, nextPage);
+    }
+  };
+
+  // عند تفعيل التقسيم الخادمي، تكون craftsmen من السيرفر هي صفحة العرض مباشرة
+  const pageItems = isServerPaginated
+    ? craftsmen
+    : paginate(filterCraftsmen(craftsmen, filter), page, PAGE_SIZE).pageItems;
+  const pageCount = isServerPaginated
+    ? (initialPagination?.pageCount ?? 1)
+    : paginate(filterCraftsmen(craftsmen, filter), page, PAGE_SIZE).pageCount;
+  const safePage = isServerPaginated
+    ? page
+    : paginate(filterCraftsmen(craftsmen, filter), page, PAGE_SIZE).page;
+  const totalDisplayCount = isServerPaginated
+    ? (initialPagination?.totalCount ?? craftsmen.length)
+    : filterCraftsmen(craftsmen, filter).length;
 
   if (loading) return <DashboardLoading />;
 
@@ -70,6 +158,7 @@ export function CraftsmenSection({ initialData }: { initialData: AdminCraftsmenD
       if (ok) {
         toast("success", "تمت إضافة الصنايعي");
         setFormTarget(null);
+        router.refresh();
       }
       return ok;
     }
@@ -78,6 +167,7 @@ export function CraftsmenSection({ initialData }: { initialData: AdminCraftsmenD
       if (ok) {
         toast("success", "تم حفظ التعديلات");
         setFormTarget(null);
+        router.refresh();
       }
       return ok;
     }
@@ -88,6 +178,7 @@ export function CraftsmenSection({ initialData }: { initialData: AdminCraftsmenD
     const ok = await toggleCraftsmanVerified(craftsman);
     if (ok) {
       toast("success", craftsman.verified ? "تم إلغاء التوثيق" : "تم توثيق الصنايعي");
+      router.refresh();
     }
   }
 
@@ -95,6 +186,7 @@ export function CraftsmenSection({ initialData }: { initialData: AdminCraftsmenD
     const ok = await toggleCraftsmanPublished(craftsman);
     if (ok) {
       toast("success", craftsman.is_published ? "تم إخفاء الصنايعي" : "تم نشر الصنايعي");
+      router.refresh();
     }
   }
 
@@ -104,6 +196,7 @@ export function CraftsmenSection({ initialData }: { initialData: AdminCraftsmenD
     if (ok) {
       toast("success", "تم حذف الصنايعي");
       setDeleteTarget(null);
+      router.refresh();
     }
   }
 
@@ -111,10 +204,15 @@ export function CraftsmenSection({ initialData }: { initialData: AdminCraftsmenD
     <div className="grid gap-6">
       <PageHeader
         title="الصنايعية"
-        description={`إدارة ${craftsmen.length} صنايعي في الدليل.`}
+        description={`إدارة ${totalDisplayCount} صنايعي في الدليل.`}
         actions={
           <>
-            <RefreshButton onRefresh={() => void refresh()} />
+            <RefreshButton
+              onRefresh={() => {
+                void refresh();
+                router.refresh();
+              }}
+            />
             <AdminButton
               type="button"
               onClick={() => setFormTarget("new")}
@@ -126,14 +224,15 @@ export function CraftsmenSection({ initialData }: { initialData: AdminCraftsmenD
         }
       />
 
-      <section className="grid gap-4 rounded-2xl border border-border bg-card p-6 shadow-card">
+      <section
+        className={`grid gap-4 rounded-2xl border border-border bg-card p-6 shadow-card transition-opacity duration-200 ${
+          isPending ? "opacity-60 pointer-events-none" : "opacity-100"
+        }`}
+      >
         <CraftsmenFilters
           filter={filter}
           categories={categories}
-          onChange={(next) => {
-            setFilter((prev) => ({ ...prev, ...next }));
-            setPage(1);
-          }}
+          onChange={handleFilterChange}
         />
 
         {pageItems.length === 0 ? (
@@ -147,7 +246,7 @@ export function CraftsmenSection({ initialData }: { initialData: AdminCraftsmenD
             <CraftsmenTable
               craftsmen={pageItems}
               busyKey={busyKey}
-                onToggleVerified={(item) => void handleToggleVerified(item)}
+              onToggleVerified={(item) => void handleToggleVerified(item)}
               onTogglePublished={(item) => void handleTogglePublished(item)}
               onEdit={setFormTarget}
               onDelete={setDeleteTarget}
@@ -157,7 +256,7 @@ export function CraftsmenSection({ initialData }: { initialData: AdminCraftsmenD
             <Pagination
               page={safePage}
               pageCount={pageCount}
-              onPageChange={setPage}
+              onPageChange={handlePageChange}
             />
           </>
         )}
