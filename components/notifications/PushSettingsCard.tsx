@@ -1,103 +1,119 @@
 "use client";
 
-import { Button } from "@/components/shared/ui/Button";
-import { IconBell, IconBellOff, IconX } from "@/components/shared/icons";
+import { IconBell, IconX } from "@/components/shared/icons";
+import { ToggleSwitch } from "@/components/shared/ui/ToggleSwitch";
 import { usePushNotifications, type PushStatus } from "@/hooks/usePushNotifications";
 
-function StatusPill({ status }: { status: PushStatus }) {
+function StatusIndicator({ status }: { status: PushStatus }) {
   if (status === "enabled") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-semibold text-accent">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
         مفعّلة
       </span>
     );
   }
   if (status === "disabled") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-border/60 px-2.5 py-0.5 text-xs font-semibold text-muted">
-        موقوفة
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/20 px-2 py-0.5 text-[11px] font-bold text-muted">
+        متوقفة
+      </span>
+    );
+  }
+  if (status === "blocked") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-bold text-amber-600 dark:text-amber-400">
+        محظورة
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-2.5 py-0.5 text-xs font-semibold text-muted">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/20 px-2 py-0.5 text-[11px] font-bold text-muted">
       غير مفعّلة
     </span>
   );
 }
 
-function stateLabel(status: PushStatus): string {
+function getStatusDescription(status: PushStatus): string {
   switch (status) {
-    case "unsupported":
-      return "متصفحك لا يدعم إشعارات المتصفح (يلزم Notification و Service Worker).";
-    case "unconfigured":
-      return "إعدادات Firebase لم تُضف بعد — عليك تفعيلها من مسؤول المشروع وتُظهر تلقائياً.";
-    case "blocked":
-      return "محظورة من إعدادات المتصفح.";
-    case "asking":
-      return "بانتظار موافقة المتصفح…";
     case "enabled":
-      return "تعمل — ستصل إشعارات الفعاليات حتى لو أغلقت الموقع.";
+      return "ستصلك تنبيهات فورية بالصنايعية الجدد والردود على تقييماتك.";
     case "disabled":
-      return "موقوفة منك — فعّلها متى شئت.";
+      return "الإشعارات متوقفة — يمكنك تشغيلها في أي وقت لتلقي كل جديد.";
+    case "blocked":
+      return "تم رفض الإذن سابقاً من إعدادات المتصفح على جهازك.";
+    case "asking":
+      return "يرجى تأكيد الموافقة في نافذة المتصفح الظاهرة...";
+    case "unsupported":
+      return "متصفحك الحالي لا يدعم إشعارات الويب المباشرة.";
+    case "unconfigured":
+      return "خدمة الإشعارات قيد التجهيز في بيئة التطوير.";
     default:
-      return "تُفعَّل تلقائياً عند أول تفاعل — وافق المتصفح وتسجَّل تلقائياً.";
+      return "فعّل الإشعارات لتصلك تنبيهات بجديد الصنايعية وأنشطتك مباشرة.";
   }
 }
 
-/**
- * صفّ إعدادات إشعارات المتصفح — يُعرض داخل صفحة الملف الشخصي (الإعدادات) فقط،
- * وليس داخل صفحة الإشعارات (التفعيل تلقائي؛ هنا التحكم بالوقف/إعادة التفعيل).
- */
 export function PushSettingsCard() {
   const push = usePushNotifications();
 
+  const isSwitchDisabled =
+    push.status === "unsupported" ||
+    push.status === "unconfigured" ||
+    push.status === "blocked" ||
+    push.status === "asking";
+
+  const handleToggle = (checked: boolean) => {
+    if (checked) {
+      void push.enable();
+    } else {
+      void push.disable();
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 py-1">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <span
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${
+              push.enabled
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "bg-accent/10 text-accent"
+            }`}
+          >
             <IconBell className="h-5 w-5" />
           </span>
-          <div>
-            <p className="flex flex-wrap items-center gap-2 text-base font-bold text-foreground">
-              إشعارات المتصفح
-              <StatusPill status={push.status} />
-            </p>
-            <p className="mt-0.5 max-w-sm text-xs leading-relaxed text-muted">
-              {stateLabel(push.status)}
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-base font-bold text-foreground">
+                إشعارات المتصفح
+              </span>
+              <StatusIndicator status={push.status} />
+            </div>
+            <p className="mt-0.5 text-xs leading-relaxed text-muted line-clamp-2">
+              {getStatusDescription(push.status)}
             </p>
           </div>
         </div>
 
-        {push.enabled ? (
-          <Button variant="outline" size="sm" onClick={() => void push.disable()}>
-            <IconBellOff className="h-4 w-4" />
-            إيقاف
-          </Button>
-        ) : (
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => void push.enable()}
-            disabled={
-              push.status === "unsupported" ||
-              push.status === "unconfigured" ||
-              push.status === "blocked"
-            }
-          >
-            <IconBell className="h-4 w-4" />
-            {push.status === "disabled" ? "إعادة التفعيل" : "تفعيل"}
-          </Button>
-        )}
+        {/* مفتاح تبديل ناعم ومريح للمس */}
+        <div className="shrink-0 ps-2">
+          <ToggleSwitch
+            checked={push.enabled}
+            onChange={handleToggle}
+            disabled={isSwitchDisabled}
+            label="تشغيل أو إيقاف إشعارات المتصفح"
+          />
+        </div>
       </div>
 
       {push.status === "blocked" && (
-        <p className="flex items-start gap-2 text-xs leading-relaxed text-danger">
-          <IconX className="mt-0.5 h-4 w-4 shrink-0" />
-          رفضت إذن الإشعارات سابقاً من المتصفح — عدّل من شريط العنوان: أيقونة القفل ←
-          إشعارات هذا الموقع، ثم عُد هنا وشغّلها.
-        </p>
+        <div className="mt-1 flex items-start gap-2 rounded-xl bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-700 dark:text-amber-300 border border-amber-500/20">
+          <IconX className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+          <p>
+            لتشغيل الإشعارات مجدداً: افتح إعدادات المتصفح على جهازك (أو إعدادات الموقع)، واسمح بإرسال الإشعارات لدليل الصنايعية.
+          </p>
+        </div>
       )}
     </div>
   );

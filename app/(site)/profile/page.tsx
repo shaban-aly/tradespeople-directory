@@ -14,7 +14,14 @@ import {
   IconChevronLeft,
   IconUser,
   IconArrow,
+  IconShieldCheck,
 } from "@/components/shared/icons";
+import { toArabicDigits } from "@/lib/utils/format";
+
+export const metadata = {
+  title: "الملف الشخصي والإعدادات | دليل الصنايعية",
+  description: "إدارة حسابك، المفضلة، التقييمات، وضبط إعدادات الإشعارات والمظهر",
+};
 
 export default async function ProfilePage() {
   const { supabase, user } = await getServerSession();
@@ -52,25 +59,41 @@ export default async function ProfilePage() {
     );
   }
 
-  const { data } = await supabase
-    .from("profiles")
-    .select("role, craftsman_id, display_name, avatar_url")
-    .eq("id", user.id)
-    .maybeSingle();
+  // جلب البروفايل وعدد المفضلة والتقييمات بالتوازي
+  const [profileResult, favoritesResult, reviewsResult] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("role, craftsman_id, display_name, avatar_url")
+      .eq("id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("favorites")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id),
+    supabase
+      .from("reviews")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id),
+  ]);
 
-  const profile: SessionProfile | null = data
+  const profileData = profileResult.data;
+  const favoritesCount = favoritesResult.count ?? 0;
+  const reviewsCount = reviewsResult.count ?? 0;
+
+  const profile: SessionProfile | null = profileData
     ? {
-        role: data.role as SessionProfile["role"],
-        craftsmanId: data.craftsman_id ?? null,
-        displayName: data.display_name ?? null,
-        avatarUrl: data.avatar_url ?? null,
+        role: profileData.role as SessionProfile["role"],
+        craftsmanId: profileData.craftsman_id ?? null,
+        displayName: profileData.display_name ?? null,
+        avatarUrl: profileData.avatar_url ?? null,
       }
     : null;
 
   const isCraftsman = profile?.role === "craftsman";
+  const isAdmin = profile?.role === "admin";
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-8 space-y-6">
+    <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:py-8 space-y-6">
       {/* مسار التنقل */}
       <nav
         aria-label="مسار التنقل"
@@ -83,111 +106,168 @@ export default async function ProfilePage() {
         <span className="font-bold text-foreground">الملف الشخصي والإعدادات</span>
       </nav>
 
-      {/* بطاقة المستخدم الأساسية */}
-      <ProfileCard user={user} profile={profile} />
+      {/* 1. بطاقة المستخدم الأساسية مع عدادات النشاط والأفاتار الذكي */}
+      <ProfileCard
+        user={user}
+        profile={profile}
+        favoritesCount={favoritesCount}
+        reviewsCount={reviewsCount}
+      />
 
-      {/* قائمة الإعدادات والأقسام بنمط كروت مضغوطة واحترافية */}
-      <div className="space-y-3">
-        {/* رابط صفحة نشاطاتي */}
-        <Link
-          href="/activity"
-          className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 transition-all hover:border-accent hover:bg-accent/5 shadow-xs group"
-        >
-          <div className="flex items-center gap-3.5">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-on-accent">
-              <IconActivity className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-base font-bold text-foreground group-hover:text-accent transition-colors">
-                سجل نشاطاتي
-              </p>
-              <p className="text-xs text-muted">
-                عرض وإدارة المراجعات والتقييمات التي كتبتها للصنايعية
-              </p>
-            </div>
-          </div>
-          <IconChevronLeft className="h-5 w-5 text-muted transition-transform group-hover:-translate-x-1 group-hover:text-accent" />
-        </Link>
-
-        {/* رابط المفضلة والمحفوظات */}
-        <Link
-          href="/favorites"
-          className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 transition-all hover:border-accent hover:bg-accent/5 shadow-xs group"
-        >
-          <div className="flex items-center gap-3.5">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 transition-colors group-hover:bg-amber-500 group-hover:text-white">
-              <IconStar className="h-5 w-5 fill-current" />
-            </div>
-            <div>
-              <p className="text-base font-bold text-foreground group-hover:text-accent transition-colors">
-                المفضلة والمحفوظات
-              </p>
-              <p className="text-xs text-muted">
-                قائمة الفنيين المحفوظين لديك للوصول السريع
-              </p>
-            </div>
-          </div>
-          <IconChevronLeft className="h-5 w-5 text-muted transition-transform group-hover:-translate-x-1 group-hover:text-accent" />
-        </Link>
-
-        {/* قسم مظهر التطبيق المدمج والأنيق */}
-        <div className="rounded-2xl border border-border bg-card p-4 shadow-xs">
-          <ThemeSettings />
-        </div>
-
-        {/* جولة تعريفية في دليل الصنايعية */}
-        <TourHelpCard />
-
-        {/* إعدادات إشعارات المتصفح — التفعيل تلقائي عند أول تفاعل؛ الإيقاف من هنا فقط */}
-        <div className="rounded-2xl border border-border bg-card p-4 shadow-xs">
-          <PushSettingsCard />
-        </div>
-
-        {/* خيار خاص بأصحاب المهن */}
-        {!isCraftsman ? (
+      {/* 2. مجموعة النشاط والتفاعل (My Activity Group) */}
+      <div className="space-y-2">
+        <h2 className="px-1 text-xs font-bold uppercase tracking-wider text-muted">
+          نشاطاتي وتفاعلاتي
+        </h2>
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs divide-y divide-border/60">
+          {/* رابط المفضلة والمحفوظات */}
           <Link
-            href="/join"
-            className="flex items-center justify-between rounded-2xl border border-action/30 bg-action/5 p-4 transition-all hover:border-action hover:bg-action/10 shadow-xs group"
+            href="/favorites"
+            className="flex items-center justify-between p-4 transition-colors hover:bg-accent/5 group"
           >
-            <div className="flex items-center gap-3.5">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-action/15 text-action">
-                <IconWrench className="h-5 w-5" />
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 transition-colors group-hover:bg-amber-500 group-hover:text-white">
+                <IconStar className="h-5 w-5 fill-current" />
               </div>
-              <div>
-                <p className="text-base font-bold text-foreground group-hover:text-action transition-colors">
-                  انضم كصنايعي في دليل السويس
+              <div className="min-w-0">
+                <p className="text-base font-bold text-foreground group-hover:text-accent transition-colors">
+                  المفضلة والمحفوظات
                 </p>
-                <p className="text-xs text-muted">
-                  سجل مهنتك واكسب زبائن جدد بدون وسيط أو عمولات
+                <p className="text-xs text-muted truncate">
+                  قائمة الفنيين المحفوظين لديك للوصول السريع
                 </p>
               </div>
             </div>
-            <IconChevronLeft className="h-5 w-5 text-muted transition-transform group-hover:-translate-x-1 group-hover:text-action" />
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-bold text-accent">
+                {toArabicDigits(favoritesCount)} فني
+              </span>
+              <IconChevronLeft className="h-5 w-5 text-muted transition-transform group-hover:-translate-x-1 group-hover:text-accent" />
+            </div>
           </Link>
-        ) : (
+
+          {/* رابط صفحة نشاطاتي */}
           <Link
-            href="/dashboard"
-            className="flex items-center justify-between rounded-2xl border border-action/30 bg-action/5 p-4 transition-all hover:border-action hover:bg-action/10 shadow-xs group"
+            href="/activity"
+            className="flex items-center justify-between p-4 transition-colors hover:bg-accent/5 group"
           >
-            <div className="flex items-center gap-3.5">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-action/15 text-action">
-                <IconWrench className="h-5 w-5" />
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-on-accent">
+                <IconActivity className="h-5 w-5" />
               </div>
-              <div>
-                <p className="text-base font-bold text-foreground group-hover:text-action transition-colors">
-                  لوحة تحكم الفني والإحصائيات
+              <div className="min-w-0">
+                <p className="text-base font-bold text-foreground group-hover:text-accent transition-colors">
+                  سجل نشاطاتي وتقييماتي
                 </p>
-                <p className="text-xs text-muted">
-                  متابعة المشاهدات والمتواصلين وتعديل بيانات ملفك
+                <p className="text-xs text-muted truncate">
+                  عرض وإدارة المراجعات والتقييمات التي كتبتها للصنايعية
                 </p>
               </div>
             </div>
-            <IconChevronLeft className="h-5 w-5 text-muted transition-transform group-hover:-translate-x-1 group-hover:text-action" />
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="rounded-full bg-muted/20 px-2.5 py-0.5 text-xs font-bold text-foreground">
+                {toArabicDigits(reviewsCount)} تقييم
+              </span>
+              <IconChevronLeft className="h-5 w-5 text-muted transition-transform group-hover:-translate-x-1 group-hover:text-accent" />
+            </div>
           </Link>
-        )}
+        </div>
       </div>
 
-      {/* زر تسجيل الخروج الأنيق */}
+      {/* 3. مجموعة التفضيلات والتحكم (Preferences Group) */}
+      <div className="space-y-2">
+        <h2 className="px-1 text-xs font-bold uppercase tracking-wider text-muted">
+          التفضيلات والمظهر
+        </h2>
+        <div className="overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-xs space-y-4 divide-y divide-border/60">
+          <ThemeSettings />
+          <PushSettingsCard />
+        </div>
+      </div>
+
+      {/* 4. مجموعة المساعدة والدليل (Help & Guide Group) */}
+      <div className="space-y-2">
+        <h2 className="px-1 text-xs font-bold uppercase tracking-wider text-muted">
+          المساعدة والإرشاد
+        </h2>
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
+          <TourHelpCard />
+        </div>
+      </div>
+
+      {/* 5. البطاقة المهنية حسب الدور (Role Hub) — بدون أي تكرار */}
+      {isAdmin ? (
+        <Link
+          href="/admin"
+          className="flex items-center justify-between rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 sm:p-5 transition-all hover:border-amber-500 hover:bg-amber-500/10 shadow-xs group"
+        >
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
+              <IconShieldCheck className="h-6 w-6" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-base font-bold text-foreground group-hover:text-amber-600 transition-colors">
+                لوحة تحكم الإدارة الشاملة
+              </p>
+              <p className="text-xs text-muted truncate">
+                متابعة المنصة وإدارة الصنايعية والمراجعات والمستخدمين
+              </p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400">
+            <span className="hidden sm:inline">الانتقال للإدارة</span>
+            <IconChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+          </div>
+        </Link>
+      ) : isCraftsman ? (
+        <Link
+          href="/dashboard"
+          className="flex items-center justify-between rounded-2xl border border-action/30 bg-action/5 p-4 sm:p-5 transition-all hover:border-action hover:bg-action/10 shadow-xs group"
+        >
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-action/15 text-action">
+              <IconWrench className="h-6 w-6" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-base font-bold text-foreground group-hover:text-action transition-colors">
+                لوحة تحكم الفني والإحصائيات
+              </p>
+              <p className="text-xs text-muted truncate">
+                متابعة اتصالات العملاء ونسب المشاهدات وتعديل بيانات ملفك
+              </p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-1 text-xs font-bold text-action">
+            <span className="hidden sm:inline">إدارة حسابك</span>
+            <IconChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+          </div>
+        </Link>
+      ) : (
+        <Link
+          href="/join"
+          className="flex items-center justify-between rounded-2xl border border-action/30 bg-action/5 p-4 sm:p-5 transition-all hover:border-action hover:bg-action/10 shadow-xs group"
+        >
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-action/15 text-action">
+              <IconWrench className="h-6 w-6" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-base font-bold text-foreground group-hover:text-action transition-colors">
+                هل تقدم خدمة أو مهنة في السويس؟
+              </p>
+              <p className="text-xs text-muted truncate">
+                سجّل كصنايعي واكسب زبائن جدد ومكالمات مباشرة بدون عمولات
+              </p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-1 text-xs font-bold text-action">
+            <span className="hidden sm:inline">انضم كصنايعي</span>
+            <IconChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+          </div>
+        </Link>
+      )}
+
+      {/* 6. زر تسجيل الخروج الأنيق */}
       <div className="pt-2">
         <SignOutButton />
       </div>

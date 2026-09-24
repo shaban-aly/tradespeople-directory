@@ -99,8 +99,12 @@ export const viewport: Viewport = {
 
 const themeInitScript = `
 try {
-  if (localStorage.getItem("tradespeople-theme") === "dark") {
+  var stored = localStorage.getItem("tradespeople-theme");
+  var isDark = stored === "dark" || (!stored && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  if (isDark) {
     document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
   }
 } catch (e) {}
 `;
