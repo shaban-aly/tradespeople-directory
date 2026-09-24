@@ -19,37 +19,43 @@ export function CraftsmanMobileCard({
   onLinkAccount,
 }: ActionMenuProps) {
   return (
-    <div className="grid gap-3 rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-card w-full max-w-full overflow-hidden">
-      <div className="flex items-start justify-between gap-2.5">
-        <div className="flex min-w-0 flex-1 items-center gap-2.5">
-          {craftsman.image_url ? (
-            <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-border">
-              <Image
-                src={craftsman.image_url}
-                alt={craftsman.name}
-                fill
-                sizes="44px"
-                className="object-cover"
-              />
-            </div>
-          ) : (
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
-              <IconUsers className="h-5 w-5" />
-            </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <p className="truncate text-sm sm:text-base font-bold text-foreground">
-                {craftsman.name}
-              </p>
-              {craftsman.verified && <VerifiedBadge />}
-            </div>
-            <p className="truncate text-xs text-muted" dir="ltr">
-              {craftsman.slug}
-            </p>
+    <div className="relative grid gap-3 rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-card w-full max-w-full overflow-hidden">
+      {/* قسم الهيدر مع توفير مساحة كافية لأيقونة الإجراءات الثابتة */}
+      <div className="flex items-start gap-2.5 pe-11">
+        {craftsman.image_url ? (
+          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-border">
+            <Image
+              src={craftsman.image_url}
+              alt={craftsman.name}
+              fill
+              sizes="44px"
+              className="object-cover"
+            />
           </div>
+        ) : (
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+            <IconUsers className="h-5 w-5" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <p className="truncate text-sm sm:text-base font-bold text-foreground">
+              {craftsman.name}
+            </p>
+            {craftsman.verified && (
+              <span className="shrink-0">
+                <VerifiedBadge />
+              </span>
+            )}
+          </div>
+          <p className="truncate text-xs text-muted block max-w-full" dir="ltr">
+            {craftsman.slug}
+          </p>
         </div>
+      </div>
 
+      {/* أيقونة الإجراءات مثبتة دائماً في الزاوية العلوية ولن تخرج مهما طال الاسم أو السلاج */}
+      <div className="absolute top-3.5 end-3.5 z-10">
         <ActionMenu
           craftsman={craftsman}
           busyKey={busyKey}

@@ -127,7 +127,7 @@ export function ActionMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => (open ? setOpen(false) : openMenu())}
-        className="rounded-lg border border-border p-2 text-muted transition-colors hover:bg-background hover:text-foreground"
+        className="shrink-0 rounded-lg border border-border bg-card p-2 text-muted transition-colors hover:bg-background hover:text-foreground"
       >
         <IconMoreVertical className="h-5 w-5" />
       </button>

@@ -5,9 +5,10 @@ import type { CraftsmanSelfProfile } from "@/lib/db/craftsman-dashboard";
 
 interface ProfileCompletionCardProps {
   profile: CraftsmanSelfProfile;
+  hideActionLink?: boolean;
 }
 
-export function ProfileCompletionCard({ profile }: ProfileCompletionCardProps) {
+export function ProfileCompletionCard({ profile, hideActionLink = false }: ProfileCompletionCardProps) {
   let score = 0;
   const missingTips: string[] = [];
 
@@ -92,7 +93,7 @@ export function ProfileCompletionCard({ profile }: ProfileCompletionCardProps) {
             />
           </div>
 
-          {!isComplete && (
+          {!isComplete && !hideActionLink && (
             <Link
               href="/dashboard/profile"
               className="text-xs font-bold text-accent hover:underline shrink-0"

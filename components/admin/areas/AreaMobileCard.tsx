@@ -24,11 +24,11 @@ export function AreaMobileCard({
   return (
     <div className="grid gap-3 rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-card w-full max-w-full overflow-hidden">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
             <IconPin className="h-5 w-5" />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1 overflow-hidden">
             <p className="truncate text-base font-bold text-foreground">
               {area.name}
             </p>

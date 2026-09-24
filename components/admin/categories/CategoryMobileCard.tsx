@@ -25,15 +25,15 @@ export function CategoryMobileCard({
   return (
     <div className="grid gap-3 rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-card w-full max-w-full overflow-hidden">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
             <CategoryIcon name={category.icon} className="h-6 w-6" />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1 overflow-hidden">
             <p className="truncate text-base font-bold text-foreground">
               {category.name}
             </p>
-            <p className="truncate text-xs text-muted" dir="ltr">
+            <p className="truncate text-xs text-muted block max-w-full" dir="ltr">
               {category.slug}
             </p>
           </div>

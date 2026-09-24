@@ -7,6 +7,7 @@ import {
 } from "@/lib/db/craftsman-dashboard";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardNav } from "@/components/dashboard/DashboardNav";
+import { ProfileCompletionCard } from "@/components/dashboard/ProfileCompletionCard";
 import { ProfileEditForm } from "@/components/dashboard/ProfileEditForm";
 
 export default async function CraftsmanProfileEditPage() {
@@ -32,6 +33,7 @@ export default async function CraftsmanProfileEditPage() {
     <>
       <DashboardHeader profile={data.profile} />
       <DashboardNav />
+      <ProfileCompletionCard profile={data.profile} hideActionLink={true} />
       <Suspense
         fallback={
           <div className="h-96 w-full animate-pulse rounded-2xl border border-border bg-card" />
