@@ -14,6 +14,7 @@ import { CraftsmanList } from "@/components/category/CraftsmanList";
 import { PushActivationLayer } from "@/components/notifications/PushActivationLayer";
 import { breadcrumbSchema, categoryPageSchema } from "@/lib/seo/schema";
 import { siteUrl } from "@/lib/data/site";
+import { getCategorySeo } from "@/lib/seo/metadata";
 
 // لا تحديث دوري — يُبطَّل الكاش عبر Supabase Webhook → /api/webhooks/supabase
 export const revalidate = false;
@@ -31,15 +32,29 @@ export async function generateMetadata({
   const { slug } = await params;
   const category = await getCategoryBySlug(slug);
   if (!category) return {};
+
+  const seo = getCategorySeo(
+    category.name,
+    category.singular_name,
+    category.plural_name,
+  );
+
   return {
-    title: category.name,
-    description: `أفضل ${category.name} في السويس — اتصل أو راسل واتساب مباشرة.`,
+    title: seo.title,
+    description: seo.description,
+    keywords: seo.keywords,
     alternates: { canonical: `/category/${category.slug}` },
     openGraph: {
-      title: `صنايعية ${category.name} في السويس — دليل الصنايعية`,
-      description: `أفضل ${category.name} في السويس — اتصل أو راسل واتساب مباشرة.`,
+      title: seo.ogTitle,
+      description: seo.description,
       type: "website",
-      images: [{ url: "/og.webp", width: 1200, height: 630 }],
+      images: [{ url: "/og.png", width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: seo.ogTitle,
+      description: seo.description,
+      images: ["/og.png"],
     },
   };
 }

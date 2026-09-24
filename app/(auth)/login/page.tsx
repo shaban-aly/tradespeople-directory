@@ -11,6 +11,7 @@ import { siteUrl } from "@/lib/data/site";
 export const metadata = {
   title: "تسجيل الدخول | دليل الصنايعية",
   description: "سجّل دخولك لإضافة مفضّلة وتقييم الصنايعية",
+  robots: { index: false, follow: false },
 };
 
 interface Props {

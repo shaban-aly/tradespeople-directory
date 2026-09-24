@@ -6,6 +6,7 @@ import { ThemeSettings } from "@/components/profile/ThemeSettings";
 import { PushSettingsCard } from "@/components/notifications/PushSettingsCard";
 import { SignOutButton } from "@/components/profile/SignOutButton";
 import { TourHelpCard } from "@/components/profile/TourHelpCard";
+import { PwaInstallCard } from "@/components/profile/PwaInstallCard";
 import { GoogleSignInButton } from "@/components/shared/GoogleSignInButton";
 import {
   IconActivity,
@@ -21,6 +22,7 @@ import { toArabicDigits } from "@/lib/utils/format";
 export const metadata = {
   title: "الملف الشخصي والإعدادات | دليل الصنايعية",
   description: "إدارة حسابك، المفضلة، التقييمات، وضبط إعدادات الإشعارات والمظهر",
+  robots: { index: false, follow: false },
 };
 
 export default async function ProfilePage() {
@@ -119,58 +121,60 @@ export default async function ProfilePage() {
         <h2 className="px-1 text-xs font-bold uppercase tracking-wider text-muted">
           نشاطاتي وتفاعلاتي
         </h2>
-        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs divide-y divide-border/60">
-          {/* رابط المفضلة والمحفوظات */}
-          <Link
-            href="/favorites"
-            className="flex items-center justify-between p-4 transition-colors hover:bg-accent/5 group"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 transition-colors group-hover:bg-amber-500 group-hover:text-white">
-                <IconStar className="h-5 w-5 fill-current" />
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
+          <div className="divide-y divide-border/60">
+            {/* رابط المفضلة والمحفوظات */}
+            <Link
+              href="/favorites"
+              className="flex items-center justify-between p-4 transition-colors hover:bg-accent/5 group"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 transition-colors group-hover:bg-amber-500 group-hover:text-white">
+                  <IconStar className="h-5 w-5 fill-current" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-base font-bold text-foreground group-hover:text-accent transition-colors">
+                    المفضلة والمحفوظات
+                  </p>
+                  <p className="text-xs text-muted truncate">
+                    قائمة الفنيين المحفوظين لديك للوصول السريع
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-base font-bold text-foreground group-hover:text-accent transition-colors">
-                  المفضلة والمحفوظات
-                </p>
-                <p className="text-xs text-muted truncate">
-                  قائمة الفنيين المحفوظين لديك للوصول السريع
-                </p>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-bold text-accent">
+                  {toArabicDigits(favoritesCount)} فني
+                </span>
+                <IconChevronLeft className="h-5 w-5 text-muted transition-transform group-hover:-translate-x-1 group-hover:text-accent" />
               </div>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-bold text-accent">
-                {toArabicDigits(favoritesCount)} فني
-              </span>
-              <IconChevronLeft className="h-5 w-5 text-muted transition-transform group-hover:-translate-x-1 group-hover:text-accent" />
-            </div>
-          </Link>
+            </Link>
 
-          {/* رابط صفحة نشاطاتي */}
-          <Link
-            href="/activity"
-            className="flex items-center justify-between p-4 transition-colors hover:bg-accent/5 group"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-on-accent">
-                <IconActivity className="h-5 w-5" />
+            {/* رابط صفحة نشاطاتي */}
+            <Link
+              href="/activity"
+              className="flex items-center justify-between p-4 transition-colors hover:bg-accent/5 group"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-on-accent">
+                  <IconActivity className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-base font-bold text-foreground group-hover:text-accent transition-colors">
+                    سجل نشاطاتي وتقييماتي
+                  </p>
+                  <p className="text-xs text-muted truncate">
+                    عرض وإدارة المراجعات والتقييمات التي كتبتها للصنايعية
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-base font-bold text-foreground group-hover:text-accent transition-colors">
-                  سجل نشاطاتي وتقييماتي
-                </p>
-                <p className="text-xs text-muted truncate">
-                  عرض وإدارة المراجعات والتقييمات التي كتبتها للصنايعية
-                </p>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="rounded-full bg-muted/20 px-2.5 py-0.5 text-xs font-bold text-foreground">
+                  {toArabicDigits(reviewsCount)} تقييم
+                </span>
+                <IconChevronLeft className="h-5 w-5 text-muted transition-transform group-hover:-translate-x-1 group-hover:text-accent" />
               </div>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <span className="rounded-full bg-muted/20 px-2.5 py-0.5 text-xs font-bold text-foreground">
-                {toArabicDigits(reviewsCount)} تقييم
-              </span>
-              <IconChevronLeft className="h-5 w-5 text-muted transition-transform group-hover:-translate-x-1 group-hover:text-accent" />
-            </div>
-          </Link>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -179,19 +183,26 @@ export default async function ProfilePage() {
         <h2 className="px-1 text-xs font-bold uppercase tracking-wider text-muted">
           التفضيلات والمظهر
         </h2>
-        <div className="overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-xs space-y-4 divide-y divide-border/60">
-          <ThemeSettings />
-          <PushSettingsCard />
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
+          <div className="p-4 space-y-4">
+            <ThemeSettings />
+            <div className="border-t border-border/60 pt-4">
+              <PushSettingsCard />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* 4. مجموعة المساعدة والدليل (Help & Guide Group) */}
+      {/* 4. مجموعة المساعدة وتثبيت التطبيق (Help & App Installation) */}
       <div className="space-y-2">
         <h2 className="px-1 text-xs font-bold uppercase tracking-wider text-muted">
-          المساعدة والإرشاد
+          المساعدة وتثبيت التطبيق
         </h2>
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
-          <TourHelpCard />
+          <div className="divide-y divide-border/60">
+            <PwaInstallCard />
+            <TourHelpCard />
+          </div>
         </div>
       </div>
 
@@ -202,11 +213,11 @@ export default async function ProfilePage() {
           className="flex items-center justify-between rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 sm:p-5 transition-all hover:border-amber-500 hover:bg-amber-500/10 shadow-xs group"
         >
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-500">
               <IconShieldCheck className="h-6 w-6" />
             </div>
             <div className="min-w-0">
-              <p className="text-base font-bold text-foreground group-hover:text-amber-600 transition-colors">
+              <p className="text-base font-bold text-foreground group-hover:text-amber-500 transition-colors">
                 لوحة تحكم الإدارة الشاملة
               </p>
               <p className="text-xs text-muted truncate">
@@ -214,7 +225,7 @@ export default async function ProfilePage() {
               </p>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400">
+          <div className="flex shrink-0 items-center gap-1 text-xs font-bold text-amber-500">
             <span className="hidden sm:inline">الانتقال للإدارة</span>
             <IconChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
           </div>

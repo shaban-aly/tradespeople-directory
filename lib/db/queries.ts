@@ -12,9 +12,9 @@ import { CACHE_TAGS, DATA_CACHE_KEYS, SEARCH_CACHE_KEYS, SEARCH_CACHE_REVALIDATE
 import { matchScore, matchesQuery, normalizeArabic, type SearchData } from "../search";
 
 const CRAFTSMAN_SELECT =
-  "id, slug, name, image_url, avatar_position, phone, whatsapp, description, verified, added_at, updated_at, social_links, category:categories(slug, name, icon), area:areas(name)";
+  "id, slug, name, image_url, avatar_position, phone, whatsapp, description, verified, added_at, updated_at, social_links, category:categories(slug, name, singular_name, plural_name, icon), area:areas(name)";
 const CRAFTSMAN_BY_CATEGORY_SELECT =
-  "id, slug, name, image_url, avatar_position, phone, whatsapp, description, verified, added_at, updated_at, social_links, category:categories!inner(slug, name, icon), area:areas(name), stats:craftsman_stats(views, calls, whatsapp)";
+  "id, slug, name, image_url, avatar_position, phone, whatsapp, description, verified, added_at, updated_at, social_links, category:categories!inner(slug, name, singular_name, plural_name, icon), area:areas(name), stats:craftsman_stats(views, calls, whatsapp)";
 
 /**
  * غلاف يكش لكل مماثلة (slug...) نسخة كاش منفصلة بمفتاح ووسم خاصين بها
@@ -42,7 +42,7 @@ function keyedCache<TArgs extends unknown[], TResult>(
   };
 }
 
-type CategoryRow = { slug: string; name: string; icon: string };
+type CategoryRow = { slug: string; name: string; singular_name: string; plural_name: string; icon: string };
 type AreaRow = { name: string };
 type RatingSummaryRow = {
   craftsman_id: string;
@@ -146,13 +146,13 @@ async function attachRatings<T extends Craftsman>(craftsmen: T[]): Promise<T[]> 
 }
 
 function mapCategory(row: CategoryRow): Category {
-  return { slug: row.slug, name: row.name, icon: row.icon };
+  return { slug: row.slug, name: row.name, singular_name: row.singular_name, plural_name: row.plural_name, icon: row.icon };
 }
 
 async function getCategoriesImpl(): Promise<Category[]> {
   const { data, error } = await createServerReadClient()
     .from("categories")
-    .select("slug, name, icon")
+    .select("slug, name, singular_name, plural_name, icon")
     .eq("is_active", true)
     .order("sort_order");
   assertSelectOk("التخصصات", error);
@@ -166,7 +166,7 @@ export const getCategories = unstable_cache(getCategoriesImpl, [
 async function getCategoryBySlugImpl(slug: string): Promise<Category | undefined> {
   const { data, error } = await createServerReadClient()
     .from("categories")
-    .select("slug, name, icon")
+    .select("slug, name, singular_name, plural_name, icon")
     .eq("slug", slug)
     .eq("is_active", true)
     .maybeSingle();

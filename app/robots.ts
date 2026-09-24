@@ -20,7 +20,7 @@ const aiAgents = [
 export default function robots(): MetadataRoute.Robots {
   const publicRules = {
     allow: "/",
-    disallow: ["/admin", "/api/"],
+    disallow: ["/api/"],
   };
   return {
     rules: [

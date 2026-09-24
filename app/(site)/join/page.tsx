@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "أضف صنايعي",
   description:
     "سجّل دخولك وأضف صنايعي للدليل — الصنايعي هيترتبط بحسابك لما يوافق عليه المشرف.",
+  robots: { index: false, follow: false },
   alternates: { canonical: "/join" },
   openGraph: {
     title: "أضف صنايعي — دليل الصنايعية في السويس",

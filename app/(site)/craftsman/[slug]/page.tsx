@@ -11,6 +11,7 @@ import { CraftsmanDetail } from "@/components/craftsman/CraftsmanDetail";
 import { RelatedCraftsmen } from "@/components/craftsman/RelatedCraftsmen";
 import { IconTrendingUp } from "@/components/shared/icons";
 import { breadcrumbSchema, craftsmanSchema } from "@/lib/seo/schema";
+import { getCraftsmanSeo } from "@/lib/seo/metadata";
 import { rankRelatedCraftsmen } from "@/lib/recommendations";
 import { getCraftsmanRatingSummary } from "@/lib/db/reviews";
 import { PushActivationLayer } from "@/components/notifications/PushActivationLayer";
@@ -31,23 +32,40 @@ export async function generateMetadata({
   const craftsman = await getCraftsmanBySlug(slug);
   if (!craftsman) return {};
   const category = await getCategoryBySlug(craftsman.category);
-  const title = category
-    ? `${craftsman.name} — ${category.name} في السويس`
-    : craftsman.name;
+  const categoryName = category?.name ?? "صنايعي";
+  const seo = getCraftsmanSeo({
+    name: craftsman.name,
+    categoryName,
+    singularName: category?.singular_name ?? "صنايعي",
+    pluralName: category?.plural_name ?? "صنايعية",
+    area: craftsman.area,
+    customDescription: craftsman.description,
+  });
+  const imageUrl = craftsman.image || "/og.png";
+
   return {
-    title,
-    description: craftsman.description,
+    title: seo.title,
+    description: seo.description,
+    keywords: seo.keywords,
     alternates: { canonical: `/craftsman/${craftsman.slug}` },
     openGraph: {
-      title: `${craftsman.name} — ${category?.name ?? "صنايعي"} في السويس | دليل الصنايعية`,
-      description: craftsman.description,
+      title: seo.ogTitle,
+      description: seo.description,
       type: "profile",
       images: [
         {
-          url: craftsman.image || "/og.webp",
-          ...(craftsman.image ? {} : { width: 1200, height: 630 }),
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: seo.imageAlt,
         },
       ],
+    },
+    twitter: {
+      card: "summary",
+      title: `${craftsman.name} — ${categoryName} في السويس`,
+      description: seo.description,
+      images: [imageUrl],
     },
   };
 }
@@ -94,7 +112,7 @@ export default async function CraftsmanPage({
             },
           ])}
         />
-        <JsonLd data={craftsmanSchema(craftsman, category?.name ?? "صنايعي")} />
+        <JsonLd data={craftsmanSchema(craftsman, category?.name ?? "صنايعي", ratingSummary)} />
         <CraftsmanDetail
           craftsman={craftsman}
           category={category}

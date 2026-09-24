@@ -104,6 +104,8 @@ export type CategoryRow = {
   id: string;
   slug: string;
   name: string;
+  singular_name: string;
+  plural_name: string;
   icon: string;
   sort_order: number;
   is_active: boolean;
@@ -286,7 +288,7 @@ export async function fetchCategories(
 ): Promise<CategoryRow[]> {
   const { data, error } = await client
     .from("categories")
-    .select("id, slug, name, icon, sort_order, is_active")
+    .select("id, slug, name, singular_name, plural_name, icon, sort_order, is_active")
     .order("sort_order");
   if (error) throw new Error("مقدرناش نحمّل بيانات لوحة التحكم");
   return data ?? [];
@@ -510,6 +512,8 @@ export async function createCategory(
   const { error } = await createSupabase().from("categories").insert({
     slug: payload.slug,
     name: payload.name,
+    singular_name: payload.name,
+    plural_name: payload.name,
     icon: payload.icon,
     sort_order: sortOrder,
   });

@@ -2,6 +2,13 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { getServerSession } from "@/lib/db/server";
 import { fetchAdminNavCounts } from "@/lib/db/admin";
 
+export const metadata = {
+  title: "لوحة التحكم الإدارية | دليل الصنايعية",
+  description: "لوحة تحكم المشرف لإدارة دليل الصنايعية في السويس",
+  robots: { index: false, follow: false },
+};
+
+
 export default async function AdminDashboardLayout({
   children,
 }: Readonly<{

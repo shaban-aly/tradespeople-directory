@@ -127,7 +127,12 @@ export function CraftsmanForm({
   }
 
   function handleChange(field: FieldName, value: string) {
-    if (field === "name") setName(value);
+    if (field === "name") {
+      setName(value);
+      if (!isEdit && !touched.slug && categoryId) {
+        setSlug(generateArabicSlug(categoryId, value));
+      }
+    }
     else if (field === "slug") setSlug(value);
     else if (field === "categoryId") setCategoryId(value);
     else if (field === "areaId") setAreaId(value);
@@ -143,15 +148,21 @@ export function CraftsmanForm({
     }
   }
 
+  function generateArabicSlug(catId: string, craftsmanName: string): string {
+    const category = categories.find((item) => item.id === catId);
+    if (!category || !craftsmanName) return "";
+    
+    const cleanName = craftsmanName.replace(/[^a-zA-Z0-9\u0621-\u064A\u0660-\u0669]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").toLowerCase();
+    const cleanCat = (category.singular_name || "صنايعي").replace(/[^a-zA-Z0-9\u0621-\u064A\u0660-\u0669]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").toLowerCase();
+    
+    const hash = Math.random().toString(36).slice(2, 6);
+    return `${cleanCat}-${cleanName}-${hash}`;
+  }
+
   function handleCategoryChange(next: string) {
     handleChange("categoryId", next);
-    if (!isEdit && slug === "") {
-      const category = categories.find((item) => item.id === next);
-      if (category) {
-        setSlug(
-          `${category.slug}-${Math.random().toString(36).slice(2, 8)}`,
-        );
-      }
+    if (!isEdit && !touched.slug && name) {
+      setSlug(generateArabicSlug(next, name));
     }
   }
 
@@ -391,7 +402,7 @@ export function CraftsmanForm({
             <img
               src={shownPreview}
               alt="معاينة صورة الصنايعي"
-              className="aspect-[4/3] w-full object-cover"
+              className="aspect-4/3 w-full object-cover"
             />
             <div className="absolute bottom-3 left-3 flex flex-wrap gap-2">
               <input

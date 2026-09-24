@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { IconDownload, IconX, IconShare, IconPlus } from "@/components/shared/icons";
 import { Button } from "@/components/shared/ui/Button";
-import { useInstallPrompt } from "@/hooks/useInstallPrompt";
+import { useInstallPrompt, PWA_OPEN_INSTALL_EVENT } from "@/hooks/useInstallPrompt";
 
 export function PwaInstallBanner() {
   const {
@@ -17,6 +17,7 @@ export function PwaInstallBanner() {
   } = useInstallPrompt();
 
   const [delayedVisible, setDelayedVisible] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
 
   // تأخير الظهور التلقائي 3.5 ثوانٍ بعد فتح الصفحة لتجنب المباغتة
   useEffect(() => {
@@ -30,7 +31,27 @@ export function PwaInstallBanner() {
     return () => window.clearTimeout(timer);
   }, [available]);
 
-  const isVisible = showIosGuide || (available && delayedVisible);
+  // الاستماع لحدث فتح التثبيت اليدوي من الفوتر أو البروفايل
+  useEffect(() => {
+    const handleManualInstall = () => {
+      setManualOpen(true);
+      if (isIos) {
+        setShowIosGuide(true);
+      } else {
+        void install();
+      }
+    };
+    window.addEventListener(PWA_OPEN_INSTALL_EVENT, handleManualInstall);
+    return () => window.removeEventListener(PWA_OPEN_INSTALL_EVENT, handleManualInstall);
+  }, [isIos, install, setShowIosGuide]);
+
+  const handleDismiss = () => {
+    setManualOpen(false);
+    setShowIosGuide(false);
+    dismiss();
+  };
+
+  const isVisible = manualOpen || showIosGuide || (available && delayedVisible);
 
   if (!isVisible) return null;
 
@@ -53,7 +74,7 @@ export function PwaInstallBanner() {
               </h2>
               <button
                 type="button"
-                onClick={dismiss}
+                onClick={handleDismiss}
                 aria-label="إغلاق التنبيه"
                 className="flex h-9 w-9 -m-1 shrink-0 items-center justify-center rounded-xl text-muted transition-colors hover:bg-muted/10 hover:text-foreground"
               >
@@ -107,7 +128,10 @@ export function PwaInstallBanner() {
             <div className="mt-3 pt-2 border-t border-accent/15 flex justify-end">
               <button
                 type="button"
-                onClick={() => setShowIosGuide(false)}
+                onClick={() => {
+                  setShowIosGuide(false);
+                  setManualOpen(false);
+                }}
                 className="text-xs font-bold text-accent hover:underline"
               >
                 فهمت ذلك، إغلاق الدليل
@@ -131,7 +155,7 @@ export function PwaInstallBanner() {
               <IconDownload className="h-5 w-5" />
               تثبيت التطبيق
             </Button>
-            <Button variant="ghost" size="md" onClick={dismiss}>
+            <Button variant="ghost" size="md" onClick={handleDismiss}>
               لاحقاً
             </Button>
           </div>

@@ -35,6 +35,8 @@ export type Craftsman = {
 export type Category = {
   slug: string;
   name: string; // بالعربي
+  singular_name: string;
+  plural_name: string;
   icon: string; // اسم الأيقونة اللي هنرسمها كـ component
 };
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getServerSession } from "@/lib/db/server";
 import { GoogleSignInButton } from "@/components/shared/GoogleSignInButton";
 import { ActivityList } from "@/components/activity/ActivityList";
@@ -6,6 +7,12 @@ import {
   IconActivity,
   IconArrow,
 } from "@/components/shared/icons";
+
+export const metadata: Metadata = {
+  title: "سجل نشاطاتي | دليل الصنايعية",
+  description: "سجل تفاعلاتك وتقييماتك مع الصنايعية في دليل الصنايعية السويس.",
+  robots: { index: false, follow: false },
+};
 
 export default async function ActivityPage() {
   const { user } = await getServerSession();

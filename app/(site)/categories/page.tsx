@@ -4,19 +4,27 @@ import { toArabicDigits } from "@/lib/utils/format";
 import { CategoryGrid } from "@/components/categories/CategoryGrid";
 import { JsonLd } from "@/components/shared/seo/JsonLd";
 import { allCategoriesSchema } from "@/lib/seo/schema";
+import { categoriesSeo } from "@/lib/seo/metadata";
 
 // لا تحديث دوري — يُبطَّل الكاش عبر Supabase Webhook → /api/webhooks/supabase
 export const revalidate = false;
 
 export const metadata: Metadata = {
-  title: "كل التصنيفات",
-  description: "تصفح كل تخصصات دليل الصنايعية في السويس واختار الأنسب لك.",
+  title: categoriesSeo.title,
+  description: categoriesSeo.description,
+  keywords: categoriesSeo.keywords,
   alternates: { canonical: "/categories" },
   openGraph: {
-    title: "كل التصنيفات — دليل الصنايعية في السويس",
-    description: "تصفح كل تخصصات دليل الصنايعية في السويس واختار الأنسب لك.",
+    title: categoriesSeo.ogTitle,
+    description: categoriesSeo.ogDescription,
     type: "website",
-    images: [{ url: "/og.webp", width: 1200, height: 630 }],
+    images: [{ url: "/og.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: categoriesSeo.ogTitle,
+    description: categoriesSeo.ogDescription,
+    images: ["/og.png"],
   },
 };
 

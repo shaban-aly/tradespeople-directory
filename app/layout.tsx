@@ -14,6 +14,7 @@ import {
   siteUrl,
   siteDescription,
 } from "@/lib/data/site";
+import { siteKeywords } from "@/lib/seo/metadata";
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -35,15 +36,7 @@ export const metadata: Metadata = {
   },
   description: siteDescription,
   applicationName: siteName,
-  keywords: [
-    "دليل الصنايعية",
-    "صنايعية السويس",
-    "سباك في السويس",
-    "كهربائي في السويس",
-    "نجار في السويس",
-    "دليل حرف ومهن السويس",
-    "أصحاب حرف ومهن",
-  ],
+  keywords: siteKeywords,
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
@@ -52,13 +45,30 @@ export const metadata: Metadata = {
     siteName,
     title: siteTagline,
     description: siteDescription,
-    images: [{ url: "/og.webp", width: 1200, height: 630, alt: siteTagline }],
+    images: [
+      {
+        url: "/og.png",
+        secureUrl: `${siteUrl}/og.png`,
+        width: 1200,
+        height: 630,
+        type: "image/png",
+        alt: siteTagline,
+      },
+      {
+        url: "/og.jpg",
+        secureUrl: `${siteUrl}/og.jpg`,
+        width: 1200,
+        height: 630,
+        type: "image/jpeg",
+        alt: siteTagline,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: siteTagline,
     description: siteDescription,
-    images: ["/og.webp"],
+    images: [`${siteUrl}/og.png`],
   },
   robots: {
     index: true,

@@ -117,6 +117,7 @@ const LOCAL_BUSINESS_TYPES: Record<string, string> = {
 export function craftsmanSchema(
   craftsman: Craftsman,
   categoryName: string,
+  ratingSummary?: { average: number; totalReviews: number } | null,
 ): SchemaItem {
   const sameAs = (craftsman.socialLinks ?? [])
     .map((link) => link.url)
@@ -139,7 +140,6 @@ export function craftsmanSchema(
       addressCountry: "EG",
     },
     areaServed: { "@type": "City", name: "السويس" },
-    priceRange: "$$",
     contactPoint: {
       "@type": "ContactPoint",
       telephone: craftsman.phone,
@@ -148,11 +148,29 @@ export function craftsmanSchema(
       availableLanguage: "ar",
     },
     ...(sameAs.length > 0 ? { sameAs } : {}),
-    founder: { "@type": "Person", name: craftsman.name },
-    ...(craftsman.verified ? { award: "موثّق في دليل الصنايعية" } : {}),
+    ...(craftsman.verified
+      ? {
+          hasCredential: {
+            "@type": "EducationalOccupationalCredential",
+            name: "موثّق في دليل الصنايعية",
+            credentialCategory: "verified",
+          },
+        }
+      : {}),
     makesOffer: {
       "@type": "Offer",
       itemOffered: { "@type": "Service", name: categoryName },
     },
+    ...(ratingSummary && ratingSummary.totalReviews > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: ratingSummary.average,
+            reviewCount: ratingSummary.totalReviews,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
   };
 }

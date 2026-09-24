@@ -22,14 +22,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
-      url: `${siteUrl}/join`,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
       url: `${siteUrl}/report`,
       changeFrequency: "monthly",
       priority: 0.4,
+    },
+    {
+      url: `${siteUrl}/privacy`,
+      changeFrequency: "monthly",
+      priority: 0.3,
+    },
+    {
+      url: `${siteUrl}/terms`,
+      changeFrequency: "monthly",
+      priority: 0.3,
     },
   ];
 

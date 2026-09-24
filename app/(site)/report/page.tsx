@@ -14,7 +14,14 @@ export const metadata: Metadata = {
     description:
       "لقيت رقم متغير أو بيانات غلط عن صنايعي في الدليل؟ بلغنا وبنراجع البيانات في نفس اليوم.",
     type: "website",
-    images: [{ url: "/og.webp", width: 1200, height: 630 }],
+    images: [{ url: "/og.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "أبلغ عن بيانات خاطئة — دليل الصنايعية في السويس",
+    description:
+      "لقيت رقم متغير أو بيانات غلط عن صنايعي في الدليل؟ بلغنا وبنراجع البيانات في نفس اليوم.",
+    images: ["/og.png"],
   },
 };
 

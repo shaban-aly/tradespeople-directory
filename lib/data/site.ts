@@ -10,7 +10,7 @@ export const siteUrl = "https://sanay.daleel-al-suez.com";
 export const siteName = "دليل الصنايعية";
 export const siteTagline = "دليل الصنايعية — السويس";
 export const siteDescription =
-  "اعثر على صنايعي محترف في مدينة السويس (سباكة، كهرباء، نجارة...) واتصل به أو راسله واتساب مباشرة في ثوانٍ.";
+  "دليل الحرفيين والصنايعية في محافظة السويس — اعثر على أفضل فني (سباكة، كهرباء، تكييف، نجارة، نقاشة...) واتصل به أو راسله واتساب مباشرة في ثوانٍ.";
 
 export const siteNavLinks = [
   { href: "/", label: "الرئيسية" },

@@ -4,9 +4,9 @@ import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { IconDownload } from "@/components/shared/icons";
 
 export function PwaInstallTrigger() {
-  const { canInstall, openInstallGuide } = useInstallPrompt();
+  const { installed, openInstallGuide } = useInstallPrompt();
 
-  if (!canInstall) return null;
+  if (installed) return null;
 
   return (
     <li>

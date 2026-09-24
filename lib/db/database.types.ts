@@ -125,6 +125,8 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          plural_name: string
+          singular_name: string
           slug: string
           sort_order: number
         }
@@ -134,6 +136,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          plural_name: string
+          singular_name: string
           slug: string
           sort_order?: number
         }
@@ -143,6 +147,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          plural_name?: string
+          singular_name?: string
           slug?: string
           sort_order?: number
         }

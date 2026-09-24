@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getServerSession } from "@/lib/db/server";
 import { getUserAllReviews } from "@/lib/db/reviews";
 import { MyReviewsSection } from "@/components/activity/MyReviewsSection";
@@ -7,6 +8,12 @@ import {
   IconStar,
   IconArrow,
 } from "@/components/shared/icons";
+
+export const metadata: Metadata = {
+  title: "تقييماتي ومراجعاتي | دليل الصنايعية",
+  description: "التقييمات التي كتبتها للصنايعية في دليل الصنايعية السويس.",
+  robots: { index: false, follow: false },
+};
 
 export default async function MyReviewsPage() {
   const { supabase, user } = await getServerSession();
