@@ -53,6 +53,8 @@ function iconForType(type: string) {
       return { Icon: IconMail, tone: "bg-accent/10 text-accent" };
     case "welcome":
       return { Icon: IconSparkles, tone: "bg-accent/10 text-accent" };
+    case "admin_broadcast":
+      return { Icon: IconBell, tone: "bg-blue-500/10 text-blue-500" };
     default:
       return { Icon: IconBell, tone: "bg-accent/10 text-accent" };
   }
@@ -84,7 +86,14 @@ function NotificationRow({
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-start justify-between gap-2">
-          <span className="text-base font-semibold text-foreground">{n.title}</span>
+          <span className="flex items-center gap-2 text-base font-semibold text-foreground">
+            {n.title}
+            {n.type === "admin_broadcast" && (
+              <span className="shrink-0 rounded-full bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-bold text-blue-500">
+                من الإدارة
+              </span>
+            )}
+          </span>
           <span className="shrink-0 text-[11px] text-muted">
             {formatRelativeTime(n.created_at)}
           </span>

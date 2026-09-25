@@ -56,6 +56,13 @@ export const ADMIN_NAV_GROUPS: NavGroup[] = [
       { href: "/admin/areas", label: "المناطق", icon: IconPin },
     ],
   },
+  {
+    id: "tools",
+    label: "أدوات",
+    items: [
+      { href: "/admin/broadcast", label: "إشعار جماعي", icon: IconAlert },
+    ],
+  },
 ];
 
 export const ADMIN_NAV_ITEMS: NavItem[] = ADMIN_NAV_GROUPS.flatMap(

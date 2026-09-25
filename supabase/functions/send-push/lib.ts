@@ -124,7 +124,14 @@ export type LinkResolver = (metadata: Record<string, unknown>) => string | undef
 /** رابط نقرة الإشعار: metadata.slug → صفحة الصنايعي، وإلا صفحة الإشعارات */
 export const defaultLinkResolver: LinkResolver = (metadata) => {
   const base = metadata.siteUrl as string | undefined;
+  const directLink = metadata.link as string | undefined;
   const slug = metadata.slug as string | undefined;
+
+  if (base && directLink) {
+    return directLink.startsWith("http")
+      ? directLink
+      : `${base.replace(/\/$/, "")}${directLink}`;
+  }
   if (base && slug) return `${base.replace(/\/$/, "")}/craftsman/${slug}`;
   if (base) return `${base.replace(/\/$/, "")}/notifications`;
   return undefined;

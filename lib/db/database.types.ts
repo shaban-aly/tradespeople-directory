@@ -670,6 +670,16 @@ export type Database = {
         Args: { p_craftsman_id: string }
         Returns: string
       }
+      broadcast_admin_notification: {
+        Args: {
+          p_title: string
+          p_body: string
+          p_link?: string | null
+          p_audience?: string
+          p_user_id?: string | null
+        }
+        Returns: number
+      }
       create_notification: {
         Args: {
           p_body: string
