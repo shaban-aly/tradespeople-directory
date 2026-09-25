@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/shared/ui/Button";
 import { EmptyState } from "@/components/shared/ui/EmptyState";
@@ -28,7 +28,7 @@ export function CraftsmanReviewsSection({
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
 
-  const { user, isLoggedIn, profile } = useSession();
+  const { user, isLoggedIn, profile, loading: sessionLoading } = useSession();
   const isOwner = Boolean(profile?.craftsmanId && profile.craftsmanId === craftsmanId);
   const { summary, reviews, userReview, loading, reload } = useReviews(craftsmanId);
   const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null);
@@ -56,11 +56,21 @@ export function CraftsmanReviewsSection({
       const search = current.toString();
       const query = search ? `?${search}` : "";
       startTransition(() => {
-        router.push(`${pathname}${query}`, { scroll: false });
+        // replace بدل push عشان إزالة الباراميتر ما تضيفش entry جديد في الـ history
+        // وده بيمنع التعليق عند الإغلاق لما المودال بيتفتح مباشرة من رابط مشارك
+        router.replace(`${pathname}${query}`, { scroll: false });
       });
     },
     [pathname, router, searchParams]
   );
+
+  // لو المستخدم فتح الرابط وفيه ?review=new لكنه مش مسجل دخول بعد تحميل الـ session
+  // نمسح الباراميتر لتفادي إظهار المودال في state غلطة تسبب التعليق
+  useEffect(() => {
+    if (!sessionLoading && isReviewModalOpen && !isLoggedIn) {
+      updateUrlParam("review", null);
+    }
+  }, [sessionLoading, isLoggedIn, isReviewModalOpen, updateUrlParam]);
 
   // الضغط على إضافة تقييم مع حارس تسجيل الدخول
   const handleAddReviewClick = () => {

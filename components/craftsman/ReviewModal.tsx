@@ -61,10 +61,19 @@ export function ReviewModal({
     }
   }
 
+  const MIN_COMMENT_LENGTH = 10;
+  const commentTrimmed = comment.trim();
+  const commentTooShort = commentTrimmed.length > 0 && commentTrimmed.length < MIN_COMMENT_LENGTH;
+  const canSubmit = rating >= 1 && rating <= 5 && commentTrimmed.length >= MIN_COMMENT_LENGTH;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (rating < 1 || rating > 5) {
       setError("يرجى اختيار تقييم من 1 إلى 5 نجوم");
+      return;
+    }
+    if (commentTrimmed.length < MIN_COMMENT_LENGTH) {
+      setError(`يرجى كتابة تعليق لا يقل عن ${MIN_COMMENT_LENGTH} أحرف`);
       return;
     }
 
@@ -75,7 +84,7 @@ export function ReviewModal({
       userId,
       craftsmanId,
       rating,
-      comment,
+      comment: commentTrimmed,
     });
 
     setLoading(false);
@@ -151,10 +160,15 @@ export function ReviewModal({
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label htmlFor="review-comment" className="text-sm font-bold text-foreground">
-                اكتب تفاصيل تجربتك (اختياري)
+                اكتب تفاصيل تجربتك
+                <span className="text-danger ms-1">*</span>
               </label>
-              <span className="text-xs text-muted">
-                {comment.length}/500
+              <span className={`text-xs ${
+                commentTooShort ? "text-danger font-semibold" : "text-muted"
+              }`}>
+                {commentTrimmed.length < 10 && commentTrimmed.length > 0
+                  ? `${10 - commentTrimmed.length} حروف متبقية`
+                  : `${comment.length}/500`}
               </span>
             </div>
             <textarea
@@ -164,8 +178,16 @@ export function ReviewModal({
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="احكي لنا عن التزامه بالمواعيد، جودة الشغل، الأمانة، والأسعار..."
-              className="w-full rounded-2xl border border-border bg-background p-3.5 text-base text-foreground transition-colors focus:outline-none resize-none"
+              className={`w-full rounded-2xl border bg-background p-3.5 text-base text-foreground transition-colors focus:outline-none resize-none ${
+                commentTooShort ? "border-danger/60" : "border-border"
+              }`}
+              required
             />
+            {commentTooShort && (
+              <p className="mt-1.5 text-xs text-danger font-medium">
+                يرجى كتابة 10 أحرف على الأقل لوصف تجربتك
+              </p>
+            )}
           </div>
 
           {/* أزرار الإجراء */}
@@ -197,7 +219,7 @@ export function ReviewModal({
                 type="submit"
                 variant="action"
                 className="min-w-30 px-6"
-                disabled={loading || deleting}
+                disabled={loading || deleting || !canSubmit}
               >
                 {loading
                   ? "جاري الحفظ..."

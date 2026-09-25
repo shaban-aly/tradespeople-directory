@@ -158,11 +158,15 @@ export async function upsertReview(params: {
   }
 
   const cleanedComment = comment ? cleanText(comment) : null;
-  if (cleanedComment && hasDangerousContent(cleanedComment)) {
+  if (!cleanedComment || cleanedComment.trim().length < 10) {
+    return { success: false, error: "يرجى كتابة تعليق لا يقل عن 10 أحرف لوصف تجربتك" };
+  }
+
+  if (hasDangerousContent(cleanedComment)) {
     return { success: false, error: "التعليق يحتوي على محتوى غير مسموح به" };
   }
 
-  if (cleanedComment && cleanedComment.length > 500) {
+  if (cleanedComment.length > 500) {
     return { success: false, error: "التعليق يجب ألا يتجاوز 500 حرف" };
   }
 
