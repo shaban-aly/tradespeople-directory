@@ -6,7 +6,7 @@ export const siteContact = {
 };
 
 // ثوابت السيو
-export const siteUrl = "https://sanay.daleel-al-suez.com";
+export const siteUrl = "https://daleel-al-suez.com";
 export const siteName = "دليل الصنايعية";
 export const siteTagline = "دليل الصنايعية — السويس";
 export const siteDescription =
