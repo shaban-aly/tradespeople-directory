@@ -9,6 +9,22 @@ const nextConfig = {
       { protocol: "https", hostname: "*.supabase.co" },
     ],
   },
+  async redirects() {
+    return [
+      {
+        // نقل SEO من الدومين القديم للدومين الجديد
+        source: "/:path*",
+        has: [
+          {
+            type: "host",
+            value: "sanay.daleel-al-suez.com",
+          },
+        ],
+        destination: "https://daleel-al-suez.com/:path*",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     let supabaseHost = "";
