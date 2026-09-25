@@ -6,6 +6,7 @@ import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { useToast } from "@/hooks/ui/useToast";
 import { IconAlert, IconCheck } from "@/components/shared/icons";
 import { UserSelect } from "./UserSelect";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 
 export function BroadcastForm() {
   const { sendBroadcast, loading, error, successCount } = useAdminBroadcast();
@@ -16,6 +17,7 @@ export function BroadcastForm() {
   const [link, setLink] = useState("");
   const [audience, setAudience] = useState<BroadcastAudience>("all");
   const [targetUserId, setTargetUserId] = useState("");
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,10 +32,11 @@ export function BroadcastForm() {
       return;
     }
 
-    // Modal Confirmation could be implemented here
-    if (!window.confirm("هل أنت متأكد من إرسال هذا الإشعار الجماعي؟ لا يمكن التراجع عن هذه الخطوة.")) {
-      return;
-    }
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirm = async () => {
+    setIsConfirmOpen(false);
 
     const success = await sendBroadcast({
       title: title.trim(),
@@ -155,6 +158,16 @@ export function BroadcastForm() {
           {loading ? "جاري الإرسال..." : "إرسال الإشعار"}
         </AdminButton>
       </div>
+
+      <ConfirmDialog
+        open={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleConfirm}
+        title="تأكيد الإرسال الجماعي"
+        message="هل أنت متأكد من إرسال هذا الإشعار؟ سيتم الإرسال فوراً ولا يمكن التراجع عن هذه الخطوة."
+        confirmLabel="نعم، أرسل الإشعار"
+        danger={false}
+      />
     </form>
   );
 }
