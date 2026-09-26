@@ -1,9 +1,11 @@
 "use client";
 
 import { useId, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { IconX } from "@/components/shared/icons";
 import { useBodyScrollLock } from "@/hooks/ui/useBodyScrollLock";
 import { useFocusTrap } from "@/hooks/ui/useFocusTrap";
+import { useHydratedValue } from "@/hooks/ui/useHydratedValue";
 
 // مودال موحّد: خلفية معتمة + قفل سكرول الجسم + إغلاق بـ Escape
 // أو بالنقر خارجياً + هيدر بعنوان وإغلاق + جسم قابل للتمرير + مصيدة تركيز (Focus Trap).
@@ -30,12 +32,13 @@ export function Modal({
 }: ModalProps) {
   const titleId = useId();
   const cardRef = useRef<HTMLDivElement>(null);
+  const mounted = useHydratedValue(false, () => true);
   useBodyScrollLock(open);
   useFocusTrap(cardRef, open, { onClose });
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -94,6 +97,7 @@ export function Modal({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

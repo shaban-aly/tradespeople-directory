@@ -1,4 +1,3 @@
-import type { CraftsmanSort } from "../data/craftsmen";
 import { categoryHref, craftsmanHref, searchHref } from "../utils/url";
 
 export type SearchResultKind = "craftsman" | "category" | "area";
@@ -11,12 +10,6 @@ export type SearchSuggestion = {
   image?: string;
   icon?: string;
   verified?: boolean;
-};
-
-export type SearchFilters = {
-  category?: string;
-  area?: string;
-  sort?: CraftsmanSort;
 };
 
 export type SearchHighlightPart = {

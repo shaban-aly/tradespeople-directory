@@ -19,12 +19,16 @@ export function PwaInstallBanner() {
   const [delayedVisible, setDelayedVisible] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
 
+  // تصفير التأخير عند توفّر الخيار (تعديل أثناء الريندر — النمط الرسمي).
+  const [lastAvailable, setLastAvailable] = useState(available);
+  if (lastAvailable !== available) {
+    setLastAvailable(available);
+    if (!available) setDelayedVisible(false);
+  }
+
   // تأخير الظهور التلقائي 3.5 ثوانٍ بعد فتح الصفحة لتجنب المباغتة
   useEffect(() => {
-    if (!available) {
-      setDelayedVisible(false);
-      return;
-    }
+    if (!available) return;
     const timer = window.setTimeout(() => {
       setDelayedVisible(true);
     }, 3500);

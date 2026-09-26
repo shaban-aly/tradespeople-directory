@@ -28,7 +28,7 @@ export async function Hero() {
             media="(min-width: 768px)"
             srcSet="/hero-images/pol_desktop.webp"
           />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          { }
           <img
             src="/hero-images/pol_mobile.webp"
             alt="صنايعي سباك أثناء صيانة منزلية بالسويس"

@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { IconX } from "@/components/shared/icons";
 import { useBodyScrollLock } from "@/hooks/ui/useBodyScrollLock";
+import { useHydratedValue } from "@/hooks/ui/useHydratedValue";
 
 export function BottomSheet({
   open,
@@ -18,6 +20,7 @@ export function BottomSheet({
   footer?: React.ReactNode;
 }) {
   const [closing, setClosing] = useState(false);
+  const mounted = useHydratedValue(false, () => true);
   useBodyScrollLock(open);
 
   function handleClose() {
@@ -38,11 +41,11 @@ export function BottomSheet({
     return () => document.removeEventListener("keydown", onKey);
   });
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   const visible = !closing;
 
-  return (
+  return createPortal(
     <div className={`fixed inset-0 z-[90] ${closing ? "pointer-events-none" : ""}`}>
       <button
         type="button"
@@ -78,6 +81,7 @@ export function BottomSheet({
           <div className="shrink-0 border-t border-border p-4">{footer}</div>
         ) : null}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

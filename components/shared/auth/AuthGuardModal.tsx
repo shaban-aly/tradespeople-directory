@@ -1,11 +1,14 @@
 "use client";
 
 import { useRef } from "react";
+import { createPortal } from "react-dom";
 import { IconExternalLink, IconLock, IconX } from "@/components/shared/icons";
 import { GoogleSignInButton } from "@/components/shared/GoogleSignInButton";
 import { ButtonAnchor } from "@/components/shared/ui/Button";
 import { useExternalBrowserPrompt } from "@/hooks/ui/useExternalBrowserPrompt";
+import { useBodyScrollLock } from "@/hooks/ui/useBodyScrollLock";
 import { useFocusTrap } from "@/hooks/ui/useFocusTrap";
+import { useHydratedValue } from "@/hooks/ui/useHydratedValue";
 import {
   detectMobileBrowserKind,
   openInExternalBrowser,
@@ -31,11 +34,13 @@ export function AuthGuardModal({
 }: AuthGuardModalProps) {
   const { ua, shouldPrompt: mobileBrowser } = useExternalBrowserPrompt();
   const cardRef = useRef<HTMLDivElement>(null);
+  const mounted = useHydratedValue(false, () => true);
+  useBodyScrollLock(open);
   useFocusTrap(cardRef, open, { onClose });
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -144,6 +149,7 @@ export function AuthGuardModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

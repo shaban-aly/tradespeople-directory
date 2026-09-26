@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
   // Rate limiting (10 broadcasts per hour)
   const rl = await consumeRateLimit(
-    supabase as any, // as any to bypass type matching on rpc Pick if needed, though usually safe
+    supabase,
     `admin_broadcast:${data.user.id}`,
     { limit: 10, windowMs: 3600 * 1000 }
   );

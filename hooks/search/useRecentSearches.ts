@@ -1,78 +1,77 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useCallback } from "react";
+import { useLocalStorageStore } from "@/hooks/ui/useLocalStorageStore";
 
 const STORAGE_KEY = "suez_recent_searches";
 const MAX_SEARCHES = 8;
+const FALLBACK: string[] = [];
+
+function parseSearches(raw: string): string[] | undefined {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return undefined;
+    return parsed
+      .filter((item): item is string => typeof item === "string")
+      .slice(0, MAX_SEARCHES);
+  } catch {
+    return undefined;
+  }
+}
+
+function serializeSearches(value: string[]): string {
+  return JSON.stringify(value);
+}
 
 export function useRecentSearches() {
-  const [searches, setSearches] = useState<string[]>([]);
-  const [isReady, setIsReady] = useState(false);
-
-  // تحميل السجل عند بدء التشغيل في المتصفح
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          setSearches(parsed.slice(0, MAX_SEARCHES));
-        }
-      }
-    } catch {
-      // تجاهل أخطاء التخزين
-    } finally {
-      setIsReady(true);
-    }
-  }, []);
+  const {
+    value: searches,
+    updateValue,
+    removeValue,
+    hydrated: isReady,
+  } = useLocalStorageStore<string[]>({
+    key: STORAGE_KEY,
+    fallback: FALLBACK,
+    parse: parseSearches,
+    serialize: serializeSearches,
+  });
 
   // إضافة استعلام بحث إلى السجل
-  const addSearch = useCallback((query: string) => {
-    const trimmed = query.trim();
-    if (!trimmed || trimmed.length < 2) return;
+  const addSearch = useCallback(
+    (query: string) => {
+      const trimmed = query.trim();
+      if (!trimmed || trimmed.length < 2) return;
 
-    setSearches((prev) => {
-      // إزالة التكرار إن وجد
-      const filtered = prev.filter(
-        (item) => item.toLowerCase() !== trimmed.toLowerCase(),
+      updateValue((previous) =>
+        [
+          trimmed,
+          // إزالة التكرار إن وجد
+          ...previous.filter(
+            (item) => item.toLowerCase() !== trimmed.toLowerCase(),
+          ),
+          // البحث الجديد في المقدمة بحد أقصى 8
+        ].slice(0, MAX_SEARCHES),
       );
-      // وضع البحث الجديد في المقدمة بحد أقصى 8
-      const next = [trimmed, ...filtered].slice(0, MAX_SEARCHES);
-
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        // تجاهل أخطاء التخزين
-      }
-
-      return next;
-    });
-  }, []);
+    },
+    [updateValue],
+  );
 
   // حذف عملية بحث محددة
-  const removeSearch = useCallback((queryToRemove: string) => {
-    setSearches((prev) => {
-      const next = prev.filter(
-        (item) => item.toLowerCase() !== queryToRemove.toLowerCase(),
+  const removeSearch = useCallback(
+    (queryToRemove: string) => {
+      updateValue((previous) =>
+        previous.filter(
+          (item) => item.toLowerCase() !== queryToRemove.toLowerCase(),
+        ),
       );
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        // تجاهل أخطاء التخزين
-      }
-      return next;
-    });
-  }, []);
+    },
+    [updateValue],
+  );
 
   // مسح السجل بالكامل
   const clearSearches = useCallback(() => {
-    setSearches([]);
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // تجاهل أخطاء التخزين
-    }
-  }, []);
+    removeValue();
+  }, [removeValue]);
 
   return {
     searches,

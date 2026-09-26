@@ -6,8 +6,6 @@ interface OverviewTrafficBannerProps {
   ga4?: {
     sessionsToday: number;
     activeUsersToday: number;
-    pageViewsToday: number;
-    newUsersToday: number;
   } | null;
   ga4Loading?: boolean;
   viewsToday: number;

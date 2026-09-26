@@ -255,30 +255,6 @@ export async function getCraftsmanRecentInteractions(
 }
 
 
-/**
- * تحديث موضع الصورة وبؤرتها للصانع
- */
-export async function updateCraftsmanAvatarPosition(
-  craftsmanId: string,
-  position: AvatarPosition
-): Promise<void> {
-  const supabase = createSupabase();
-  const { error } = await supabase
-    .from("craftsmen")
-    .update({
-      avatar_position: {
-        x: position.x,
-        y: position.y,
-        zoom: position.zoom ?? 1,
-      },
-    })
-    .eq("id", craftsmanId);
-
-  if (error) {
-    throw new Error("حدث خطأ أثناء حفظ موضع الصورة: " + error.message);
-  }
-}
-
 export interface SaveCraftsmanAvatarInput {
   craftsmanId: string;
   imageFile?: File | null;

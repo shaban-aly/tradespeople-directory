@@ -16,6 +16,7 @@ import {
   IconX,
 } from "@/components/shared/icons";
 import { useBodyScrollLock } from "@/hooks/ui/useBodyScrollLock";
+import { useHydratedValue } from "@/hooks/ui/useHydratedValue";
 
 export interface ImageViewerProps {
   src: string | null;
@@ -39,11 +40,7 @@ export function ImageViewer({
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useHydratedValue(false, () => true);
 
   useBodyScrollLock(open);
 
@@ -55,38 +52,27 @@ export function ImageViewer({
   const posRef = useRef({ x: 0, y: 0 });
   const scaleRef = useRef(1);
 
-  // مزامنة المراجع مع الحالة لتجنب الـ closure stale
-  posRef.current = position;
-  scaleRef.current = scale;
-
-  // إعادة ضبط الموضع والتكبير عند فتح العارض أو إغلاقه
+  // مزامنة المراجع مع الحالة لتجنب الـ closure stale.
+  // تتم بعد الـ commit (وليس أثناء الريندر) حتى تقرأها معالجات الأحداث أحدث قيمة.
   useEffect(() => {
+    posRef.current = position;
+    scaleRef.current = scale;
+  }, [position, scale]);
+
+  // إعادة ضبط الموضع والتكبير عند فتح العارض أو تغيّر الصورة.
+  // يتم تعديل الحالة أثناء الريندر (النمط الرسمي المعتمد من React) بدل
+  // useEffect، لتفادي ريندر متتالٍ. `resetKey` يغطي الحالتين: فتح العارض
+  // وانتقال الصورة-src أثناء فتحه — نفس ما كان تفعله الاعتماديات [open, src].
+  const resetKey = `${open ? "1" : "0"}:${src ?? ""}`;
+  const [lastResetKey, setLastResetKey] = useState(resetKey);
+  if (lastResetKey !== resetKey) {
+    setLastResetKey(resetKey);
     if (open) {
       setScale(1);
       setPosition({ x: 0, y: 0 });
       setIsTransitioning(false);
     }
-  }, [open, src]);
-
-  // إغلاق بـ Escape والتحكم عبر الكيبورد
-  useEffect(() => {
-    if (!open) return;
-
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        onClose();
-      } else if (e.key === "+" || e.key === "=") {
-        handleZoomIn();
-      } else if (e.key === "-") {
-        handleZoomOut();
-      } else if (e.key === "0") {
-        handleReset();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose]);
+  }
 
   const handleZoomIn = useCallback(() => {
     setIsTransitioning(true);
@@ -109,6 +95,27 @@ export function ImageViewer({
     setScale(1);
     setPosition({ x: 0, y: 0 });
   }, []);
+
+  // إغلاق بـ Escape والتحكم عبر الكيبورد.
+  // مُعلن بعد الـ callbacks أعلاه لأنها مستدعاة داخله.
+  useEffect(() => {
+    if (!open) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onClose();
+      } else if (e.key === "+" || e.key === "=") {
+        handleZoomIn();
+      } else if (e.key === "-") {
+        handleZoomOut();
+      } else if (e.key === "0") {
+        handleReset();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, onClose, handleZoomIn, handleZoomOut, handleReset]);
 
   // حساب المسافة بين نقطتي لمس للـ Pinch
   const getDistance = (t1: React.Touch, t2: React.Touch) => {

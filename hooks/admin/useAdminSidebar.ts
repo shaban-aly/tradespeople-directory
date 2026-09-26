@@ -1,40 +1,37 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
+import { useLocalStorageStore } from "@/hooks/ui/useLocalStorageStore";
 
 const STORAGE_KEY = "admin_sidebar_collapsed";
 
-export function useAdminSidebar() {
-  const [collapsed, setCollapsed] = useState(false);
-  const [mounted, setMounted] = useState(false);
+function parseCollapsed(raw: string): boolean | undefined {
+  if (raw === "true") return true;
+  if (raw === "false") return false;
+  return undefined;
+}
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved !== null) {
-        setCollapsed(saved === "true");
-      }
-    } catch {
-      // Ignore localStorage errors
-    }
-    setMounted(true);
-  }, []);
+function serializeCollapsed(value: boolean): string {
+  return String(value);
+}
+
+export function useAdminSidebar() {
+  const { value: collapsed, updateValue, hydrated } =
+    useLocalStorageStore<boolean>({
+      key: STORAGE_KEY,
+      fallback: false,
+      parse: parseCollapsed,
+      serialize: serializeCollapsed,
+    });
 
   const toggleCollapsed = useCallback(() => {
-    setCollapsed((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem(STORAGE_KEY, String(next));
-      } catch {
-        // Ignore
-      }
-      return next;
-    });
-  }, []);
+    updateValue((previous) => !previous);
+  }, [updateValue]);
 
   return {
-    collapsed: mounted ? collapsed : false,
+    // قبل الترطيب نعرض الافتراضي حتى لا يختلف HTML عن السيرفر
+    collapsed: hydrated ? collapsed : false,
     toggleCollapsed,
-    isHydrated: mounted,
+    isHydrated: hydrated,
   };
 }

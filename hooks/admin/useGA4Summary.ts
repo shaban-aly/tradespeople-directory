@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { GA4SiteSummary } from "@/lib/analytics/ga4-api";
 
 type UseGA4SummaryResult = {
@@ -30,8 +30,6 @@ export function useGA4Summary(): UseGA4SummaryResult {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError("");
 
     fetch("/api/admin/ga4-summary")
       .then(async (res) => {
@@ -58,10 +56,19 @@ export function useGA4Summary(): UseGA4SummaryResult {
     };
   }, [tick]);
 
+  // حالة "التحميل جارٍ" تُضبط من المُستدعي لا من داخل الـ effect:
+  // setState المتزامن في جسم الـ effect يُطلق ريندر متتالٍ
+  // (قاعدة react-hooks/set-state-in-effect). القيمة الابتدائية true تغطي أول جلب.
+  const refetch = useCallback(() => {
+    setLoading(true);
+    setError("");
+    setTick((t) => t + 1);
+  }, []);
+
   return {
     data,
     loading,
     error,
-    refetch: () => setTick((t) => t + 1),
+    refetch,
   };
 }

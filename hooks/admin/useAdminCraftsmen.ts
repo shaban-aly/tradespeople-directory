@@ -86,17 +86,25 @@ export function useAdminCraftsmen(
     if (error) toast("error", error);
   }, [error, toast]);
 
-  useEffect(() => {
-    if (initialFilter) {
-      setFilter(initialFilter);
-    }
-  }, [initialFilter]);
+  // مزامنة الفلاتر/الصفحة مع قيم السيرفر.
+  // المقارنة بـ signature من الحقول السطرية لا بهوية الكائن، لأن السيرفر
+  // يبني initialFilter كائناً جديداً في كل ريندر — فالمقارنة بالهوية
+  // كانت ستعيد ضبط فلاتر المستخدم مع كل تحديث.
+  const filterSig = initialFilter
+    ? `${initialFilter.search}|${initialFilter.category}|${initialFilter.published}|${initialFilter.verified}`
+    : null;
+  const [lastFilterSig, setLastFilterSig] = useState(filterSig);
+  if (filterSig !== lastFilterSig) {
+    setLastFilterSig(filterSig);
+    if (initialFilter) setFilter(initialFilter);
+  }
 
-  useEffect(() => {
-    if (initialPagination?.page) {
-      setPage(initialPagination.page);
-    }
-  }, [initialPagination?.page]);
+  const initialPage = initialPagination?.page;
+  const [lastInitialPage, setLastInitialPage] = useState(initialPage);
+  if (initialPage !== lastInitialPage) {
+    setLastInitialPage(initialPage);
+    if (initialPage) setPage(initialPage);
+  }
 
   const isServerPaginated = Boolean(initialPagination);
 

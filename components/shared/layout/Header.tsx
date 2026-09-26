@@ -1,6 +1,4 @@
 import Link from "next/link";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { ButtonLink } from "@/components/shared/ui/Button";
 import { SiteNavLinks } from "@/components/shared/layout/SiteNavLinks";
 import { ThemeToggle } from "@/components/shared/ui/ThemeToggle";
 import { UserMenu } from "@/components/shared/layout/UserMenu";

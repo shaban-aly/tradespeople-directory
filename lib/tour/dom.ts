@@ -13,14 +13,6 @@ export interface ElementRect {
   height: number;
 }
 
-/** مقياس الموبايل: نفس كسر Tailwind `sm` (640px). */
-export function isMobileViewport(): boolean {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-    return false;
-  }
-  return window.matchMedia("(max-width: 639px)").matches;
-}
-
 export function prefersReducedMotion(): boolean {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
     return false;
@@ -75,12 +67,6 @@ export function getElementRadius(el: HTMLElement): number {
   const px = parseFloat(value);
   if (!Number.isFinite(px) || px <= 0) return 14;
   return Math.min(px, 24);
-}
-
-/** هل العنصر ما زال متصلاً بالـ DOM (يعالج إعادة البناء بعد Reveal/Suspense/تغيّر auth)؟ */
-export function isElementConnected(el: HTMLElement): boolean {
-  if (typeof el.isConnected === "boolean") return el.isConnected;
-  return typeof document !== "undefined" && document.body.contains(el);
 }
 
 export function isElementInViewport(rect: ElementRect, padding = 8): boolean {

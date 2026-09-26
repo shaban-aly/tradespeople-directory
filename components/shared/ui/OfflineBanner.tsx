@@ -1,28 +1,37 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useOnlineStatus } from "@/hooks/ui/useOnlineStatus";
 import { IconCheck } from "@/components/shared/icons";
 
 export function OfflineBanner() {
   const { isOnline } = useOnlineStatus();
   const [showRestored, setShowRestored] = useState(false);
-  const wasOfflineRef = useRef(false);
+  const [wasOffline, setWasOffline] = useState(false);
 
-  useEffect(() => {
+  // إعادة ضبط حالة "تم استعادة الاتصال" عند تغيّر حالة الشبكة.
+  // تعديل أثناء الريندر (النمط الرسمي من React) بدل useEffect.
+  const [lastIsOnline, setLastIsOnline] = useState(isOnline);
+  if (lastIsOnline !== isOnline) {
+    setLastIsOnline(isOnline);
     if (!isOnline) {
-      wasOfflineRef.current = true;
+      setWasOffline(true);
       setShowRestored(false);
-    } else if (wasOfflineRef.current) {
+    } else if (wasOffline) {
       // عاد الاتصال بعد انقطاعه
       setShowRestored(true);
-      const timer = window.setTimeout(() => {
-        setShowRestored(false);
-        wasOfflineRef.current = false;
-      }, 2500);
-      return () => window.clearTimeout(timer);
+      setWasOffline(false);
     }
-  }, [isOnline]);
+  }
+
+  // إخفاء رسالة الاستعادة بعد 2.5 ثانية (مؤقت فقط — بلا setState متزامن).
+  useEffect(() => {
+    if (!showRestored) return;
+    const timer = window.setTimeout(() => {
+      setShowRestored(false);
+    }, 2500);
+    return () => window.clearTimeout(timer);
+  }, [showRestored]);
 
   if (isOnline && !showRestored) {
     return null;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useHydratedValue } from "@/hooks/ui/useHydratedValue";
 
 export interface InstallPromptEvent extends Event {
   prompt: () => Promise<{ outcome: "accepted" | "dismissed" } | undefined>;
@@ -43,6 +44,7 @@ function checkIsStandalone(): boolean {
 }
 
 function isWithinCooloff(): boolean {
+  if (typeof window === "undefined") return false;
   try {
     const legacy = localStorage.getItem(LEGACY_DISMISSED_KEY);
     const modern = localStorage.getItem(DISMISSED_KEY);
@@ -64,27 +66,31 @@ function isWithinCooloff(): boolean {
 export function useInstallPrompt() {
   const deferredPromptRef = useRef<InstallPromptEvent | null>(globalDeferredPrompt);
   const [hasPrompt, setHasPrompt] = useState(Boolean(globalDeferredPrompt));
-  const [installed, setInstalled] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
-  const [isIos, setIsIos] = useState(false);
+
+  // قراءات المتصفح التي لا تتغيّر تُقرأ عبر useHydratedValue، وهي ترجع
+  // getServerSnapshot()=false في مرحلتي السيرفر والترطيب، ثم القيمة الحقيقية بعد
+  // الترطيب. لذلك لا يجوز تجميدها في useState:
+  //   const [dismissed] = useState(useHydratedValue(false, isWithinCooloff))
+  // يقرأ الـ initializer مرة واحدة أثناء الترطيب (قبل وصول القيمة الحقيقية)
+  // فيبقى false للأبد، وتُهدر مهلة الـ14 يوماً فيعود البانر مع كل تنقّل.
+  //
+  // الحل: الاشتقاق من القيمة المقروءة + بوابة للأحداث الفورية فقط.
+  const standalone = useHydratedValue(false, checkIsStandalone);
+  const cooloffActive = useHydratedValue(false, isWithinCooloff);
+  const isIos = useHydratedValue(false, checkIsIos);
+
+  // أحداث/إجراءات الجلسة الجارية فقط (لا تُحفظ في التخزين)
+  const [installedNow, setInstalledNow] = useState(false);
+  const [dismissedNow, setDismissedNow] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
+
+  const installed = standalone || installedNow;
+  const dismissed = cooloffActive || dismissedNow;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const standalone = checkIsStandalone();
-    const ios = checkIsIos();
-    setIsIos(ios);
-
-    if (standalone) {
-      setInstalled(true);
-      return;
-    }
-
-    if (isWithinCooloff()) {
-      setDismissed(true);
-    }
-
+    // إن التقط نسخة أخرى من هذا الـ hook الحدث قبل أن يركّب هذا الـ effect
     if (globalDeferredPrompt && !deferredPromptRef.current) {
       deferredPromptRef.current = globalDeferredPrompt;
       setHasPrompt(true);
@@ -104,7 +110,7 @@ export function useInstallPrompt() {
       globalDeferredPrompt = null;
       deferredPromptRef.current = null;
       setHasPrompt(false);
-      setInstalled(true);
+      setInstalledNow(true);
       setShowIosGuide(false);
     };
 
@@ -113,7 +119,7 @@ export function useInstallPrompt() {
         globalDeferredPrompt = null;
         deferredPromptRef.current = null;
         setHasPrompt(false);
-        setInstalled(true);
+        setInstalledNow(true);
         setShowIosGuide(false);
       }
     };
@@ -139,7 +145,7 @@ export function useInstallPrompt() {
       deferredPromptRef.current = null;
       setHasPrompt(false);
       if (accepted) {
-        setInstalled(true);
+        setInstalledNow(true);
       }
       return accepted;
     }
@@ -156,7 +162,7 @@ export function useInstallPrompt() {
   const dismiss = useCallback(() => {
     deferredPromptRef.current = null;
     setHasPrompt(false);
-    setDismissed(true);
+    setDismissedNow(true);
     setShowIosGuide(false);
     try {
       localStorage.setItem(DISMISSED_KEY, String(Date.now()));
@@ -185,6 +191,7 @@ export function useInstallPrompt() {
     available: canShowAutoBanner,
     canInstall,
     installed,
+    dismissed,
     isIos,
     showIosGuide,
     setShowIosGuide,

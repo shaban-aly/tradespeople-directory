@@ -5,7 +5,6 @@ import {
   ArrowUp,
   BarChart3,
   Bell,
-  BellOff,
   Bookmark,
   Camera,
   Check,
@@ -41,7 +40,6 @@ import {
   Phone,
   Plus,
   RefreshCw,
-  RotateCcw,
   Save,
   Search,
   Settings,
@@ -59,8 +57,6 @@ import {
   Users,
   Wrench,
   X,
-  ZoomIn,
-  ZoomOut,
   type LucideProps,
 } from "lucide-react";
 
@@ -142,10 +138,6 @@ export function IconSave(props: LucideProps) {
 
 export function IconMessageSquare(props: LucideProps) {
   return <MessageSquare {...props} />;
-}
-
-export function IconUndo(props: LucideProps) {
-  return <RotateCcw {...props} />;
 }
 
 export function IconMenu(props: LucideProps) {
@@ -300,10 +292,6 @@ export function IconBell(props: LucideProps) {
   return <Bell {...props} />;
 }
 
-export function IconBellOff(props: LucideProps) {
-  return <BellOff {...props} />;
-}
-
 export function IconWhatsApp({ className }: IconProps) {
   return (
     <svg
@@ -377,14 +365,6 @@ export function IconTikTok({ className }: IconProps) {
 
 export function IconMinus(props: LucideProps) {
   return <Minus {...props} />;
-}
-
-export function IconZoomIn(props: LucideProps) {
-  return <ZoomIn {...props} />;
-}
-
-export function IconZoomOut(props: LucideProps) {
-  return <ZoomOut {...props} />;
 }
 
 export function IconMaximize(props: LucideProps) {

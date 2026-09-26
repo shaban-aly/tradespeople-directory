@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Cropper, { type Area, type Point } from "react-easy-crop";
 import type { AvatarPosition } from "@/lib/data/craftsmen";
@@ -28,19 +28,19 @@ export function ImagePositionEditor({
   onClose,
 }: ImagePositionEditorProps) {
   const router = useRouter();
-  const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  // توليد رابط محلي فوري للملف الجديد. الاشتقاق بـ useMemo يتفادى setState
+  // in the effect (وريندراً إضافياً)، و effect منفصل للإلغاء فقط.
+  const objectUrl = useMemo(
+    () => (imageFile ? URL.createObjectURL(imageFile) : null),
+    [imageFile],
+  );
 
-  // توليد رابط محلي فوري للملف الجديد وإلغاؤه عند الانتهاء لمنع تسريب الذاكرة
   useEffect(() => {
-    if (imageFile) {
-      const url = URL.createObjectURL(imageFile);
-      setObjectUrl(url);
-      return () => {
-        URL.revokeObjectURL(url);
-      };
-    }
-    setObjectUrl(null);
-  }, [imageFile]);
+    if (!objectUrl) return;
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [objectUrl]);
 
   const activeSrc = objectUrl || imageUrl || "";
 

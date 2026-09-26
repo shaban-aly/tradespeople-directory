@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Modal } from "@/components/shared/ui/Modal";
 import { Button } from "@/components/shared/ui/Button";
 import { IconStar, IconTrash } from "@/components/shared/icons";
@@ -32,16 +32,26 @@ export function ReviewModal({
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (existingReview) {
-      setRating(existingReview.rating);
-      setComment(existingReview.comment || "");
+  // تهيئة الفورم من التقييم الحالي عند فتح المودال.
+  // التعديل يتم أثناء الريندر عبر مقارنة الهوية (النمط الرسمي من React)
+  // بدل useEffect، تفادياً لريندر متتالٍ. القيمة الابتدائية null تجعل
+  // القيمة الابتدائية null تجعل المقارنة تنطلق مرة واحدة عند التركيب (كما كان يفعل الـ effect).
+  const [lastInit, setLastInit] = useState<{
+    review: ReviewItem | null;
+    open: boolean;
+  } | null>(null);
+  const currentReview = existingReview ?? null;
+  if (!lastInit || lastInit.review !== currentReview || lastInit.open !== open) {
+    setLastInit({ review: currentReview, open });
+    if (currentReview) {
+      setRating(currentReview.rating);
+      setComment(currentReview.comment || "");
     } else {
       setRating(5);
       setComment("");
     }
     setError(null);
-  }, [existingReview, open]);
+  }
 
   async function handleDelete() {
     if (!existingReview) return;
