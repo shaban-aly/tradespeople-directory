@@ -5,6 +5,7 @@ import { SearchModal } from "@/components/search/SearchModal";
 import { BackToTop } from "@/components/shared/ui/BackToTop";
 import { NotificationsToast } from "@/components/shared/ui/NotificationsToast";
 import { TourProvider } from "@/components/tour/TourProvider";
+import { PageTransition } from "@/components/shared/PageTransition";
 
 export default function SiteLayout({
   children,
@@ -14,7 +15,9 @@ export default function SiteLayout({
   return (
     <div className="flex min-h-screen flex-col pb-[calc(env(safe-area-inset-bottom)+56px)] sm:pb-0">
       <Header />
-      <main className="flex-1 pb-16 sm:pb-0">{children}</main>
+      <main className="flex-1 pb-16 sm:pb-0">
+        <PageTransition>{children}</PageTransition>
+      </main>
       <Footer />
       {/* فراغ موبايل يسمح بظهور آخر الفوتر فوق الشريط السفلي (بدل حشوة داخل الفوتر) */}
       <div className="h-[calc(env(safe-area-inset-bottom)+88px)] sm:hidden" aria-hidden />

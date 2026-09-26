@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Cairo, Tajawal } from "next/font/google";
 import "./globals.css";
 import { PwaInstallBanner } from "@/components/shared/PwaInstallBanner";
+import { ProgressBarProvider } from "@/components/shared/ProgressBarProvider";
 import { ExternalBrowserBanner } from "@/components/shared/auth/ExternalBrowserBanner";
 import { PwaRegister } from "@/components/shared/layout/PwaRegister";
 import { OfflineBanner } from "@/components/shared/ui/OfflineBanner";
@@ -174,7 +175,7 @@ export default function RootLayout({
           <OfflineBanner />
           <PwaInstallBanner />
           <ExternalBrowserBanner delayMs={10_000} />
-          {children}
+          <ProgressBarProvider>{children}</ProgressBarProvider>
         </SessionProvider>
       </body>
     </html>
