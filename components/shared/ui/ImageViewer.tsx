@@ -8,6 +8,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type TouchEvent as ReactTouchEvent,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   IconMinus,
   IconPlus,
@@ -38,6 +39,11 @@ export function ImageViewer({
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useBodyScrollLock(open);
 
@@ -140,12 +146,17 @@ export function ImageViewer({
       }
       lastTapRef.current = now;
 
-      // بدء السحب (إذا كانت الصورة مكبرة)
+      // بدء السحب أو الاستعداد لـ Swipe-to-dismiss
       if (scaleRef.current > 1) {
         setIsTransitioning(false);
         dragStartRef.current = {
           x: touch.clientX - posRef.current.x,
           y: touch.clientY - posRef.current.y,
+        };
+      } else {
+        dragStartRef.current = {
+          x: touch.clientX,
+          y: touch.clientY,
         };
       }
     }
@@ -165,18 +176,36 @@ export function ImageViewer({
       if (newScale <= 1.05) {
         setPosition({ x: 0, y: 0 });
       }
-    } else if (e.touches.length === 1 && dragStartRef.current && scaleRef.current > 1) {
+    } else if (e.touches.length === 1 && dragStartRef.current) {
       const touch = e.touches[0];
-      const maxOffset = (scaleRef.current - 1) * 200;
-      const nextX = Math.min(
-        Math.max(touch.clientX - dragStartRef.current.x, -maxOffset),
-        maxOffset
-      );
-      const nextY = Math.min(
-        Math.max(touch.clientY - dragStartRef.current.y, -maxOffset),
-        maxOffset
-      );
-      setPosition({ x: nextX, y: nextY });
+      
+      if (scaleRef.current > 1) {
+        // سحب الصورة المكبرة
+        const maxOffsetX = (window.innerWidth * (scaleRef.current - 1)) / 2;
+        const maxOffsetY = (window.innerHeight * (scaleRef.current - 1)) / 2;
+        
+        const nextX = Math.min(
+          Math.max(touch.clientX - dragStartRef.current.x, -maxOffsetX),
+          maxOffsetX
+        );
+        const nextY = Math.min(
+          Math.max(touch.clientY - dragStartRef.current.y, -maxOffsetY),
+          maxOffsetY
+        );
+        setPosition({ x: nextX, y: nextY });
+      } else {
+        // Swipe to dismiss للصورة العادية
+        const deltaY = touch.clientY - dragStartRef.current.y;
+        
+        if (Math.abs(deltaY) > 10) {
+          setPosition({ x: 0, y: deltaY * 0.5 }); // تأثير سحب مع مقاومة
+        }
+        
+        if (Math.abs(deltaY) > 120) {
+          onClose();
+          dragStartRef.current = null;
+        }
+      }
     }
   };
 
@@ -187,6 +216,10 @@ export function ImageViewer({
     if (scaleRef.current < 1) {
       setIsTransitioning(true);
       setScale(1);
+      setPosition({ x: 0, y: 0 });
+    } else if (scaleRef.current === 1) {
+      // إرجاع الصورة لمكانها إذا لم تكتمل حركة الـ Swipe-to-dismiss
+      setIsTransitioning(true);
       setPosition({ x: 0, y: 0 });
     }
   };
@@ -218,14 +251,16 @@ export function ImageViewer({
 
   const handleMouseMove = (e: ReactMouseEvent) => {
     if (dragStartRef.current && scale > 1) {
-      const maxOffset = (scale - 1) * 300;
+      const maxOffsetX = (window.innerWidth * (scale - 1)) / 2;
+      const maxOffsetY = (window.innerHeight * (scale - 1)) / 2;
+      
       const nextX = Math.min(
-        Math.max(e.clientX - dragStartRef.current.x, -maxOffset),
-        maxOffset
+        Math.max(e.clientX - dragStartRef.current.x, -maxOffsetX),
+        maxOffsetX
       );
       const nextY = Math.min(
-        Math.max(e.clientY - dragStartRef.current.y, -maxOffset),
-        maxOffset
+        Math.max(e.clientY - dragStartRef.current.y, -maxOffsetY),
+        maxOffsetY
       );
       setPosition({ x: nextX, y: nextY });
     }
@@ -235,14 +270,14 @@ export function ImageViewer({
     dragStartRef.current = null;
   };
 
-  if (!open || !src) return null;
+  if (!open || !src || !mounted) return null;
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-label={title || alt || "معاينة الصورة"}
-      className="fixed inset-0 z-90 flex flex-col bg-black/95 select-none touch-none animate-in fade-in duration-200"
+      className="fixed inset-0 z-[100] flex flex-col bg-black/95 select-none touch-none animate-in fade-in duration-200"
     >
       {/* شريط الأدوات العلوي */}
       <header className="relative z-20 flex items-center justify-between border-b border-white/10 bg-black/40 px-4 py-3 backdrop-blur-md">
@@ -320,6 +355,7 @@ export function ImageViewer({
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
         onClick={(e) => {
           // إغلاق عند النقر على الخلفية فقط إذا لم تكن الصورة مكبرة
           if (e.target === e.currentTarget && scale === 1) {
@@ -350,6 +386,7 @@ export function ImageViewer({
       <footer className="border-t border-white/10 bg-black/40 px-4 py-2.5 text-center text-xs text-white/70 backdrop-blur-md">
         <span>اضغط مرتين للتكبير السريع أو قرّب بإصبعين (Pinch to zoom)</span>
       </footer>
-    </div>
+    </div>,
+    document.body
   );
 }
