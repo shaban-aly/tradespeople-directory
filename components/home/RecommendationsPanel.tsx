@@ -1,9 +1,8 @@
 "use client";
 
-import { useRef } from "react";
 import type { Category } from "@/lib/data/craftsmen";
 import type { RecommendableCraftsman } from "@/lib/recommendations";
-import { useRecommendations } from "@/hooks/useRecommendations";
+import { useRecommendationsPanel } from "@/hooks/useRecommendationsPanel";
 import { CraftsmanCard } from "@/components/shared/ui/CraftsmanCard";
 import { CarouselIndicators } from "@/components/shared/ui/CarouselIndicators";
 import { SectionHeader } from "@/components/shared/ui/SectionHeader";
@@ -16,14 +15,11 @@ export function RecommendationsPanel({
   pool: RecommendableCraftsman[];
   categories: Category[];
 }) {
-  const { ranked, isPersonalized } = useRecommendations(pool, 8);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const { ranked, isPersonalized, scrollRef, categoryBySlug } =
+    useRecommendationsPanel(pool, categories);
 
   if (ranked.length === 0) return null;
 
-  const categoryBySlug = new Map(
-    categories.map((category) => [category.slug, category]),
-  );
 
   return (
     <div>

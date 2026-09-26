@@ -5,16 +5,7 @@ import { HeroSearchButton } from "@/components/home/HeroSearchButton";
 import { HeroSearchTags } from "@/components/home/HeroSearchTags";
 import { HeroAudienceCarousel } from "@/components/home/HeroAudienceCarousel";
 import { IconGrid, IconMapPin, IconUsers } from "@/components/shared/icons";
-
-// التخصصات الافتراضية الاحتياطية لضمان عمل الصفحة حتى لو تعذر جلب البيانات
-const FALLBACK_CATEGORIES = [
-  { slug: "plumbing", name: "سباكة", icon: "plumbing", count: 0 },
-  { slug: "electrical", name: "كهرباء", icon: "electrical", count: 0 },
-  { slug: "hvac", name: "تكييف", icon: "hvac", count: 0 },
-  { slug: "carpentry", name: "نجارة", icon: "carpentry", count: 0 },
-  { slug: "painting", name: "نقاشة", icon: "painting", count: 0 },
-  { slug: "aluminum", name: "ألوميتال", icon: "aluminum", count: 0 },
-];
+import { getHeroSearchTags } from "@/lib/utils/hero";
 
 export async function Hero() {
   const [stats, allCategories] = await Promise.all([
@@ -22,15 +13,7 @@ export async function Hero() {
     getCategoriesWithCounts(),
   ]);
 
-  // نختار التخصصات الأكثر نشاطاً كتاجات بحث سريعة
-  const activeCategories = allCategories.filter((c) => c.count > 0);
-  const searchTags = (
-    activeCategories.length >= 4
-      ? activeCategories
-      : allCategories.length > 0
-      ? allCategories
-      : FALLBACK_CATEGORIES
-  ).slice(0, 6);
+  const searchTags = getHeroSearchTags(allCategories);
 
   return (
     <section className="relative overflow-hidden pt-4 pb-8 sm:pt-14 sm:pb-12">

@@ -66,15 +66,22 @@ export function SearchModal() {
 
   return (
     <div
-      ref={containerRef}
-      role="dialog"
-      aria-modal="true"
-      aria-label="نافذة البحث السريع"
-      tabIndex={-1}
-      className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-md focus:outline-none"
+      role="presentation"
+      className="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm md:flex md:items-start md:justify-center md:pt-20"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) closeSearch();
+      }}
     >
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="نافذة البحث السريع"
+        tabIndex={-1}
+        className="flex h-full w-full flex-col bg-background/98 focus:outline-none md:h-auto md:max-h-[80vh] md:w-full md:max-w-3xl md:rounded-2xl md:border md:border-border md:shadow-2xl"
+      >
       {/* رأس النافذة مع حقل البحث */}
-      <div className="flex items-center gap-2 border-b border-border bg-card/80 px-4 py-3">
+      <div className="flex items-center gap-2 border-b border-border bg-card/80 px-4 py-3 md:rounded-t-2xl">
         <button
           type="button"
           onClick={closeSearch}
@@ -306,6 +313,7 @@ export function SearchModal() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

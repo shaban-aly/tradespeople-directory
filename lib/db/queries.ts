@@ -412,6 +412,44 @@ export const getFeaturedCraftsmen = unstable_cache(getFeaturedCraftsmenImpl, [
   "featured-craftsmen",
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.stats, SEARCH_TAG] });
 
+async function getVerifiedCraftsmenImpl(
+  count: number = 10,
+  seed?: number,
+): Promise<Craftsman[]> {
+  const { data, error } = await createServerReadClient()
+    .from("craftsmen")
+    .select(`${CRAFTSMAN_SELECT}, stats:craftsman_stats(views, calls, whatsapp)`)
+    .eq("is_published", true)
+    .eq("verified", true)
+    .order("added_at", { ascending: false })
+    .limit(80);
+
+  assertSelectOk("الصنايعية الموثقين", error);
+  const rows = data ?? [];
+  const craftsmen = await attachRatings(rows.map(mapCraftsman));
+  const ranked: RankedCraftsman[] = craftsmen.map((craftsman, index) => ({
+    id: craftsman.id,
+    craftsman,
+    stats: rows[index]?.stats ?? { views: 0, calls: 0, whatsapp: 0 },
+  }));
+
+  const hasEngagement = ranked.some((item) => engagement(item) > 0);
+
+  // بلا تفاعل بعد: نرجع للسلوك السابق (عشوائي مع تنوع تخصصات)
+  if (!hasEngagement) {
+    const shuffled = shuffle(ranked, seed);
+    return pickDiverse(shuffled, count).map((item) => item.craftsman);
+  }
+
+  // الأكثر اتصالاً أولاً، ثم تنوع تخصصات مع ميل للتفاعل الأعلى
+  ranked.sort(compareEngagement);
+  return pickDiverse(ranked, count).map((item) => item.craftsman);
+}
+
+export const getVerifiedCraftsmen = unstable_cache(getVerifiedCraftsmenImpl, [
+  "verified-craftsmen",
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.stats, SEARCH_TAG] });
+
 /** صنايعي مع إحصائياته الحقيقية — مجموعة اقتراحات «مقترحات لك». */
 export type CraftsmanWithStats = Craftsman & {
   stats: { views: number; calls: number; whatsapp: number };

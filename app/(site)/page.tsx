@@ -2,11 +2,12 @@ import { JsonLd } from "@/components/shared/seo/JsonLd";
 import { Hero } from "@/components/home/Hero";
 import { CategoriesSection } from "@/components/home/CategoriesSection";
 import { CraftsmenSections } from "@/components/home/CraftsmenSections";
+import { HowItWorksSection } from "@/components/home/HowItWorksSection";
+import { JoinSection } from "@/components/home/JoinSection";
 import { ContactSection } from "@/components/home/ContactSection";
 import { FaqSection } from "@/components/home/FaqSection";
 import { faqSchema, homeSchema } from "@/lib/seo/schema";
 import { GoogleOneTap } from "@/components/shared/auth/GoogleOneTap";
-
 
 export default function Home() {
   return (
@@ -17,6 +18,8 @@ export default function Home() {
       <Hero />
       <CategoriesSection />
       <CraftsmenSections />
+      <HowItWorksSection />
+      <JoinSection />
       <ContactSection />
       <FaqSection />
     </>

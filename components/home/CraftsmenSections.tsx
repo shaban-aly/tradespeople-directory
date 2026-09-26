@@ -1,26 +1,26 @@
-import { getCategories, getFeaturedCraftsmen, getRecommendationPool } from "@/lib/db/queries";
+import { getCategories, getVerifiedCraftsmen, getRecommendationPool } from "@/lib/db/queries";
 import { RecommendationsSection } from "@/components/home/RecommendationsSection";
-import { FeaturedCraftsmen } from "@/components/home/FeaturedCraftsmen";
+import { VerifiedCraftsmen } from "@/components/home/VerifiedCraftsmen";
 
-const FEATURED_COUNT = 8;
+const VERIFIED_COUNT = 10;
 
 export async function CraftsmenSections() {
-  const [featured, pool, categories] = await Promise.all([
-    getFeaturedCraftsmen(FEATURED_COUNT, 7),
+  const [verified, pool, categories] = await Promise.all([
+    getVerifiedCraftsmen(VERIFIED_COUNT, 7),
     getRecommendationPool(40),
     getCategories(),
   ]);
 
-  // استبعاد المميزين من مجموعة الاقتراحات — القسمان لا يعرضان نفس الصنايعي أبداً
-  const featuredSlugs = new Set(featured.map((craftsman) => craftsman.slug));
+  // استبعاد الموثقين من مجموعة الاقتراحات — القسمان لا يعرضان نفس الصنايعي أبداً
+  const verifiedSlugs = new Set(verified.map((craftsman) => craftsman.slug));
   const suggestionsPool = pool.filter(
-    (craftsman) => !featuredSlugs.has(craftsman.slug),
+    (craftsman) => !verifiedSlugs.has(craftsman.slug),
   );
 
   return (
     <>
+      <VerifiedCraftsmen items={verified} categories={categories} />
       <RecommendationsSection pool={suggestionsPool} categories={categories} />
-      <FeaturedCraftsmen items={featured} categories={categories} />
     </>
   );
 }
