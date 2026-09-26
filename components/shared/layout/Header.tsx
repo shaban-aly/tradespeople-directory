@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { ButtonLink } from "@/components/shared/ui/Button";
 import { SiteNavLinks } from "@/components/shared/layout/SiteNavLinks";
@@ -13,12 +12,14 @@ export function Header() {
       <div className="relative">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3">
           <Link href="/" className="flex shrink-0 items-center gap-2">
-            <Image
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src="/favicon-96x96.png"
               alt="دليل الصنايعية"
               width={96}
               height={96}
-              sizes="40px"
+              loading="lazy"
+              decoding="async"
               className="h-9 w-9 shrink-0 object-contain sm:h-10 sm:w-10"
             />
             <span className="font-heading text-xl font-extrabold text-foreground sm:text-2xl">

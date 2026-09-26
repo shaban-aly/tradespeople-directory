@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { siteName, siteTagline } from "@/lib/data/site";
 
 export function SiteLoading() {
@@ -13,13 +12,12 @@ export function SiteLoading() {
           aria-hidden
           className="absolute inset-0 animate-spin rounded-full border-4 border-accent/20 border-t-accent motion-reduce:hidden"
         />
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src="/favicon-96x96.png"
           alt={siteName}
           width={96}
           height={96}
-          sizes="64px"
-          priority
           className="h-16 w-16 object-contain"
         />
       </div>

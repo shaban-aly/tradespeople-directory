@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { siteContact, siteNavLinks } from "@/lib/data/site";
 import { toArabicDigits } from "@/lib/utils/format";
 import { mailtoHref, telHref, whatsappHref } from "@/lib/utils/url";
@@ -19,12 +18,14 @@ export async function Footer() {
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <Link href="/" className="flex w-fit items-center gap-2">
-              <Image
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src="/favicon-96x96.png"
                 alt="دليل الصنايعية"
                 width={96}
                 height={96}
-                sizes="40px"
+                loading="lazy"
+                decoding="async"
                 className="h-10 w-10 shrink-0 object-contain"
               />
               <span className="font-heading text-xl font-extrabold text-foreground">
