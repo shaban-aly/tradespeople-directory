@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     description:
       "سجّل اسمك وتخصصك ومنطقتك لينضم دليلك إلى دليل الصنايعية في السويس.",
     type: "website",
-    images: [{ url: "/og.webp", width: 1200, height: 630 }],
+    images: [{ url: "/og.jpg", width: 1200, height: 630 }],
   },
 };
 

@@ -2,9 +2,9 @@
 const nextConfig = {
   allowedDevOrigins: ["192.168.1.6"],
   images: {
+    deviceSizes: [640, 750, 828, 1080, 1200],
+    imageSizes: [32, 48, 64, 96, 128, 256, 384, 480, 512],
     remotePatterns: [
-      { protocol: "https", hostname: "images.unsplash.com" },
-      { protocol: "https", hostname: "plus.unsplash.com" },
       { protocol: "https", hostname: "*.googleusercontent.com" },
       { protocol: "https", hostname: "*.supabase.co" },
     ],
@@ -67,7 +67,7 @@ const nextConfig = {
       `script-src-elem 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://accounts.google.com/gsi/client https://www.gstatic.com${gaHost ? ` ${gaHost}` : ""} ${adsenseScriptHosts}`,
       "style-src 'self' 'unsafe-inline'",
       "font-src 'self' data:",
-      `img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com https://*.googleusercontent.com${supabaseHost ? ` https://${supabaseHost}` : ""}${gaHost ? ` ${gaHost}` : ""} ${adsenseHosts}`,
+      `img-src 'self' data: blob: https://*.googleusercontent.com${supabaseHost ? ` https://${supabaseHost}` : ""}${gaHost ? ` ${gaHost}` : ""} ${adsenseHosts}`,
       "media-src 'self' blob:",
       // connect-src: تشمل GA POST requests وكل دومينات Ads و Google Auth
       // + wss:// لنفس host الـ Supabase — إلزامي لاتصال Realtime WebSocket

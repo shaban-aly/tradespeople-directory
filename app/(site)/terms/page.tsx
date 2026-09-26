@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     description:
       "اتفاقية استخدام دليل الصنايعية — دورك وحقوقك ومسؤولياتك كزائر أو صنايعي.",
     type: "website",
-    images: [{ url: "/og.png", width: 1200, height: 630 }],
+    images: [{ url: "/og.jpg", width: 1200, height: 630 }],
   },
 };
 

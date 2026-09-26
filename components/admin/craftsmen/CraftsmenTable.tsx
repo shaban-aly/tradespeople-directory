@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { ToggleSwitch } from "@/components/admin/ToggleSwitch";
 import {
   DataTable,
@@ -64,11 +65,15 @@ export function CraftsmenTable({
                 <DataTableCell edge="start">
                   <div className="flex items-center gap-3">
                     {craftsman.image_url ? (
-                      <img
-                        src={craftsman.image_url}
-                        alt={craftsman.name}
-                        className="h-10 w-10 shrink-0 rounded-xl border border-border object-cover"
-                      />
+                      <div className="relative h-10 w-10 shrink-0">
+                        <Image
+                          src={craftsman.image_url}
+                          alt={craftsman.name}
+                          fill
+                          sizes="40px"
+                          className="rounded-xl border border-border object-cover"
+                        />
+                      </div>
                     ) : (
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
                         <IconUsers className="h-5 w-5" />

@@ -20,10 +20,11 @@ export async function Footer() {
           <div>
             <Link href="/" className="flex w-fit items-center gap-2">
               <Image
-                src="/favicon.svg"
+                src="/favicon-96x96.png"
                 alt="دليل الصنايعية"
-                width={192}
-                height={192}
+                width={96}
+                height={96}
+                sizes="40px"
                 className="h-10 w-10 shrink-0 object-contain"
               />
               <span className="font-heading text-xl font-extrabold text-foreground">

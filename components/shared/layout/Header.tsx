@@ -14,10 +14,11 @@ export function Header() {
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3">
           <Link href="/" className="flex shrink-0 items-center gap-2">
             <Image
-              src="/favicon.svg"
+              src="/favicon-96x96.png"
               alt="دليل الصنايعية"
-              width={192}
-              height={192}
+              width={96}
+              height={96}
+              sizes="40px"
               className="h-9 w-9 shrink-0 object-contain sm:h-10 sm:w-10"
             />
             <span className="font-heading text-xl font-extrabold text-foreground sm:text-2xl">

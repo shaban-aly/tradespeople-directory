@@ -52,7 +52,7 @@ export function VerifiedCraftsmen({
                   craftsman={craftsman}
                   category={categoryBySlug.get(craftsman.category)}
                   recent={craftsman.id === mostRecentId}
-                  priority={index < 4}
+                  priority={index === 0}
                 />
               </div>
             ))}

@@ -35,7 +35,7 @@ messaging.onBackgroundMessage((payload) => {
   const notificationId = data.notification_id;
   self.registration.showNotification(title, {
     body,
-    icon: "/favicon.svg",
+    icon: "/web-app-manifest-192x192.png",
     data: { link },
     // tag يمنع تراكم إشعارات متطابقة في مركز الإشعارات (آلية ثانوية فقط)
     tag: notificationId || undefined,

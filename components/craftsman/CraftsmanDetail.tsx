@@ -69,7 +69,7 @@ export function CraftsmanDetail({
                     src={craftsman.image}
                     alt=""
                     fill
-                    sizes="100vw"
+                    sizes="96px"
                     className="scale-125 object-cover opacity-40 blur-2xl filter"
                   />
                   <div className="absolute inset-0 bg-black/25 backdrop-blur-xs" />
@@ -80,7 +80,7 @@ export function CraftsmanDetail({
                     alt={craftsman.name}
                     fill
                     priority
-                    sizes="(min-width: 640px) 480px, 100vw"
+                    sizes="(min-width: 640px) 428px, 342px"
                     className="object-cover"
                     style={{
                       objectPosition: `${craftsman.avatarPosition?.x ?? 50}% ${craftsman.avatarPosition?.y ?? 50}%`,

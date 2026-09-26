@@ -29,7 +29,7 @@ export function CraftsmanGrid({
             craftsman={craftsman}
             category={categoryBySlug.get(craftsman.category)}
             recent={craftsman.id === recentId}
-            priority={index < 4}
+            priority={index === 0}
           />
         ))}
       </div>

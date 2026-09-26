@@ -41,7 +41,7 @@ export async function generateMetadata({
     area: craftsman.area,
     customDescription: craftsman.description,
   });
-  const imageUrl = craftsman.image || "/og.png";
+  const imageUrl = craftsman.image || "/og.jpg";
 
   return {
     title: seo.title,

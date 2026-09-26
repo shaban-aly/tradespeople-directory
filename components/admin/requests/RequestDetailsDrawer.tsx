@@ -60,7 +60,7 @@ export function RequestDetailsDrawer({
                 src={request.image_url}
                 alt={request.name ?? "صورة الطلب"}
                 fill
-                sizes="(max-width: 640px) 100vw, 640px"
+                sizes="(min-width: 640px) 640px, 342px"
                 className="object-cover"
               />
             </div>

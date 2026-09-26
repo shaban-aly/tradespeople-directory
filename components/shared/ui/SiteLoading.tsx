@@ -14,10 +14,11 @@ export function SiteLoading() {
           className="absolute inset-0 animate-spin rounded-full border-4 border-accent/20 border-t-accent motion-reduce:hidden"
         />
         <Image
-          src="/favicon.svg"
+          src="/favicon-96x96.png"
           alt={siteName}
-          width={192}
-          height={192}
+          width={96}
+          height={96}
+          sizes="64px"
           priority
           className="h-16 w-16 object-contain"
         />

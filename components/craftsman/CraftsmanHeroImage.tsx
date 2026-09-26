@@ -76,7 +76,7 @@ export function CraftsmanHeroImage({ image, name, avatarPosition }: CraftsmanHer
             src={image}
             alt=""
             fill
-            sizes="100vw"
+            sizes="96px"
             className="scale-125 object-cover opacity-40 blur-2xl filter"
           />
           <div className="absolute inset-0 bg-black/25 backdrop-blur-xs" />
@@ -89,7 +89,7 @@ export function CraftsmanHeroImage({ image, name, avatarPosition }: CraftsmanHer
             alt={name}
             fill
             priority
-            sizes="(min-width: 640px) 480px, 100vw"
+            sizes="(min-width: 640px) 428px, 342px"
             className="object-cover transition-transform duration-300 group-hover:scale-102"
             style={{
               objectPosition: `${avatarPosition?.x ?? 50}% ${avatarPosition?.y ?? 50}%`,
