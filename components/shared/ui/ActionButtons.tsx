@@ -2,8 +2,7 @@
 
 import { IconPhone, IconWhatsApp } from "@/components/shared/icons";
 import { ButtonAnchor } from "@/components/shared/ui/Button";
-import { useStats } from "@/hooks/useStats";
-import { track } from "@/lib/analytics/track";
+import { useContactTracker } from "@/hooks/useContactTracker";
 import {
   craftsmanWhatsappMessage,
   telHref,
@@ -32,7 +31,14 @@ export function ActionButtons({
   /** بادئة وسوم الجولة على الأزرار نفسها (مثال: "card" → card-call/card-whatsapp) */
   tourPrefix?: string;
 }) {
-  const { track: counterTrack } = useStats();
+  const { handleContact } = useContactTracker({
+    craftsmanId,
+    craftsmanSlug,
+    craftsmanName,
+    categoryName,
+    categorySlug,
+  });
+
   const waUrl = whatsappHref(
     whatsapp,
     craftsmanName
@@ -49,18 +55,7 @@ export function ActionButtons({
       <ButtonAnchor
         href={telHref(phone)}
         data-tour={tourPrefix ? `${tourPrefix}-call` : undefined}
-        onClick={() => {
-          if (craftsmanSlug) {
-            counterTrack(craftsmanSlug, "call", categorySlug);
-            track("contact_click", {
-              craftsman_id: craftsmanId,
-              craftsman_slug: craftsmanSlug,
-              craftsman_name: craftsmanName,
-              category: categoryName,
-              contact_method: "phone",
-            });
-          }
-        }}
+        onClick={() => handleContact("phone")}
         aria-label="اتصال هاتفي"
         variant="primary"
         size={buttonSize}
@@ -73,18 +68,7 @@ export function ActionButtons({
         target="_blank"
         rel="noopener noreferrer"
         data-tour={tourPrefix ? `${tourPrefix}-whatsapp` : undefined}
-        onClick={() => {
-          if (craftsmanSlug) {
-            counterTrack(craftsmanSlug, "whatsapp", categorySlug);
-            track("contact_click", {
-              craftsman_id: craftsmanId,
-              craftsman_slug: craftsmanSlug,
-              craftsman_name: craftsmanName,
-              category: categoryName,
-              contact_method: "whatsapp",
-            });
-          }
-        }}
+        onClick={() => handleContact("whatsapp")}
         aria-label="مراسلة واتساب"
         variant="action"
         size={buttonSize}

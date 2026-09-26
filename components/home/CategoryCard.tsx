@@ -30,7 +30,7 @@ export function CategoryCard({ category }: { category: CategoryWithCount }) {
         <h3 className="font-heading text-xs sm:text-sm font-bold text-foreground group-hover:text-accent transition-colors leading-tight line-clamp-2 sm:truncate sm:text-base">
           {category.name}
         </h3>
-        <p className="mt-0.5 text-[10px] sm:text-xs text-muted font-medium">
+        <p className="mt-0.5 text-xs text-muted font-medium">
           {toArabicDigits(category.count)} صنايعي
         </p>
       </div>

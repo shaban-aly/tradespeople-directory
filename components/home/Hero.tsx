@@ -50,6 +50,9 @@ export async function Hero() {
             src="/hero-images/pol_mobile.webp"
             alt="صنايعي سباك أثناء صيانة منزلية بالسويس"
             className="h-full w-full object-cover object-center"
+            fetchPriority="high"
+            loading="eager"
+            decoding="sync"
           />
         </picture>
 
@@ -81,7 +84,7 @@ export async function Hero() {
         </h1>
 
         {/* النص التوضيحي */}
-        <p className="mx-auto mt-1.5 sm:mt-4 max-w-xl text-sm sm:text-lg text-slate-800 dark:text-zinc-200 leading-relaxed drop-shadow-sm font-medium">
+        <p className="mx-auto mt-1.5 sm:mt-4 max-w-xl text-sm sm:text-lg text-slate-800 dark:text-zinc-200 leading-relaxed drop-shadow-sm font-medium text-halo">
           سباك، كهربائي، نقاش، نجار أو تكييف ...
           <br className="hidden sm:inline" />
           ابحث عن التخصص واختار الصنايعي المناسب.

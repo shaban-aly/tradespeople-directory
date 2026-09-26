@@ -23,12 +23,13 @@ export function CraftsmanGrid({
         <div className="min-w-0 flex-1">{toolbar}</div>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {craftsmen.map((craftsman) => (
+        {craftsmen.map((craftsman, index) => (
           <CraftsmanCard
             key={craftsman.id}
             craftsman={craftsman}
             category={categoryBySlug.get(craftsman.category)}
             recent={craftsman.id === recentId}
+            priority={index < 4}
           />
         ))}
       </div>

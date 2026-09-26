@@ -47,7 +47,7 @@ export function FeaturedCraftsmen({
         {/* Carousel على الموبايل — Grid 4 أعمدة على الديسكتوب */}
         <div ref={scrollRef} className="-mx-4 overflow-x-auto px-4 pb-2 scrollbar-none [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0 md:pb-0">
           <div className="flex snap-x snap-mandatory gap-3 md:grid md:grid-cols-2 md:gap-4 lg:grid-cols-4">
-            {items.map((craftsman) => (
+            {items.map((craftsman, index) => (
               <div
                 key={craftsman.id}
                 data-snap-card
@@ -57,6 +57,7 @@ export function FeaturedCraftsmen({
                   craftsman={craftsman}
                   category={categoryBySlug.get(craftsman.category)}
                   recent={craftsman.id === mostRecentId}
+                  priority={index < 4}
                 />
               </div>
             ))}

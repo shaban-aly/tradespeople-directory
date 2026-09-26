@@ -51,7 +51,7 @@ export function CraftsmanDetail({
           {category?.name ?? "التصنيف"}
         </Link>
         <span aria-hidden>·</span>
-        <span className="truncate font-bold text-foreground">
+        <span aria-current="page" className="truncate font-bold text-foreground">
           {craftsman.name}
         </span>
       </nav>

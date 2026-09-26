@@ -10,7 +10,7 @@ import { VerifiedBadge } from "@/components/shared/ui/VerifiedBadge";
 import { CraftsmanAvatar } from "@/components/shared/ui/CraftsmanAvatar";
 import { craftsmanHref } from "@/lib/utils/url";
 
-function CraftsmanImage({ craftsman }: { craftsman: Craftsman }) {
+function CraftsmanImage({ craftsman, priority }: { craftsman: Craftsman; priority?: boolean }) {
   if (craftsman.image) {
     const posX = craftsman.avatarPosition?.x ?? 50;
     const posY = craftsman.avatarPosition?.y ?? 50;
@@ -27,7 +27,8 @@ function CraftsmanImage({ craftsman }: { craftsman: Craftsman }) {
           transform: zoom > 1 ? `scale(${zoom})` : undefined,
           transformOrigin: `${posX}% ${posY}%`,
         }}
-        loading="lazy"
+        loading={priority ? "eager" : "lazy"}
+        priority={priority}
       />
     );
   }
@@ -45,11 +46,13 @@ export function CraftsmanCard({
   category,
   recent = false,
   reason,
+  priority = false,
 }: {
   craftsman: Craftsman;
   category?: Category;
   recent?: boolean;
   reason?: string;
+  priority?: boolean;
 }) {
   return (
     <article
@@ -58,7 +61,7 @@ export function CraftsmanCard({
     >
       <Link href={craftsmanHref(craftsman.slug)} data-tour="craftsman-card-link" className="flex flex-1 flex-col">
         <div className="relative aspect-4/3 overflow-hidden bg-accent/10">
-          <CraftsmanImage craftsman={craftsman} />
+          <CraftsmanImage craftsman={craftsman} priority={priority} />
           {(craftsman.verified || recent) && (
             <div className="absolute right-2 top-2 flex flex-col items-start gap-1">
               {craftsman.verified && <VerifiedBadge />}

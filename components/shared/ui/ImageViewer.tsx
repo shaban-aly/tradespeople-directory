@@ -305,7 +305,7 @@ export function ImageViewer({
             disabled={scale <= MIN_SCALE}
             title="تصغير (-)"
             aria-label="تصغير"
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-white transition-colors hover:bg-white/20 disabled:opacity-30 disabled:pointer-events-none active:scale-95"
+            className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/10 text-white transition-colors hover:bg-white/20 disabled:opacity-30 disabled:pointer-events-none active:scale-95"
           >
             <IconMinus className="h-4 w-4" />
           </button>
@@ -315,7 +315,7 @@ export function ImageViewer({
             onClick={handleReset}
             title="إعادة الحجم الافتراضي (0)"
             aria-label="إعادة الحجم الافتراضي"
-            className="flex h-9 min-w-14 items-center justify-center rounded-lg bg-white/10 px-2.5 text-xs font-bold text-white transition-colors hover:bg-white/20 active:scale-95"
+            className="flex h-11 min-w-14 items-center justify-center rounded-lg bg-white/10 px-2.5 text-xs font-bold text-white transition-colors hover:bg-white/20 active:scale-95"
           >
             {Math.round(scale * 100)}%
           </button>
@@ -326,7 +326,7 @@ export function ImageViewer({
             disabled={scale >= MAX_SCALE}
             title="تكبير (+)"
             aria-label="تكبير"
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-white transition-colors hover:bg-white/20 disabled:opacity-30 disabled:pointer-events-none active:scale-95"
+            className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/10 text-white transition-colors hover:bg-white/20 disabled:opacity-30 disabled:pointer-events-none active:scale-95"
           >
             <IconPlus className="h-4 w-4" />
           </button>
@@ -337,7 +337,7 @@ export function ImageViewer({
               onClick={handleReset}
               title="إعادة ضبط"
               aria-label="إعادة ضبط"
-              className="hidden sm:flex h-9 w-9 items-center justify-center rounded-lg bg-accent/20 text-accent transition-colors hover:bg-accent/30 active:scale-95"
+              className="hidden sm:flex h-11 w-11 items-center justify-center rounded-lg bg-accent/20 text-accent transition-colors hover:bg-accent/30 active:scale-95"
             >
               <IconRefresh className="h-4 w-4" />
             </button>

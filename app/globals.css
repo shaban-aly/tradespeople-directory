@@ -5,8 +5,8 @@
 :root {
   --background: #f5f7ff;
   --foreground: #14142b;
-  --muted: #5d6674;
-  --muted-foreground: #5d6674;
+  --muted: #4b5563;
+  --muted-foreground: #4b5563;
   --accent: #3b5fe3;
   --on-accent: #ffffff;
   --action: #22c55e;
@@ -47,8 +47,8 @@
 .dark {
   --background: #10131f;
   --foreground: #f2f4ff;
-  --muted: #9ca3c4;
-  --muted-foreground: #9ca3c4;
+  --muted: #b0b8d4;
+  --muted-foreground: #b0b8d4;
   --accent: #5b7fff;
   --on-accent: #10131f;
   --action: #34d399;

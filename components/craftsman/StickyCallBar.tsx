@@ -2,8 +2,7 @@
 
 import { IconPhone, IconWhatsApp } from "@/components/shared/icons";
 import { ButtonAnchor } from "@/components/shared/ui/Button";
-import { useStats } from "@/hooks/useStats";
-import { track } from "@/lib/analytics/track";
+import { useContactTracker } from "@/hooks/useContactTracker";
 import {
   craftsmanWhatsappMessage,
   telHref,
@@ -27,7 +26,14 @@ export function StickyCallBar({
   categoryName?: string;
   categorySlug?: string;
 }) {
-  const { track: counterTrack } = useStats();
+  const { handleContact } = useContactTracker({
+    craftsmanId,
+    craftsmanSlug,
+    craftsmanName,
+    categoryName,
+    categorySlug,
+  });
+
   const hasWhatsapp = Boolean(whatsapp);
   const waUrl = whatsappHref(
     whatsapp,
@@ -37,7 +43,7 @@ export function StickyCallBar({
   );
 
   return (
-    <div className="sticky bottom-18 z-20 sm:hidden" data-tour="sticky-call">
+    <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 sm:hidden" data-tour="sticky-call">
       <div className="rounded-2xl border border-border bg-card/95 p-2.5 shadow-up backdrop-blur">
         <div
           className={`grid gap-2 ${hasWhatsapp ? "grid-cols-2" : "grid-cols-1"}`}
@@ -45,18 +51,7 @@ export function StickyCallBar({
           <ButtonAnchor
             href={telHref(phone)}
             data-tour="sticky-call-call"
-            onClick={() => {
-              if (craftsmanSlug) {
-                counterTrack(craftsmanSlug, "call", categorySlug);
-                track("contact_click", {
-                  craftsman_id: craftsmanId,
-                  craftsman_slug: craftsmanSlug,
-                  craftsman_name: craftsmanName,
-                  category: categoryName,
-                  contact_method: "phone",
-                });
-              }
-            }}
+            onClick={() => handleContact("phone")}
             variant="primary"
             size="md"
           >
@@ -69,18 +64,7 @@ export function StickyCallBar({
               target="_blank"
               rel="noopener noreferrer"
               data-tour="sticky-call-whatsapp"
-              onClick={() => {
-                if (craftsmanSlug) {
-                  counterTrack(craftsmanSlug, "whatsapp", categorySlug);
-                  track("contact_click", {
-                    craftsman_id: craftsmanId,
-                    craftsman_slug: craftsmanSlug,
-                    craftsman_name: craftsmanName,
-                    category: categoryName,
-                    contact_method: "whatsapp",
-                  });
-                }
-              }}
+              onClick={() => handleContact("whatsapp")}
               variant="action"
               size="md"
             >
