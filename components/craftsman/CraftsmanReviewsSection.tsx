@@ -110,7 +110,6 @@ export function CraftsmanReviewsSection({
 
   return (
     <section
-      data-tour="details-reviews"
       className="rounded-3xl border border-border bg-card p-6 shadow-card sm:p-8"
     >
       {/* هيدر القسم */}

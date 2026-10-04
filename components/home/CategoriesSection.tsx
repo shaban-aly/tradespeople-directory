@@ -15,7 +15,6 @@ export async function CategoriesSection() {
   return (
     <section
       id="categories"
-      data-tour="home-categories"
       className="mx-auto w-full max-w-5xl px-4 pt-4 sm:pt-8 pb-14 sm:pb-20"
     >
       <Reveal>

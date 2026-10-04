@@ -18,7 +18,6 @@ export function ActionButtons({
   craftsmanName,
   categoryName,
   categorySlug,
-  tourPrefix,
 }: {
   phone: string;
   whatsapp: string;
@@ -28,8 +27,6 @@ export function ActionButtons({
   craftsmanName?: string;
   categoryName?: string;
   categorySlug?: string;
-  /** بادئة وسوم الجولة على الأزرار نفسها (مثال: "card" → card-call/card-whatsapp) */
-  tourPrefix?: string;
 }) {
   const { handleContact } = useContactTracker({
     craftsmanId,
@@ -54,7 +51,6 @@ export function ActionButtons({
     <div className={isIconOnly ? "flex gap-2" : "grid grid-cols-2 gap-2"}>
       <ButtonAnchor
         href={telHref(phone)}
-        data-tour={tourPrefix ? `${tourPrefix}-call` : undefined}
         onClick={() => handleContact("phone")}
         aria-label="اتصال هاتفي"
         variant="primary"
@@ -67,7 +63,6 @@ export function ActionButtons({
         href={waUrl}
         target="_blank"
         rel="noopener noreferrer"
-        data-tour={tourPrefix ? `${tourPrefix}-whatsapp` : undefined}
         onClick={() => handleContact("whatsapp")}
         aria-label="مراسلة واتساب"
         variant="action"

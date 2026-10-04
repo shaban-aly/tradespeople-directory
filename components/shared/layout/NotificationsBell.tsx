@@ -108,7 +108,7 @@ export function NotificationsBell() {
   const showEmpty = error === null && !loading && visibleItems.length === 0;
 
   return (
-    <div className="relative" ref={rootRef} data-tour="notifications-bell">
+    <div className="relative" ref={rootRef}>
       <button
         ref={triggerRef}
         id="header-notifications-btn"

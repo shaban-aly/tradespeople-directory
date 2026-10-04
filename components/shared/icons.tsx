@@ -35,7 +35,6 @@ import {
   Minus,
   Moon,
   MoreVertical,
-  MousePointerClick,
   Pencil,
   Phone,
   Plus,
@@ -222,10 +221,6 @@ export function IconShieldCheck(props: LucideProps) {
 
 export function IconSparkles(props: LucideProps) {
   return <Sparkles {...props} />;
-}
-
-export function IconPointer(props: LucideProps) {
-  return <MousePointerClick {...props} />;
 }
 
 export function IconChevronLeft(props: LucideProps) {

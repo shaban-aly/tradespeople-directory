@@ -4,7 +4,6 @@ import { BottomNav } from "@/components/shared/layout/BottomNav";
 import { SearchModal } from "@/components/search/SearchModal";
 import { BackToTop } from "@/components/shared/ui/BackToTop";
 import { NotificationsToast } from "@/components/shared/ui/NotificationsToast";
-import { TourProvider } from "@/components/tour/TourProvider";
 import { PageTransition } from "@/components/shared/PageTransition";
 
 export default function SiteLayout({
@@ -25,7 +24,6 @@ export default function SiteLayout({
       <SearchModal />
       <BackToTop />
       <NotificationsToast />
-      <TourProvider />
     </div>
   );
 }

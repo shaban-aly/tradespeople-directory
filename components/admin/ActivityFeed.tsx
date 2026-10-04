@@ -164,7 +164,7 @@ export function ActivityFeed({
                       >
                         {isAuthenticated
                           ? item.userDisplayName
-                            ? `المستخدم: ${item.userDisplayName}`
+                            ? `👤: ${item.userDisplayName}`
                             : "مستخدم مسجل"
                           : "زائر مجهول"}
                       </span>

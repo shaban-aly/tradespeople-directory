@@ -74,7 +74,6 @@ export function UserMenu() {
       <Link
         id="header-user-profile-link"
         href="/profile"
-        data-tour="nav-profile"
         className={`sm:hidden ${avatarClass}`}
         aria-label="صفحة حسابي"
       >
@@ -86,7 +85,6 @@ export function UserMenu() {
         id="header-user-menu-btn"
         type="button"
         onClick={() => setOpen((v) => !v)}
-        data-tour="nav-profile"
         className={`hidden sm:flex ${avatarClass}`}
         aria-label="قائمة المستخدم"
         aria-expanded={open}

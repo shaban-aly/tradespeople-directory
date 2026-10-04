@@ -5,7 +5,6 @@ import { ProfileCard } from "@/components/profile/ProfileCard";
 import { ThemeSettings } from "@/components/profile/ThemeSettings";
 import { PushSettingsCard } from "@/components/notifications/PushSettingsCard";
 import { SignOutButton } from "@/components/profile/SignOutButton";
-import { TourHelpCard } from "@/components/profile/TourHelpCard";
 import { PwaInstallCard } from "@/components/profile/PwaInstallCard";
 import { GoogleSignInButton } from "@/components/shared/GoogleSignInButton";
 import {
@@ -200,7 +199,6 @@ export default async function ProfilePage() {
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
           <div className="divide-y divide-border/60">
             <PwaInstallCard />
-            <TourHelpCard />
           </div>
         </div>
       </div>
