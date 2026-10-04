@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/shared/ui/SafeImage";
 import type { Category, Craftsman } from "@/lib/data/craftsmen";
 import { ActionButtons } from "@/components/shared/ui/ActionButtons";
 import { CategoryBadge } from "@/components/shared/ui/CategoryBadge";

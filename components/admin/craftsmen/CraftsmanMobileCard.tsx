@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/shared/ui/SafeImage";
 import {
   IconPhone,
   IconPin,

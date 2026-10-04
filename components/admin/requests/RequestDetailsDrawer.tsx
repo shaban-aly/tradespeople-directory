@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/shared/ui/SafeImage";
 import { Drawer } from "@/components/admin/Drawer";
 import { DetailField } from "@/components/admin/ui/DetailField";
 import { IconUsers } from "@/components/shared/icons";

@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/shared/ui/SafeImage";
 import { CraftsmanAvatar } from "@/components/shared/ui/CraftsmanAvatar";
 import { VerifiedBadge } from "@/components/shared/ui/VerifiedBadge";
 import { ButtonLink } from "@/components/shared/ui/Button";

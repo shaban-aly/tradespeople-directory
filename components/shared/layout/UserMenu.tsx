@@ -59,6 +59,7 @@ export function UserMenu() {
       src={profile.avatarUrl}
       alt={displayName}
       className="h-full w-full rounded-full object-cover"
+      onError={(e) => { e.currentTarget.src = "/favicon-96x96.png"; }}
     />
   ) : (
     <span>{initial}</span>
@@ -114,6 +115,7 @@ export function UserMenu() {
                   src={profile.avatarUrl}
                   alt={displayName}
                   className="h-full w-full object-cover"
+                  onError={(e) => { e.currentTarget.src = "/favicon-96x96.png"; }}
                 />
               ) : (
                 initial

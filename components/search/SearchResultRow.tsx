@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/shared/ui/SafeImage";
 import { highlightQuery, type SearchSuggestion } from "@/lib/search";
 import { CategoryIcon } from "@/components/shared/ui/CategoryIcon";
 import { VerifiedBadge } from "@/components/shared/ui/VerifiedBadge";

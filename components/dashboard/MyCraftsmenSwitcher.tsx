@@ -72,6 +72,7 @@ export function MyCraftsmenSwitcher({
                     src={c.imageUrl}
                     alt={c.name}
                     className="h-full w-full object-cover"
+                    onError={(e) => { e.currentTarget.src = "/favicon-96x96.png"; }}
                   />
                 ) : (
                   <div className="h-full w-full flex items-center justify-center text-muted">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/shared/ui/SafeImage";
 import { IconDownload, IconX, IconShare, IconPlus } from "@/components/shared/icons";
 import { Button } from "@/components/shared/ui/Button";
 import { useInstallPrompt, PWA_OPEN_INSTALL_EVENT } from "@/hooks/useInstallPrompt";

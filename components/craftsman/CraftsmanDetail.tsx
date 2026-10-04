@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/shared/ui/SafeImage";
 import type { Category, Craftsman } from "@/lib/data/craftsmen";
 import type { RatingSummary } from "@/lib/db/reviews";
 import { CategoryBadge } from "@/components/shared/ui/CategoryBadge";

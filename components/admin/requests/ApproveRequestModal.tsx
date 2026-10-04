@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/shared/ui/SafeImage";
 import { Modal } from "@/components/admin/Modal";
 import { AdminButton } from "@/components/admin/ui/AdminButton";
 import type { JoinRequestRow } from "@/lib/db/admin";

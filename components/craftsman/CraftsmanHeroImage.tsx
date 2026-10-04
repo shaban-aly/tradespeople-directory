@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, startTransition } from "react";
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/shared/ui/SafeImage";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CraftsmanAvatar } from "@/components/shared/ui/CraftsmanAvatar";
 import { ImageViewer } from "@/components/shared/ui/ImageViewer";

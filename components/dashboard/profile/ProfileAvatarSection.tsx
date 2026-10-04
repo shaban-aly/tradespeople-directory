@@ -1,7 +1,7 @@
 "use client";
 
 import type { RefObject } from "react";
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/shared/ui/SafeImage";
 import { CraftsmanAvatar } from "@/components/shared/ui/CraftsmanAvatar";
 import { ImagePositionEditor } from "@/components/dashboard/ImagePositionEditor";
 import {
