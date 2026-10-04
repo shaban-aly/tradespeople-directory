@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     p_slug: slug,
     p_action: type,
     p_ip: ip,
-    p_user_id: userId ?? undefined,
+    p_user_id: (userId ?? null) as string | undefined,
     p_user_status: userStatus,
   });
   if (error) {

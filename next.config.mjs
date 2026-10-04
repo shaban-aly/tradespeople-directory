@@ -52,7 +52,7 @@ const nextConfig = {
 
     // دومينات موارد الإعلانات (صور، connect، frames)
     const adsenseHosts =
-      "https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.adtrafficquality.google https://*.googlesyndication.com";
+      "https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.adtrafficquality.google https://*.googlesyndication.com https://www.google.com.eg https://*.google.com.eg https://www.google.com https://*.google.com";
 
     // دومينات الـ frames — Google Ads بتفتح iframes لـ google.com و doubleclick.net
     const adsenseFrameHosts =

@@ -54,9 +54,10 @@ export async function getUnreadNotificationsCount(
   const supabase = createSupabase();
   const { count, error } = await supabase
     .from("notifications")
-    .select("id", { count: "exact", head: true })
+    .select("id", { count: "exact" })
     .eq("recipient_id", userId)
-    .is("read_at", null);
+    .is("read_at", null)
+    .limit(0);
 
   if (error) {
     return { data: 0, error: error.message || "تعذّر جلب عدّاد الإشعارات" };
