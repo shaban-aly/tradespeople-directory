@@ -19,10 +19,22 @@ export function SafeImage({
     setError(false);
   }, [src]);
 
+  if (error || !src) {
+    return (
+      <Image
+        key="fallback"
+        {...rest}
+        src={fallbackSrc}
+        alt={alt || "Fallback"}
+      />
+    );
+  }
+
   return (
     <Image
+      key={String(src)}
       {...rest}
-      src={error || !src ? fallbackSrc : src}
+      src={src}
       alt={alt}
       onError={() => setError(true)}
     />

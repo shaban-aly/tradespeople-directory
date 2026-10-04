@@ -84,7 +84,7 @@ export function ApproveRequestModal({
               ) : null}
             </div>
             {request.image_url && (
-              <div className="relative mt-3 aspect-[4/3] w-full overflow-hidden rounded-xl">
+              <div className="relative mt-3 aspect-4/3 w-full overflow-hidden rounded-xl">
                 <Image
                   src={request.image_url}
                   alt={request.name ?? "صورة الطلب"}

@@ -104,7 +104,7 @@ export function CraftsmanHeroImage({ image, name, avatarPosition }: CraftsmanHer
         </div>
 
         {/* شارة التكبير بالحجم الكامل */}
-        <div className="absolute bottom-3 start-3 z-10 flex items-center gap-1.5 rounded-xl bg-black/60 px-3 py-1.5 text-xs font-semibold text-white shadow-md backdrop-blur-md transition-all duration-200 group-hover:bg-black/80 sm:text-sm">
+        <div className="absolute bottom-3 inset-s-3 z-10 flex items-center gap-1.5 rounded-xl bg-black/60 px-3 py-1.5 text-xs font-semibold text-white shadow-md backdrop-blur-md transition-all duration-200 group-hover:bg-black/80 sm:text-sm">
           <IconMaximize className="h-4 w-4" />
           <span>اضغط لتكبير الصورة</span>
         </div>

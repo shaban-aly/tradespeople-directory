@@ -55,7 +55,7 @@ export function CraftsmanMobileCard({
       </div>
 
       {/* أيقونة الإجراءات مثبتة دائماً في الزاوية العلوية ولن تخرج مهما طال الاسم أو السلاج */}
-      <div className="absolute top-3.5 end-3.5 z-10">
+      <div className="absolute top-3.5 inset-e-3.5 z-10">
         <ActionMenu
           craftsman={craftsman}
           busyKey={busyKey}

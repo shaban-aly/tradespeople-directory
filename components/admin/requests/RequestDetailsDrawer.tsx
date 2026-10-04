@@ -55,7 +55,7 @@ export function RequestDetailsDrawer({
             </div>
           ) : null}
           {request.image_url && (
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl">
+            <div className="relative aspect-4/3 w-full overflow-hidden rounded-xl">
               <Image
                 src={request.image_url}
                 alt={request.name ?? "صورة الطلب"}
