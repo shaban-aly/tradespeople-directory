@@ -12,16 +12,18 @@ import { AuthGuardModal } from "@/components/shared/auth/AuthGuardModal";
 import { ReviewModal } from "@/components/craftsman/ReviewModal";
 import { AllReviewsModal } from "@/components/craftsman/AllReviewsModal";
 import { useSession } from "@/hooks/auth/useSession";
-import { deleteReview } from "@/lib/db/reviews";
+import { deleteReviewAction } from "@/app/actions/reviews";
 
 interface CraftsmanReviewsSectionProps {
   craftsmanId: string;
   craftsmanName: string;
+  ownerUserId: string | null;
 }
 
 export function CraftsmanReviewsSection({
   craftsmanId,
   craftsmanName,
+  ownerUserId,
 }: CraftsmanReviewsSectionProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -29,7 +31,7 @@ export function CraftsmanReviewsSection({
   const [, startTransition] = useTransition();
 
   const { user, isLoggedIn, profile, loading: sessionLoading } = useSession();
-  const isOwner = Boolean(profile?.craftsmanId && profile.craftsmanId === craftsmanId);
+  const isOwner = Boolean(user?.id && user.id === ownerUserId);
   const { summary, reviews, userReview, loading, reload } = useReviews(craftsmanId);
   const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null);
   const {
@@ -97,7 +99,7 @@ export function CraftsmanReviewsSection({
     if (!user) return;
     if (!window.confirm("هل أنت متأكد من رغبتك في حذف تقييمك؟")) return;
     setDeletingReviewId(reviewId);
-    const ok = await deleteReview(user.id, reviewId, craftsmanId);
+    const ok = await deleteReviewAction(user.id, reviewId, craftsmanId);
     setDeletingReviewId(null);
     if (ok) {
       reload();

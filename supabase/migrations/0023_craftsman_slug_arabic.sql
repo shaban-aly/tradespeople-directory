@@ -4,7 +4,7 @@
 -- وتوسيع increment_craftsman_stats لقبول الروابط بالحروف العربية
 -- ============================================================================
 
--- 1) تحديث RPC الموافقة على طلب تقديم الصانع لتوليد slug دلالي من التخصص والاسم
+-- 1) تحديث RPC الموافقة على طلب تقديم الصنايعي لتوليد slug دلالي من التخصص والاسم
 CREATE OR REPLACE FUNCTION public.approve_craftsman_application(p_craftsman_id uuid)
 RETURNS uuid
 LANGUAGE plpgsql
@@ -54,7 +54,7 @@ BEGIN
   FROM public.categories
   WHERE id = v_craftsman.category_id;
 
-  -- تنظيف اسم الصانع: الإبقاء على الحروف العربية والإنجليزية والأرقام
+  -- تنظيف اسم الصنايعي: الإبقاء على الحروف العربية والإنجليزية والأرقام
   v_clean_name := lower(regexp_replace(v_craftsman.name, '[^a-zA-Z0-9\u0621-\u064A\u0660-\u0669]+', '-', 'g'));
   v_clean_name := trim(both '-' from v_clean_name);
 
@@ -100,7 +100,7 @@ REVOKE EXECUTE ON FUNCTION public.approve_craftsman_application(uuid) FROM PUBLI
 GRANT EXECUTE ON FUNCTION public.approve_craftsman_application(uuid) TO authenticated;
 
 COMMENT ON FUNCTION public.approve_craftsman_application(uuid) IS
-  'الموافقة على طلب صانع وتوليد slug دلالي عربي/إنجليزي يجمع بين التخصص والاسم والهاش ونشره وربط بروفايله';
+  'الموافقة على طلب صنايعي وتوليد slug دلالي عربي/إنجليزي يجمع بين التخصص والاسم والهاش ونشره وربط بروفايله';
 
 
 -- 2) تحديث دالة increment_craftsman_stats لدعم الـ Slugs التي تحتوي على حروف عربية
@@ -185,4 +185,4 @@ REVOKE ALL ON FUNCTION public.increment_craftsman_stats(text, text, text) FROM P
 GRANT EXECUTE ON FUNCTION public.increment_craftsman_stats(text, text, text) TO anon, authenticated;
 
 COMMENT ON FUNCTION public.increment_craftsman_stats(text, text, text) IS
-  'تسجيل تفاعل (مشاهدة/اتصال/واتساب) مع صانع برابط slug عربي أو إنجليزي مع rate limit داخلي';
+  'تسجيل تفاعل (مشاهدة/اتصال/واتساب) مع صنايعي برابط slug عربي أو إنجليزي مع rate limit داخلي';

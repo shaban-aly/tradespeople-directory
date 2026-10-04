@@ -64,7 +64,7 @@ export function UserMobileCard({ user }: UserMobileCardProps) {
               <IconExternalLink className="h-3 w-3 text-muted shrink-0" />
             </Link>
           ) : (
-            <span className="text-muted/70">غير مرتبط بصانع</span>
+            <span className="text-muted/70">غير مرتبط بصنايعي</span>
           )}
         </div>
 

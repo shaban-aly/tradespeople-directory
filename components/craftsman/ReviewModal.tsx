@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Modal } from "@/components/shared/ui/Modal";
 import { Button } from "@/components/shared/ui/Button";
 import { IconStar, IconTrash } from "@/components/shared/icons";
-import { deleteReview, upsertReview, type ReviewItem } from "@/lib/db/reviews";
+import { type ReviewItem } from "@/lib/db/reviews";
+import { upsertReviewAction, deleteReviewAction } from "@/app/actions/reviews";
 
 interface ReviewModalProps {
   open: boolean;
@@ -60,7 +61,7 @@ export function ReviewModal({
     setDeleting(true);
     setError(null);
 
-    const success = await deleteReview(userId, existingReview.id, craftsmanId);
+    const success = await deleteReviewAction(userId, existingReview.id, craftsmanId);
     setDeleting(false);
 
     if (success) {
@@ -90,7 +91,7 @@ export function ReviewModal({
     setLoading(true);
     setError(null);
 
-    const res = await upsertReview({
+    const res = await upsertReviewAction({
       userId,
       craftsmanId,
       rating,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { consumeRateLimit } from "@/lib/db/rate-limit";
+import { isSafeInternalLink } from "@/lib/utils/internalLink";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,6 +60,15 @@ export async function POST(request: NextRequest) {
 
   if (!title || !msgBody || !audience) {
     return NextResponse.json({ error: "حقول ناقصة" }, { status: 400 });
+  }
+
+  // تحقق مبكر في الواجهة وفي القاعدة معاً: لا نرسل رابطاً خارجياً للمشرف أصلاً،
+  // فيحصل على رسالة واضحة بدل خطأ RPC غير مفهوم.
+  if (link != null && !isSafeInternalLink(link)) {
+    return NextResponse.json(
+      { error: "الرابط يجب أن يكون مساراً داخلياً يبدأ بـ /" },
+      { status: 400 },
+    );
   }
 
   const { data: count, error: rpcError } = await supabase.rpc(

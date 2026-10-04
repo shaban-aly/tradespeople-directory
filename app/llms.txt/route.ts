@@ -1,7 +1,7 @@
 import { getCategories, getCraftsmen } from "@/lib/db/queries";
 import { siteDescription, siteName, siteUrl } from "@/lib/data/site";
 // llms.txt يكفيه تحديث يومي
-export const revalidate = 86400; // 24 ساعة بالثواني
+export const revalidate = false;
 
 const shortDescription = (text: string, max = 120): string =>
   text.length > max ? `${text.slice(0, max).trim()}...` : text;

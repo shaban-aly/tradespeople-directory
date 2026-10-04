@@ -33,13 +33,12 @@ async function fetchProfile(
 ): Promise<SessionProfile | null> {
   const { data } = await createSupabase()
     .from("profiles")
-    .select("role, craftsman_id, display_name, avatar_url")
+    .select("role, display_name, avatar_url")
     .eq("id", userId)
     .maybeSingle();
   if (!data) return null;
   return {
     role: data.role as UserRole,
-    craftsmanId: data.craftsman_id ?? null,
     displayName: data.display_name ?? null,
     avatarUrl: data.avatar_url ?? null,
   };

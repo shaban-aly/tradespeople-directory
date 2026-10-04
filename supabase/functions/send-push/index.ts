@@ -1,15 +1,31 @@
 // @ts-nocheck — هذا الملف يعمل في بيئة Deno (Edge Function) وليس Node.js.
 // أخطاء IDE المتعلقة بـ Deno أو npm: imports هي وهمية ولا تؤثر على النشر.
-// send-push — Edge Function لتوزيع إشعارات FCM عند كل إدراج notification جديد.
+// send-push — Edge Function لتوزيع إشعارات FCM.
 //
-// التدفق الأساسي (مسجلون):
-//   trigger دالة dispatch_push_notification (migration 0016) → pg_net →
-//   هذا الـ HTTP handler → FCM HTTP v1 لأجهزة المستخدم.
+// التدفق الأساسي (مسجلون) — عبر صندوق الصادر (outbox):
+//   trigger enqueue_push_notification → صف في notification_push_outbox داخل
+//   نفس المعاملة + صف لكل device في notification_push_deliveries → pg_net →
+//   هذا الـ HTTP handler (outbox_id + lease_id) → claim_push_outbox →
+//   FCM HTTP v1 → record_push_delivery_result لكل جهاز على حدة →
+//   finish_push_outbox. معيار اكتمال الصف في القاعدة: لا delivery معلّقة.
+//
+// حارس الـlease (migration 20261004082118):
+//   كل صف في processing يحمل lease_id؛ claim_push_outbox والإرسال الفوري
+//   يولّدان lease جديداً، وكل UPDATE في finish/record يشترط مطابقته. فمحاولة
+//   متأخرة (سقط worker ثم استُعيد صفه بعد 10 دقائق) تُتجاهل ولا تكتب شيئاً.
+//   لذلك هذا المسار يرفض الطلب بلا lease_id بدل العمل بلا حارس.
+//
+// لكل جهاز على حدة (migration 20261004082139):
+//   فشل جهاز لا يعيد إرسال جهاز نجح، وbackoff مستقل لكل device delivery،
+//   ولا يُحذف توكن من هنا (القاعدة تحسم invalid وتحذفه داخل نفس الـlease).
 //
 // التدفق الثاني (زوار مجهولون):
 //   trigger notify_category_subscribers_on_publish (migration 0017) → pg_net →
 //   هذا الـ HTTP handler (anonymous_outbox_id) → يقرأ anonymous_push_outbox →
 //   يجلب التوكنات المهتمة بالتصنيف من anonymous_push_subscriptions → FCM.
+//
+// وضع العامل (worker mode): استدعاء بدون body مع x-push-secret صحيح
+//   → claim_push_outbox يعالج دفعة من الصفوف المعلّقة ويعيد جدولة ما لم يُحال إليه.
 //
 // المتغيرات المطلوبة (function secrets):
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY  (تُحقن تلقائياً)
@@ -25,6 +41,7 @@ import {
   fcmSendEndpoint,
   isUnregisteredStatus,
   signJwt,
+  toAbsoluteInternalUrl,
 } from "./lib.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
@@ -80,42 +97,79 @@ interface SendResult {
   failed: number;
   removedTokens: number;
   notifiedTokens: number;
+  retried: number;
+}
+
+interface DueDelivery {
+  token_id: string;
+  attempts: number;
+}
+
+function emptySendResult(): SendResult {
+  return { sent: 0, failed: 0, removedTokens: 0, notifiedTokens: 0, retried: 0 };
 }
 
 // ---------------------------------------------------------------------------
-// المسار الأول: مسجل — notification_id
+// المسار الأول: مسجل — صف واحد من notification_push_outbox
 // ---------------------------------------------------------------------------
-async function handleRegisteredNotification(
+
+/**
+ * يرسل لكل جهاز على حدة ويسجّل النتيجة في notification_push_deliveries.
+ *
+ * القاعدة (migration 20261004082139): كل device delivery مستقل له عدّاد
+ * و backoff خاص؛ لأن فشل جهاز لا يعيد إرسال الأجهزة التي نجحت، ولا
+ * يمنع جهازاً آخر من المحاولة. معيار اكتمال الصف يحسمه finish_push_outbox
+ * في القاعدة، لا هذا الملف.
+ */
+async function deliverToDevices(
   supabase: ReturnType<typeof createClient>,
+  outboxId: string,
+  leaseId: string,
+  title: string,
+  body: string,
+  metadata: Record<string, unknown>,
   notificationId: string,
   accessToken: string,
   account: ReturnType<typeof assertServiceAccount>,
 ): Promise<SendResult> {
-  const result: SendResult = { sent: 0, failed: 0, removedTokens: 0, notifiedTokens: 0 };
+  const result = emptySendResult();
 
-  const { data: notification, error: notifError } = await supabase
-    .from("notifications")
-    .select("recipient_id, title, body, metadata")
-    .eq("id", notificationId)
-    .maybeSingle();
-  if (notifError || !notification) {
-    console.error("notifications select error", notifError?.message);
+  const { data: deliveries, error: delivErr } = await supabase
+    .from("notification_push_deliveries")
+    .select("token_id, attempts")
+    .eq("outbox_id", outboxId)
+    .eq("status", "pending")
+    .lte("next_attempt_at", new Date().toISOString());
+
+  if (delivErr) {
+    console.error("notification_push_deliveries select error", delivErr.message);
+    return result;
+  }
+  if (!deliveries || deliveries.length === 0) return result;
+
+  const tokenIds = deliveries.map((d: DueDelivery) => d.token_id);
+  const { data: tokens, error: tokensErr } = await supabase
+    .from("user_push_tokens")
+    .select("id, token")
+    .in("id", tokenIds);
+  if (tokensErr) {
+    console.error("user_push_tokens select error", tokensErr.message);
     return result;
   }
 
-  const { data: tokens, error: tokensError } = await supabase
-    .from("user_push_tokens")
-    .select("id, token")
-    .eq("user_id", notification.recipient_id);
-  if (tokensError || !tokens || tokens.length === 0) return result;
-
   const endpoint = fcmSendEndpoint(account.project_id);
-  const metadata = (notification.metadata ?? {}) as Record<string, unknown>;
   const link = defaultLinkResolver({ ...metadata, siteUrl: PUSH_SITE_URL });
-  result.notifiedTokens = tokens.length;
+  result.notifiedTokens = tokens?.length ?? 0;
 
-  for (const row of tokens) {
-    const message = buildFcmMessage(row.token, notification.title, notification.body, link, notificationId);
+  for (const row of tokens ?? []) {
+    const delivery = deliveries.find((d: DueDelivery) => d.token_id === row.id);
+    if (!delivery) continue;
+
+    const message = buildFcmMessage(row.token, title, body, link, notificationId);
+    let ok = false;
+    let invalid = false;
+    let errorText: string | null = null;
+
     try {
       const res = await fetch(endpoint, {
         method: "POST",
@@ -127,21 +181,176 @@ async function handleRegisteredNotification(
       });
 
       if (res.ok) {
+        ok = true;
         result.sent += 1;
       } else if (isUnregisteredStatus(res.status)) {
-        await supabase.from("user_push_tokens").delete().eq("id", row.id);
+        // توكن معطّل ⇒ القاعدة تحسمه كـinvalid وتحذفه (لا حذف من هنا)
+        invalid = true;
         result.removedTokens += 1;
       } else {
+        errorText = `fcm status ${res.status}`;
         result.failed += 1;
-        console.warn("fcm send failed (registered)", res.status);
       }
     } catch (err) {
+      errorText = (err as Error).message.slice(0, 300);
       result.failed += 1;
-      console.error("fcm send exception (registered)", (err as Error).message);
     }
+
+    // النتيجة تُسجَّل لكل جهاز على حدة — القاعدة تطبّق backoff على هذا
+    // الجهاز وحده، وتشترط lease_id فأي محاولة أخرى تُتجاهل.
+    const { error: recErr } = await supabase.rpc("record_push_delivery_result", {
+      p_outbox_id: outboxId,
+      p_lease_id: leaseId,
+      p_token_id: row.id,
+      p_ok: ok,
+      p_invalid: invalid,
+      p_error_text: errorText,
+    });
+    if (recErr) {
+      console.error("record_push_delivery_result error", recErr.message);
+      continue;
+    }
+    if (!ok && !invalid) result.retried += 1;
   }
 
   return result;
+}
+
+async function handleRegisteredOutboxRow(
+  supabase: ReturnType<typeof createClient>,
+  outboxId: string,
+  leaseId: string,
+  accessToken: string,
+  account: ReturnType<typeof assertServiceAccount>,
+): Promise<SendResult> {
+  const result = emptySendResult();
+
+  const { data: outbox, error: outboxErr } = await supabase
+    .from("notification_push_outbox")
+    .select("id, notification_id, recipient_id, status, lease_id")
+    .eq("id", outboxId)
+    .maybeSingle();
+
+  if (outboxErr || !outbox) {
+    console.error("notification_push_outbox select error", outboxErr?.message);
+    return result;
+  }
+
+  // حارس الـlease: صف حجزته محاولة أحدث ⇒ تجاهُل صامت بلا أي كتابة.
+  // هذا هو ما يمنع المحاولة المتأخرة من إنهاء صف أنهته محاولة أخرى.
+  if (outbox.status !== "processing" || outbox.lease_id !== leaseId) {
+    console.warn(
+      `outbox ${outboxId}: stale lease (status=${outbox.status}, lease_match=${outbox.lease_id === leaseId}) — ignored`,
+    );
+    return result;
+  }
+
+  const { data: notification, error: notifError } = await supabase
+    .from("notifications")
+    .select("id, recipient_id, title, body, metadata")
+    .eq("id", outbox.notification_id)
+    .maybeSingle();
+
+  if (notifError || !notification) {
+    // الإشعار لم يعد موجوداً (حُذف) ⇒ لا معنى لإعادة المحاولة على أي جهاز.
+    // نحسم الـdeliveries المعلّقة exhausted (لا invalid: توكنات الأجهزة سليمة،
+    // الهدف فقط اختفى) فيُعتبر الصف مكتملاً بلا إعادة محاولة.
+    await supabase
+      .from("notification_push_deliveries")
+      .update({
+        status: "exhausted",
+        last_error: "notification deleted",
+      })
+      .eq("outbox_id", outboxId)
+      .eq("status", "pending");
+
+    await supabase.rpc("finish_push_outbox", {
+      p_outbox_id: outboxId,
+      p_lease_id: leaseId,
+      p_error_text: "notification deleted",
+    });
+    return result;
+  }
+
+  const metadata = (notification.metadata ?? {}) as Record<string, unknown>;
+  const sendResult = await deliverToDevices(
+    supabase,
+    outboxId,
+    leaseId,
+    notification.title,
+    notification.body,
+    metadata,
+    String(notification.id),
+    accessToken,
+    account,
+  );
+
+  // p_error_text تشخيصي فقط: القاعدة هي التي تقرر sent أو pending بناءً
+  // على وجود deliveries معلّقة. نمرّر ملخّصاً لا قيمة p_sent.
+  const summary =
+    sendResult.failed > 0 || sendResult.retried > 0
+      ? `devices: ${sendResult.sent} sent, ${sendResult.failed} failed, ${sendResult.retried} retrying, ${sendResult.removedTokens} invalid`
+      : null;
+
+  await supabase.rpc("finish_push_outbox", {
+    p_outbox_id: outboxId,
+    p_lease_id: leaseId,
+    p_error_text: summary,
+  });
+
+  return sendResult;
+}
+
+/**
+ * وضع العامل: يسترد الصفوف التي لم يحلّها pg_net (فشل شبكة، سقوط الدالة، أو
+ * backoff بعد محاولات فاشلة) ويعالجها دفعةً دفعة.
+ */
+async function runOutboxWorker(
+  supabase: ReturnType<typeof createClient>,
+  accessToken: string,
+  account: ReturnType<typeof assertServiceAccount>,
+  limit: number,
+): Promise<{ processed: number; sent: number; failed: number }> {
+  const { data: rows, error } = await supabase.rpc("claim_push_outbox", {
+    p_limit: limit,
+  });
+
+  if (error || !rows || rows.length === 0) {
+    if (error) console.error("claim_push_outbox error", error.message);
+    return { processed: 0, sent: 0, failed: 0 };
+  }
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const row of rows as Array<{ id: string; lease_id: string }>) {
+    // الحجز الذي أعادته claim_push_outbox هو ما يثبت ملكيتنا للصف
+    if (!row.lease_id) {
+      console.error(`outbox ${row.id}: claimed without lease_id — skipping`);
+      continue;
+    }
+    try {
+      const result = await handleRegisteredOutboxRow(
+        supabase,
+        row.id,
+        row.lease_id,
+        accessToken,
+        account,
+      );
+      sent += result.sent;
+      failed += result.failed;
+    } catch (err) {
+      // استثناء في معالجة صف واحد يُسجَّل كفشل صراحة بدل ابتلاعه
+      await supabase.rpc("finish_push_outbox", {
+        p_outbox_id: row.id,
+        p_lease_id: row.lease_id,
+        p_error_text: (err as Error).message.slice(0, 500),
+      });
+      failed += 1;
+    }
+  }
+
+  return { processed: rows.length, sent, failed };
 }
 
 // ---------------------------------------------------------------------------
@@ -153,7 +362,7 @@ async function handleAnonymousOutbox(
   accessToken: string,
   account: ReturnType<typeof assertServiceAccount>,
 ): Promise<SendResult> {
-  const result: SendResult = { sent: 0, failed: 0, removedTokens: 0, notifiedTokens: 0 };
+  const result = emptySendResult();
 
   // قراءة سجل الـ outbox
   const { data: outbox, error: outboxErr } = await supabase
@@ -189,9 +398,8 @@ async function handleAnonymousOutbox(
   }
 
   const endpoint = fcmSendEndpoint(account.project_id);
-  const link = outbox.url
-    ? `${PUSH_SITE_URL.replace(/\/$/, "")}${outbox.url}`
-    : PUSH_SITE_URL || undefined;
+  // رابط المجهولين كذلك لا يُبنى إلا من مسار داخلي مُتحقَّق منه
+  const link = toAbsoluteInternalUrl(PUSH_SITE_URL, outbox.url);
 
   result.notifiedTokens = subscriptions.length;
   const staleIds: string[] = [];
@@ -261,23 +469,57 @@ Deno.serve(async (req) => {
     });
   }
 
-  let body: { notification_id?: string; anonymous_outbox_id?: string };
+  let body: { outbox_id?: string; lease_id?: string; anonymous_outbox_id?: string } | null;
   try {
-    body = (await req.json()) as { notification_id?: string; anonymous_outbox_id?: string };
+    const raw = await req.text();
+    body = raw.trim() ? JSON.parse(raw) : null;
   } catch (_e) {
     return new Response("invalid json", { status: 400 });
   }
 
-  const notificationId = String(body.notification_id ?? "").trim();
+  // وضع العامل: بلا body ⇒ استرداد الصفوف المعلّقة وإعادة محاولةها
+  if (!body || (body.outbox_id == null && body.anonymous_outbox_id == null)) {
+    if (!FCM_SERVICE_ACCOUNT) {
+      return new Response(JSON.stringify({ ok: true, skipped: true, reason: "fcm not configured" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    try {
+      const account = assertServiceAccount(FCM_SERVICE_ACCOUNT);
+      const accessToken = await getFcmAccessToken(FCM_SERVICE_ACCOUNT);
+      const worker = await runOutboxWorker(supabase, accessToken, account, 20);
+      return new Response(JSON.stringify({ ok: true, mode: "worker", ...worker }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (err) {
+      console.error("send-push worker fatal", (err as Error).message);
+      return new Response(JSON.stringify({ ok: false, error: (err as Error).message }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }
+
+  const outboxId = String(body.outbox_id ?? "").trim();
+  const leaseId = String(body.lease_id ?? "").trim();
   const anonOutboxId = String(body.anonymous_outbox_id ?? "").trim();
 
-  if (!notificationId && !anonOutboxId) {
-    return new Response("missing notification_id or anonymous_outbox_id", { status: 400 });
+  if (!outboxId && !anonOutboxId) {
+    return new Response("missing outbox_id or anonymous_outbox_id", { status: 400 });
   }
   // التحقق من صيغة UUID (36 حرفاً)
-  const targetId = notificationId || anonOutboxId;
+  const targetId = outboxId || anonOutboxId;
   if (targetId.length !== 36) {
     return new Response("invalid id format", { status: 400 });
+  }
+  // المسار المسجّل يتطلّب lease: بدونه لا تستطيع الدالة إثبات أنها الحاجزة،
+  // فالسماح بالحاولة بلا lease يفتح تماماً سباق finish الذي وُجد له هذا
+  // الحقل.Trigger (enqueue_push_notification) يمرّره دائماً.
+  if (outboxId && leaseId.length !== 36) {
+    return new Response("missing or invalid lease_id", { status: 400 });
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -287,8 +529,8 @@ Deno.serve(async (req) => {
     const accessToken = await getFcmAccessToken(FCM_SERVICE_ACCOUNT);
 
     let result: SendResult;
-    if (notificationId) {
-      result = await handleRegisteredNotification(supabase, notificationId, accessToken, account);
+    if (outboxId) {
+      result = await handleRegisteredOutboxRow(supabase, outboxId, leaseId, accessToken, account);
     } else {
       result = await handleAnonymousOutbox(supabase, anonOutboxId, accessToken, account);
     }

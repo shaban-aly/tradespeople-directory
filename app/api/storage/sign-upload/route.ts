@@ -28,9 +28,9 @@ function sanitizeBaseName(fileName: string): string {
   return cleaned || "image";
 }
 
-function isValidRequest(body: unknown): body is { folder: string; fileName: string } {
+function isValidRequest(body: unknown): body is { folder: string; fileName: string; craftsmanId?: string } {
   if (!body || typeof body !== "object") return false;
-  const candidate = body as { folder?: unknown; fileName?: unknown };
+  const candidate = body as { folder?: unknown; fileName?: unknown; craftsmanId?: unknown };
   return typeof candidate.folder === "string" && typeof candidate.fileName === "string";
 }
 
@@ -107,17 +107,27 @@ export async function POST(request: NextRequest) {
     }
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role, craftsman_id")
+      .select("role")
       .eq("id", userData.user.id)
       .maybeSingle();
 
-    // المشرف يرفع لأي صنايعي، والفني يرفع في مجلد ملفه فقط
     const isAdmin = profile?.role === "admin";
-    const isOwner = profile?.role === "craftsman" && !!profile.craftsman_id;
+    const craftsmanId = body.craftsmanId;
+    
+    let isOwner = false;
+    if (craftsmanId) {
+      const { count } = await supabase
+        .from("craftsmen")
+        .select("id", { count: "exact", head: true })
+        .eq("id", craftsmanId)
+        .eq("owner_user_id", userData.user.id);
+      isOwner = !!count && count > 0;
+    }
+
     if (!isAdmin && !isOwner) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
     }
-    dir = isOwner ? (profile?.craftsman_id ?? crypto.randomUUID()) : crypto.randomUUID();
+    dir = craftsmanId || crypto.randomUUID();
   } else {
     supabase = createServerReadClient();
     dir = crypto.randomUUID();

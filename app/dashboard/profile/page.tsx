@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { getServerSession } from "@/lib/db/server";
 import {
   getCraftsmanDashboardData,
-  getAreasList,
 } from "@/lib/db/craftsman-dashboard";
+import { getAreasList } from "@/lib/db/craftsman-mutations";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { ProfileCompletionCard } from "@/components/dashboard/ProfileCompletionCard";
@@ -14,8 +14,18 @@ export default async function CraftsmanProfileEditPage() {
   const { supabase, user } = await getServerSession();
   if (!user) notFound();
 
+  const { data: firstCraftsman } = await supabase
+    .from("craftsmen")
+    .select("id")
+    .eq("owner_user_id", user.id)
+    .order("added_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   const [data, areas] = await Promise.all([
-    getCraftsmanDashboardData(user.id, supabase),
+    firstCraftsman
+      ? getCraftsmanDashboardData(user.id, firstCraftsman.id, supabase)
+      : Promise.resolve(null),
     getAreasList(supabase),
   ]);
 

@@ -11,14 +11,16 @@ import { CACHE_TAGS, SEARCH_TAG } from "@/lib/db/cache";
 export async function revalidateProfileAfterSave(slug?: string): Promise<void> {
   const { user, supabase } = await getServerSession();
   if (!user) return;
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("craftsman_id")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (profile?.craftsman_id) {
+  const { count } = await supabase
+    .from("craftsmen")
+    .select("id", { count: "exact", head: true })
+    .eq("owner_user_id", user.id);
+
+  if (count && count > 0) {
     revalidateTag(SEARCH_TAG, {});
-    revalidateTag(CACHE_TAGS.craftsmenList, {});
+    revalidateTag(CACHE_TAGS.allCraftsmen, {});
+    revalidateTag(CACHE_TAGS.homeVerified, {});
+    revalidateTag(CACHE_TAGS.homeStats, {});
     if (slug) {
       revalidateTag(CACHE_TAGS.craftsmanSlug(slug), {});
     }

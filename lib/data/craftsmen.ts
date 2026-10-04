@@ -29,6 +29,7 @@ export type Craftsman = {
   };
   addedAt: string; // تاريخ الإضافة بصيغة ISO
   updatedAt?: string; // تاريخ آخر تحديث بصيغة ISO
+  ownerUserId?: string | null;
   socialLinks?: SocialLink[]; // روابط سوشيال اختيارية
 };
 

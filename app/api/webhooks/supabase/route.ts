@@ -14,6 +14,8 @@ type WebhookEvent = {
   table: string;
   record?: { slug?: string; id?: string; craftsman_id?: string };
   old_record?: { slug?: string; id?: string; craftsman_id?: string };
+  category_slug?: string;
+  old_category_slug?: string;
 };
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -50,15 +52,29 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     case "craftsmen":
       // صفحة الصنايعي المحدد (إبطال دقيق بالـ slug)
       if (slug) invalidate(CACHE_TAGS.craftsmanSlug(slug));
-      // القوائم العامة والإحصائيات
-      invalidate(CACHE_TAGS.craftsmenList);
-      invalidate(CACHE_TAGS.stats);
+      
+      // إبطال فئة هذا الصنايعي تحديداً
+      const catSlug = event.category_slug;
+      if (catSlug) {
+        invalidate(CACHE_TAGS.categoryList(catSlug));
+      }
+      
+      // إبطال الفئة القديمة في حالة تغيير تخصص الصنايعي
+      const oldCatSlug = event.old_category_slug;
+      if (oldCatSlug && oldCatSlug !== catSlug) {
+        invalidate(CACHE_TAGS.categoryList(oldCatSlug));
+      }
+
+      // تحديث قوائم الرئيسية المُشتقة من بيانات الصنايعي
+      invalidate(CACHE_TAGS.allCraftsmen);
+      invalidate(CACHE_TAGS.homeVerified);
+      invalidate(CACHE_TAGS.homeStats);
       break;
 
     case "categories":
       invalidate(CACHE_TAGS.categories);
       // قوائم الصنايعية تعتمد على التصنيفات
-      invalidate(CACHE_TAGS.craftsmenList);
+      invalidate(CACHE_TAGS.allCraftsmen);
       break;
 
     case "areas":
@@ -66,17 +82,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       break;
 
     case "reviews":
-      // إبطال صفحة الصنايعي المُقيَّم فقط
+      // إبطال صفحة الصنايعي المُقيَّم فقط — التقييمات لا تظهر في الرئيسية
       if (slug) invalidate(CACHE_TAGS.craftsmanSlug(slug));
-      // الإحصائيات قد تتضمن متوسط تقييم
-      invalidate(CACHE_TAGS.stats);
       break;
 
     case "craftsman_stats":
     case "craftsman_stats_daily":
-      // العدادات تتغير كثيراً — نُبطل stats فقط، ولا نُعيد توليد صفحات الأفراد
-      invalidate(CACHE_TAGS.stats);
-      break;
+      // الإحصائيات تظهر فقط في Admin (force-dynamic) — لا علاقة لها بكاش الزوار
+      return NextResponse.json({ skipped: true, table, type, reason: "admin-only-data" });
 
     default:
       // جدول غير مُسجَّل — تجاهل بهدوء

@@ -7,10 +7,10 @@
 --   2) جدول `anonymous_push_subscriptions`: توكن الجهاز + مصفوفة الاهتمامات (interests).
 --      server-only عبر RPCs بـ SECURITY DEFINER.
 --   3) جدول `user_interest_subscriptions`: متابعة التصنيفات للمسجلين.
---   4) جدول `anonymous_push_outbox`: منع الإزعاج والتكرار مع Dedup key لكل صانع/تصنيف.
+--   4) جدول `anonymous_push_outbox`: منع الإزعاج والتكرار مع Dedup key لكل صنايعي/تصنيف.
 --   5) التبني التلقائي (Adoption): عند تسجيل دخول المستخدم، تنقل اهتماماته من المجهول
 --      إلى حسابه المسجل ويُحذف السجل المجهول.
---   6) Trigger النشر: عند نشر صانع جديد (approved + is_published)، يُجدوَل إشعار
+--   6) Trigger النشر: عند نشر صنايعي جديد (approved + is_published)، يُجدوَل إشعار
 --      للزوار المهتمين بالتصنيف، وللمسجلين المتابعين له.
 -- Idempotent — قابلة لإعادة التطبيق.
 -- ============================================================================
@@ -250,7 +250,7 @@ END;
 $function$;
 
 -- ----------------------------------------------------------------------------
--- PART 6 — Triggers عند نشر الصانع: إشعار المتابعين والزوار المهتمين
+-- PART 6 — Triggers عند نشر الصنايعي: إشعار المتابعين والزوار المهتمين
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.notify_category_subscribers_on_publish()
 RETURNS trigger
@@ -267,7 +267,7 @@ DECLARE
   v_secret text;
   v_outbox_id uuid;
 BEGIN
-  -- يتم الإطلاق فقط عند انتقال الصانع لحالة معتمد + منشور
+  -- يتم الإطلاق فقط عند انتقال الصنايعي لحالة معتمد + منشور
   IF NEW.is_published = true AND NEW.status = 'approved' AND
      (TG_OP = 'INSERT' OR OLD.is_published = false OR OLD.status IS DISTINCT FROM 'approved') THEN
 

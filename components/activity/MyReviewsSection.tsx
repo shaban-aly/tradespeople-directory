@@ -9,12 +9,9 @@ import {
   IconArrow,
 } from "@/components/shared/icons";
 import { toArabicDigits } from "@/lib/utils/format";
-import {
-  getUserAllReviews,
-  deleteReview,
-  type UserReviewDetail,
-  type ReviewItem,
-} from "@/lib/db/reviews";
+import { type ReviewItem } from "@/lib/db/reviews";
+import { getUserAllReviews, type UserReviewDetail } from "@/lib/db/reviews-queries";
+import { deleteReviewAction } from "@/app/actions/reviews";
 import { ReviewModal } from "@/components/craftsman/ReviewModal";
 
 interface MyReviewsSectionProps {
@@ -42,7 +39,7 @@ export function MyReviewsSection({
     if (!window.confirm("هل أنت متأكد من رغبتك في حذف هذا التقييم؟")) return;
 
     setDeletingId(reviewId);
-    const success = await deleteReview(userId, reviewId, craftsmanId);
+    const success = await deleteReviewAction(userId, reviewId, craftsmanId);
     setDeletingId(null);
 
     if (success) {

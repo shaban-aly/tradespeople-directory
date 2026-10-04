@@ -48,7 +48,7 @@ DECLARE
   v_secret text;
   v_outbox_id uuid;
 BEGIN
-  -- يتم الإطلاق فقط عند انتقال الصانع لحالة معتمد + منشور
+  -- يتم الإطلاق فقط عند انتقال الصنايعي لحالة معتمد + منشور
   IF NEW.is_published = true AND NEW.status = 'approved' AND
      (TG_OP = 'INSERT' OR OLD.is_published = false OR OLD.status IS DISTINCT FROM 'approved') THEN
 

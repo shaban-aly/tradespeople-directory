@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
 import { useForegroundPush } from "@/hooks/useForegroundPush";
 import { useBehaviorPushBridge } from "@/hooks/useBehaviorPushBridge";
+import { useNotifications } from "@/hooks/useNotifications";
+import { isSafeInternalLink } from "@/lib/utils/internalLink";
 import { type NotificationRow } from "@/lib/db/notifications";
 import { type ForegroundPushMessage } from "@/lib/push/client";
 import { IconBell, IconX } from "@/components/shared/icons";
@@ -13,7 +15,10 @@ type LiveToast = {
   id: string;
   title: string;
   body: string;
+  /** رابط داخلي مُتحقَّق منه فقط */
   link?: string;
+  /** معرّف الإشعار المحفوظ في القاعدة (لمّعاله كمقروء عند النقر) */
+  notificationId?: string;
 };
 
 const TOAST_TTL_MS = 6000;
@@ -25,6 +30,7 @@ const TOAST_TTL_MS = 6000;
  */
 export function NotificationsToast() {
   useBehaviorPushBridge();
+  const { markAsRead } = useNotifications();
   const [toasts, setToasts] = useState<LiveToast[]>([]);
   const seen = useRef(new Set<string>());
 
@@ -48,13 +54,19 @@ export function NotificationsToast() {
   useRealtimeNotifications(
     useCallback(
       (row: NotificationRow) => {
-        const meta = (row.metadata ?? {}) as { slug?: string };
-        const link = meta.slug ? `/craftsman/${meta.slug}` : undefined;
+        const meta = (row.metadata ?? {}) as { slug?: unknown; link?: unknown };
+        // نتحقق من الرابط الوارد من القاعدة — رابط قديم غير صالح يُتجاهل
+        const link = isSafeInternalLink(meta.link)
+          ? meta.link
+          : typeof meta.slug === "string" && meta.slug.trim().length > 0
+            ? `/craftsman/${encodeURIComponent(meta.slug.trim())}`
+            : undefined;
         displayToast({
           id: row.id,
           title: row.title,
           body: row.body,
           link,
+          notificationId: row.id,
         });
       },
       [displayToast],
@@ -66,11 +78,27 @@ export function NotificationsToast() {
     useCallback(
       (msg: ForegroundPushMessage) => {
         const id = msg.notificationId || `fcm-${msg.title}-${msg.body}`;
+        // رابط الـ FCM قد يكون مطلقاً — نحوّله لنسبي، ونرفض لو لم يكن داخلياً
+        let link: string | undefined;
+        if (msg.link) {
+          try {
+            const parsed = new URL(msg.link);
+            if (typeof window !== "undefined" && parsed.origin === window.location.origin) {
+              link = isSafeInternalLink(`${parsed.pathname}${parsed.search}`)
+                ? `${parsed.pathname}${parsed.search}`
+                : undefined;
+            }
+          } catch {
+            // رابط غير قابل للتحليل (نسبية أصلاً أو تالف)
+            link = isSafeInternalLink(msg.link) ? msg.link : undefined;
+          }
+        }
         displayToast({
           id,
           title: msg.title,
           body: msg.body,
-          link: msg.link,
+          link,
+          notificationId: msg.notificationId,
         });
       },
       [displayToast],
@@ -85,6 +113,19 @@ export function NotificationsToast() {
     <div className="pointer-events-none fixed top-16 left-1/2 z-[120] flex w-full max-w-sm -translate-x-1/2 flex-col gap-2 px-4">
       {toasts.map((toast) => {
         const href = toast.link || null;
+        const handleActivate = () => {
+          // الإشعار المحفوظ يُعلَّم كمقروء عند التفاعل مع التوست
+          if (toast.notificationId) void markAsRead(toast.notificationId);
+          remove(toast.id);
+        };
+        const content = (
+          <>
+            <p className="text-sm font-bold text-foreground">{toast.title}</p>
+            <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted">
+              {toast.body}
+            </p>
+          </>
+        );
         return (
           <div
             key={toast.id}
@@ -95,19 +136,17 @@ export function NotificationsToast() {
               <IconBell className="h-5 w-5" />
             </div>
             {href ? (
-              <Link href={href} className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-foreground">{toast.title}</p>
-                <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted">
-                  {toast.body}
-                </p>
+              <Link href={href} onClick={handleActivate} className="min-w-0 flex-1">
+                {content}
               </Link>
             ) : (
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-foreground">{toast.title}</p>
-                <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted">
-                  {toast.body}
-                </p>
-              </div>
+              <button
+                type="button"
+                onClick={handleActivate}
+                className="min-w-0 flex-1 text-right"
+              >
+                {content}
+              </button>
             )}
             <button
               type="button"

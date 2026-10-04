@@ -65,7 +65,7 @@ export default async function ProfilePage() {
   const [profileResult, favoritesResult, reviewsResult] = await Promise.all([
     supabase
       .from("profiles")
-      .select("role, craftsman_id, display_name, avatar_url")
+      .select("role, display_name, avatar_url")
       .eq("id", user.id)
       .maybeSingle(),
     supabase
@@ -85,7 +85,6 @@ export default async function ProfilePage() {
   const profile: SessionProfile | null = profileData
     ? {
         role: profileData.role as SessionProfile["role"],
-        craftsmanId: profileData.craftsman_id ?? null,
         displayName: profileData.display_name ?? null,
         avatarUrl: profileData.avatar_url ?? null,
       }

@@ -15,6 +15,14 @@ export const dynamic = "force-dynamic";
  *   PUSH_FUNCTION_URL          (رابط Edge Function send-push)
  *   PUSH_FUNCTION_SECRET       (سر مشترك بين trigger والدالة)
  *   NEXT_PUBLIC_SUPABASE_ANON_KEY (apikey الذي يمرره pg_net للـ gateway)
+ *
+ * إعادة جدولة إعادة المحاولة (pg_cron) لا تُستدعى من هنا عمداً:
+ * كل كتابة في push_settings يُطلق trigger (20261004103200) يستدعي
+ * refresh_notification_push_cron، في.reflect成為 الإعدادات الحالية تلقائياً
+ * هنا وفي أي كاتب مستقبلي. هذا المسار وحده يكفي — لو صار cron مرتبطاً
+ * بمسار واحد لبقي سلوك الجدولة معطّلاً حين يُعدَّل المفتاح من غيره.
+ * فحص المشرف على upsert_push_setting يتمّ داخل الدالة (profiles.role)،
+ * لأن دور authenticated يحتاج EXECUTE لاستدعائها من جلسة المستخدم.
  */
 export async function POST(request: NextRequest) {
   if (request.method !== "POST") {

@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
   }
 
   const slug = typeof body.slug === "string" ? body.slug.trim().toLowerCase() : "";
-  
+
   // قبول type أو contact_method
   let type: Metric | undefined;
   if (typeof body.contact_method === "string") {
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
   const viewedList = viewedCookie ? viewedCookie.split(",") : [];
 
   if (type === "view" && viewedList.includes(slug)) {
-    // تم تسجيل مشاهدة هذا الصانع بالفعل من هذا المتصفح خلال الـ 24 ساعة
+    // تم تسجيل مشاهدة هذا الصنايعي بالفعل من هذا المتصفح خلال الـ 24 ساعة
     return new NextResponse(null, { status: 204 });
   }
 
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
           getAll() {
             return request.cookies.getAll();
           },
-          setAll() {},
+          setAll() { },
         },
       },
     );

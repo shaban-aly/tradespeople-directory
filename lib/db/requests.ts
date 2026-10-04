@@ -89,20 +89,26 @@ export async function submitCraftsmanApplication(
     throw new Error("سجّل دخولك الأول عشان تقدر تضيف صنايعي");
   }
 
-  const { data: existingPending } = await supabase
-    .from("craftsmen")
-    .select("id")
-    .eq("submitted_by", user.id)
-    .eq("status", "pending")
-    .maybeSingle();
-  if (existingPending) {
-    throw new Error("عندك طلب تسجيل قيد المراجعة بالفعل. تواصل معنا إذا كنت تريد تعديله.");
-  }
-
   const [categoryId, areaId] = await Promise.all([
     getCategoryId(payload.category),
     getAreaId(payload.area),
   ]);
+
+  const { data: existingCraftsman } = await supabase
+    .from("craftsmen")
+    .select("status, is_published")
+    .eq("owner_user_id", user.id)
+    .eq("category_id", categoryId)
+    .in("status", ["pending", "approved"])
+    .maybeSingle();
+
+  if (existingCraftsman) {
+    if (existingCraftsman.status === "approved") {
+      throw new Error(`لديك بالفعل ملف صنايعي معتمد في تخصص ${payload.category}.`);
+    } else {
+      throw new Error(`لديك طلب قيد المراجعة بالفعل في تخصص ${payload.category}.`);
+    }
+  }
 
   let imageUrl: string | null = null;
   if (payload.image) {
@@ -123,6 +129,7 @@ export async function submitCraftsmanApplication(
     is_published: false,
     verified: false,
     submitted_by: user.id,
+    owner_user_id: user.id,
     social_links: payload.socialLinks.map((link) => ({
       platform: link.platform,
       url: link.url.trim(),

@@ -87,13 +87,14 @@ export type UploadedImage = {
 export async function uploadCraftsmanImage(
   file: File,
   folder: "requests" | "craftsmen",
+  craftsmanId?: string,
 ): Promise<UploadedImage> {
   const supabase = createSupabase();
 
   const res = await fetch("/api/storage/sign-upload", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ folder, fileName: file.name }),
+    body: JSON.stringify({ folder, fileName: file.name, craftsmanId }),
   });
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as { error?: string } | null;

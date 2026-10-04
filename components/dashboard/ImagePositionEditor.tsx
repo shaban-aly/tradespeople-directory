@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Cropper, { type Area, type Point } from "react-easy-crop";
 import type { AvatarPosition } from "@/lib/data/craftsmen";
-import { saveCraftsmanAvatarStandalone } from "@/lib/db/craftsman-dashboard";
+import { saveCraftsmanAvatarStandalone } from "@/lib/db/craftsman-mutations";
 import { revalidateProfileAfterSave } from "@/app/dashboard/actions";
 import { IconCheck, IconRefresh } from "@/components/shared/icons";
 

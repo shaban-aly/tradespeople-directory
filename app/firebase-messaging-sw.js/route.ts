@@ -27,11 +27,25 @@ export async function GET() {
 const app = firebase.initializeApp(${JSON.stringify(config)});
 const messaging = firebase.messaging(app);
 
+// ---- حارس الروابط الداخلية -------------------------------------------------
+// نفس قاعدة public/sw.js وlib/utils/internalLink.ts: أي رابط لا يبدأ بـ "/"
+// واحد (أو "//evil.example" أو javascript:) لا يُفتح ولا يُمرَّر لـ openWindow.
+function isSafeInternalPath(link) {
+  if (typeof link !== "string" || link.length < 1 || link.length > 500) return false;
+  if (!link.startsWith("/")) return false;
+  if (link.startsWith("//")) return false;
+  if (/[\\u0000-\\u001f\\u007f\\s\\\\]/.test(link)) return false;
+  var path = link.split("?")[0].split("#")[0];
+  if (path.indexOf(":") !== -1) return false;
+  return true;
+}
+
 messaging.onBackgroundMessage((payload) => {
   const data = payload.data || {};
   const title = data.title || "إشعار جديد";
   const body = data.body || "";
-  const link = data.link || "/notifications";
+  // رابط تالف ⇒ مسار مركز الإشعارات، ولا نخزّن قيمة غير داخلية في data
+  const link = isSafeInternalPath(data.link) ? data.link : "/notifications";
   const notificationId = data.notification_id;
   self.registration.showNotification(title, {
     body,
@@ -44,8 +58,15 @@ messaging.onBackgroundMessage((payload) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const link = (event.notification.data && event.notification.data.link) || "/notifications";
-  event.waitUntil(clients.openWindow(link));
+  var raw = (event.notification.data && event.notification.data.link) || "/notifications";
+  var target = isSafeInternalPath(raw) ? raw : "/notifications";
+  try {
+    var resolved = new URL(target, self.location.origin);
+    if (resolved.origin !== self.location.origin) resolved = new URL("/notifications", self.location.origin);
+    event.waitUntil(clients.openWindow(resolved.href));
+  } catch (err) {
+    event.waitUntil(clients.openWindow("/notifications"));
+  }
 });
 `;
 

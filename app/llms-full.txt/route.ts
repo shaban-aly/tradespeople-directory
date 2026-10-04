@@ -1,7 +1,7 @@
 import { getCategories, getCraftsmen } from "@/lib/db/queries";
 import { siteDescription, siteName, siteUrl } from "@/lib/data/site";
 // llms-full.txt يكفيه تحديث يومي
-export const revalidate = 86400; // 24 ساعة بالثواني
+export const revalidate = false;
 
 export async function GET() {
   const [categories, craftsmen] = await Promise.all([

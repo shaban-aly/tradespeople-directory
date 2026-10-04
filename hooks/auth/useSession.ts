@@ -7,7 +7,6 @@ export type UserRole = "client" | "craftsman" | "admin";
 
 export interface SessionProfile {
   role: UserRole;
-  craftsmanId: string | null;
   displayName: string | null;
   avatarUrl: string | null;
 }

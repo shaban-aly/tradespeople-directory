@@ -55,9 +55,8 @@ export function ActivityFeed({
         <div>
           <div className="flex items-center gap-2">
             <span
-              className={`flex h-2.5 w-2.5 rounded-full ${
-                isLoading ? "bg-amber-500 animate-spin" : "bg-emerald-500 animate-pulse"
-              }`}
+              className={`flex h-2.5 w-2.5 rounded-full ${isLoading ? "bg-amber-500 animate-spin" : "bg-emerald-500 animate-pulse"
+                }`}
             />
             <h2 className="text-lg font-bold text-foreground sm:text-xl">
               سجل التفاعلات اللحظي (Activity Feed)
@@ -78,11 +77,10 @@ export function ActivityFeed({
                 type="button"
                 onClick={() => void handleTimeframeChange(opt.value)}
                 disabled={isLoading}
-                className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all sm:text-sm cursor-pointer disabled:opacity-60 ${
-                  isActive
+                className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all sm:text-sm cursor-pointer disabled:opacity-60 ${isActive
                     ? "bg-accent text-accent-contrast shadow-sm"
                     : "text-muted hover:text-foreground hover:bg-card"
-                }`}
+                  }`}
               >
                 {opt.label}
               </button>
@@ -123,14 +121,13 @@ export function ActivityFeed({
             لا توجد تفاعلات مسجلة في هذه الفترة
           </h3>
           <p className="mt-1 text-xs text-muted">
-            ستظهر هنا العمليات فور قيام الزوار بالنقر على الاتصال أو الواتساب لأي صانع.
+            ستظهر هنا العمليات فور قيام الزوار بالنقر على الاتصال أو الواتساب لأي صنايعي.
           </p>
         </div>
       ) : (
         <div
-          className={`mt-4 divide-y divide-border/60 transition-opacity duration-200 ${
-            isLoading ? "opacity-50 pointer-events-none" : "opacity-100"
-          }`}
+          className={`mt-4 divide-y divide-border/60 transition-opacity duration-200 ${isLoading ? "opacity-50 pointer-events-none" : "opacity-100"
+            }`}
         >
           {feedList.map((item) => {
             const isWhatsapp = item.contactMethod === "whatsapp";
@@ -144,11 +141,10 @@ export function ActivityFeed({
                 {/* أيقونة وسيلة التواصل */}
                 <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${
-                      isWhatsapp
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${isWhatsapp
                         ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                         : "bg-accent/10 text-accent"
-                    }`}
+                      }`}
                   >
                     {isWhatsapp ? (
                       <IconWhatsApp className="h-5 w-5" />
@@ -161,11 +157,10 @@ export function ActivityFeed({
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-1.5 text-xs sm:text-sm text-foreground">
                       <span
-                        className={`inline-block rounded-md px-1.5 py-0.5 text-[11px] font-medium ${
-                          isAuthenticated
+                        className={`inline-block rounded-md px-1.5 py-0.5 text-[11px] font-medium ${isAuthenticated
                             ? "bg-accent/15 text-accent font-semibold"
                             : "bg-muted/15 text-muted"
-                        }`}
+                          }`}
                       >
                         {isAuthenticated
                           ? item.userDisplayName

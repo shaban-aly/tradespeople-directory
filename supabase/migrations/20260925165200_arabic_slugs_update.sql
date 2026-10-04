@@ -50,7 +50,7 @@ BEGIN
   FROM public.categories
   WHERE id = v_craftsman.category_id;
 
-  -- تنظيف اسم الصانع
+  -- تنظيف اسم الصنايعي
   v_clean_name := lower(regexp_replace(v_craftsman.name, '[^a-zA-Z0-9\u0621-\u064A\u0660-\u0669]+', '-', 'g'));
   v_clean_name := trim(both '-' from v_clean_name);
   v_clean_name := regexp_replace(v_clean_name, '-+', '-', 'g');

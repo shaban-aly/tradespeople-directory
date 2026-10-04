@@ -10,6 +10,69 @@ try {
 }
 
 // ---------------------------------------------------------------------------
+// 3. إشعارات الخلفية والنقر عليها
+// ---------------------------------------------------------------------------
+// Firebase يستدعي onBackgroundMessage عبر وحدة firebase-messaging-sw.js المستوردة
+// أعلاه، فنعرض الإشعار بأنفسنا (payload data-only لمنع عرض مزدوج).
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+
+  let payload;
+  try {
+    payload = event.data.json();
+  } catch (err) {
+    console.error("[SW] push payload is not JSON:", err);
+    return;
+  }
+
+  const title = (payload && payload.title) || "إشعار جديد";
+  const body = payload.body || "";
+  // رابط غير صالح ⇒ لا نمرره إطلاقاً (لا نافذة خارجية ولا javascript:)
+  const link = isSafeInternalPath(payload.link) ? payload.link : "";
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: "/web-app-manifest-192x192.png",
+      badge: "/web-app-manifest-192x192.png",
+      tag: payload.notification_id || "tradespeople-push",
+      renotify: false,
+      data: { link, notificationId: payload.notification_id || null },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  const data = (event.notification && event.notification.data) || {};
+
+  event.waitUntil(
+    (async () => {
+      // 1) رابط داخلي صالح فقط
+      const href = resolveInternalLink(data.link);
+      if (href) {
+        await self.clients.openWindow(href);
+        return;
+      }
+
+      // 2) لا رابط صالح: نركّز نافذة مفتوحة، وإلا نفتح الصفحة الرئيسية
+      const clientList = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+      for (const client of clientList) {
+        if ("focus" in client) {
+          await client.focus();
+          return;
+        }
+      }
+      await self.clients.openWindow("/");
+    })(),
+  );
+});
+
+// ---------------------------------------------------------------------------
 // 2. سياسة الكاش: لا Offline App إطلاقاً
 // ---------------------------------------------------------------------------
 //   - صفحات الموقع والت navigation: NETWORK ONLY. عند تعذّر الاتصال فقط نعرض
@@ -33,6 +96,37 @@ const APP_CACHE_PREFIXES = ["shell-v", "runtime-v", "offline-v"];
 
 function isAppCache(key) {
   return APP_CACHE_PREFIXES.some((prefix) => key.startsWith(prefix));
+}
+
+// ---------------------------------------------------------------------------
+// 2b. حارس الروابط الداخلية (Internal Link Guard)
+// ---------------------------------------------------------------------------
+// نفس قاعدة `public.is_safe_internal_link` في القاعدة و`lib/utils/internalLink.ts`
+// و`supabase/functions/send-push/lib.ts` — أربع نسخ متطابقة عن قصد، كل واحدة
+// تغلق باباً: القاعدة تمنع التخزين، والخادم يمنع الإرسال، الواجهة تمنع العرض،
+// وهنا نمنع فتح أي نافذة من payload وصلنا.
+// أي رابط خارجي أو javascript: في رسالة push لا يفتح شيئاً ولا يُمرَّر لـ clients.
+function isSafeInternalPath(link) {
+  if (typeof link !== "string" || link.length < 1 || link.length > 500) return false;
+  if (!link.startsWith("/")) return false;
+  if (link.startsWith("//")) return false;
+  if (/[\u0000-\u001f\u007f\s\\]/.test(link)) return false;
+  const path = link.split("?")[0].split("#")[0];
+  if (path.includes(":")) return false;
+  return true;
+}
+
+/** يحوّل رابطاً داخلياً صالحاً إلى URL مطلق، أو null إن كان غير صالح */
+function resolveInternalLink(link) {
+  if (!isSafeInternalPath(link)) return null;
+  try {
+    const target = new URL(link, self.location.origin);
+    if (target.origin !== self.location.origin) return null;
+    return target.href;
+  } catch (err) {
+    console.error("[SW] Failed to resolve internal link:", err);
+    return null;
+  }
 }
 
 // يجلب صفحة /offline (HTML مكتفٍ بذاته) ويخزّنها كمفتاح "/offline" فقط.

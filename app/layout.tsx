@@ -9,6 +9,7 @@ import { PwaRegister } from "@/components/shared/layout/PwaRegister";
 import { OfflineBanner } from "@/components/shared/ui/OfflineBanner";
 import { SessionProvider } from "@/hooks/auth/SessionProvider";
 import { PushAutoEnabler } from "@/components/notifications/PushAutoEnabler";
+import { NotificationsProvider } from "@/components/notifications/NotificationsProvider";
 import {
   siteName,
   siteTagline,
@@ -161,12 +162,16 @@ export default function RootLayout({
         className={`${cairo.variable} ${tajawal.variable} bg-background font-body text-foreground antialiased`}
       >
         <SessionProvider>
-          <PushAutoEnabler />
-          <PwaRegister />
-          <OfflineBanner />
-          <PwaInstallBanner />
-          <ExternalBrowserBanner delayMs={10_000} />
-          <ProgressBarProvider>{children}</ProgressBarProvider>
+          {/* مصدر حالة الإشعارات الوحيد: يغطي الموقع ولوحات التحكم معاً،
+              فيبقى الجرس وصفحة /notifications والـ Toast متزامنة دائماً */}
+          <NotificationsProvider>
+            <PushAutoEnabler />
+            <PwaRegister />
+            <OfflineBanner />
+            <PwaInstallBanner />
+            <ExternalBrowserBanner delayMs={10_000} />
+            <ProgressBarProvider>{children}</ProgressBarProvider>
+          </NotificationsProvider>
         </SessionProvider>
       </body>
     </html>

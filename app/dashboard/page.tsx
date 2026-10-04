@@ -1,24 +1,32 @@
 import { notFound } from "next/navigation";
 import { getServerSession } from "@/lib/db/server";
-import { getCraftsmanDashboardData } from "@/lib/db/craftsman-dashboard";
+import { getCraftsmanDashboardData, getMyCraftsmen } from "@/lib/db/craftsman-dashboard";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { ProfileCompletionCard } from "@/components/dashboard/ProfileCompletionCard";
 import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { CraftsmanStatsGrid } from "@/components/dashboard/CraftsmanStatsGrid";
 import { CraftsmanActivityFeed } from "@/components/dashboard/CraftsmanActivityFeed";
 import { ReviewsSection } from "@/components/dashboard/ReviewsSection";
+import { MyCraftsmenSwitcher } from "@/components/dashboard/MyCraftsmenSwitcher";
 import { ButtonLink } from "@/components/shared/ui/Button";
 import { IconUser } from "@/components/shared/icons";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ craftsman?: string }>;
+}) {
   const { supabase, user } = await getServerSession();
   if (!user) notFound();
 
-  const data = await getCraftsmanDashboardData(user.id, supabase);
+  const params = await searchParams;
 
-  if (!data) {
+  // جلب جميع ملفات الصنايعي المملوكة للمستخدم
+  const allCraftsmen = await getMyCraftsmen(user.id, supabase);
+
+  if (allCraftsmen.length === 0) {
     return (
       <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-card sm:p-10">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 text-3xl text-amber-500">
@@ -30,7 +38,6 @@ export default async function DashboardPage() {
         <p className="mx-auto mt-2 max-w-md text-sm text-muted leading-relaxed">
           لقد قمت بتسجيل الدخول بنجاح، ولكن حسابك لم يُربط بعد بملف فني في دليل الصنايعية. إذا كنت قد قدمت طلب انضمام سابقاً، فسيتم تفعيل لوحتك بمجرد مراجعة المشرف للطلب.
         </p>
-
         <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center items-center">
           <ButtonLink
             href="/join"
@@ -44,10 +51,30 @@ export default async function DashboardPage() {
     );
   }
 
+  // تحديد الملف النشط: من الـ query param أو أحدث ملف
+  const requestedId = params.craftsman;
+  const activeCraftsman =
+    allCraftsmen.find((c) => c.id === requestedId) ?? allCraftsmen[0];
+
+  const data = await getCraftsmanDashboardData(user.id, activeCraftsman.id, supabase);
+
+  if (!data) {
+    return (
+      <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-card sm:p-10">
+        <p className="text-sm text-muted">تعذّر تحميل بيانات الملف المحدد.</p>
+      </div>
+    );
+  }
+
   return (
     <>
       <DashboardHeader profile={data.profile} />
       <ProfileCompletionCard profile={data.profile} />
+      {/* شريط التبديل بين الملفات (يظهر فقط لو عنده أكثر من ملف أو ملف واحد لإظهار زر "إضافة") */}
+      <MyCraftsmenSwitcher
+        craftsmen={allCraftsmen}
+        activeCraftsmanId={activeCraftsman.id}
+      />
       <DashboardNav />
       <CraftsmanStatsGrid stats={data.stats} />
       <CraftsmanActivityFeed items={data.recentInteractions} />

@@ -121,18 +121,52 @@ export function isUnregisteredStatus(status: number): boolean {
 
 export type LinkResolver = (metadata: Record<string, unknown>) => string | undefined;
 
-/** رابط نقرة الإشعار: metadata.slug → صفحة الصنايعي، وإلا صفحة الإشعارات */
+export const MAX_INTERNAL_LINK_LENGTH = 500;
+
+/**
+ * نفس قاعدة `public.is_safe_internal_link` (migration
+ * `20261004072423_notification_internal_link_guard.sql`) ونفس
+ * `lib/utils/internalLink.ts` — ثلاث نسخ متطابقة عن قصد: القاعدة تمنع التخزين،
+ * والخادم يمنع الإرسال، والواجهة تمنع العرض.
+ */
+export function isSafeInternalLink(link: unknown): link is string {
+  if (typeof link !== "string") return false;
+  if (link.length < 1 || link.length > MAX_INTERNAL_LINK_LENGTH) return false;
+  if (!link.startsWith("/")) return false;
+  if (link.startsWith("//")) return false;
+  // محارف تحكّم / مسافات / backslash
+  if (/[\u0000-\u001f\u007f\s\\]/.test(link)) return false;
+  const path = link.split("?")[0].split("#")[0];
+  if (path.includes(":")) return false;
+  return true;
+}
+
+/**
+ * يبني رابطاً مطلقاً من مسار داخلي صالح فقط.
+ * يرجع `undefined` عند غياب siteUrl أو عند رفض المسار — فلا يُرسَل أبداً
+ * رابط خارجي أو javascript: في رسالة push.
+ */
+export function toAbsoluteInternalUrl(
+  siteUrl: string | undefined,
+  internalPath: string,
+): string | undefined {
+  if (!siteUrl) return undefined;
+  if (!isSafeInternalLink(internalPath)) return undefined;
+  return `${siteUrl.replace(/\/$/, "")}${internalPath}`;
+}
+
+/** رابط نقرة الإشعار: metadata.link (داخلي فقط) → صفحة الصنايعي → صفحة الإشعارات */
 export const defaultLinkResolver: LinkResolver = (metadata) => {
   const base = metadata.siteUrl as string | undefined;
   const directLink = metadata.link as string | undefined;
   const slug = metadata.slug as string | undefined;
 
-  if (base && directLink) {
-    return directLink.startsWith("http")
-      ? directLink
-      : `${base.replace(/\/$/, "")}${directLink}`;
+  if (base && isSafeInternalLink(directLink)) {
+    return `${base.replace(/\/$/, "")}${directLink}`;
   }
-  if (base && slug) return `${base.replace(/\/$/, "")}/craftsman/${slug}`;
-  if (base) return `${base.replace(/\/$/, "")}/notifications`;
+  if (base && typeof slug === "string" && slug.trim().length > 0) {
+    return toAbsoluteInternalUrl(base, `/craftsman/${encodeURIComponent(slug.trim())}`);
+  }
+  if (base) return toAbsoluteInternalUrl(base, "/notifications");
   return undefined;
 };

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getServerSession } from "@/lib/db/server";
-import { getUserAllReviews } from "@/lib/db/reviews";
+import { getUserAllReviews } from "@/lib/db/reviews-queries";
 import { MyReviewsSection } from "@/components/activity/MyReviewsSection";
 import { GoogleSignInButton } from "@/components/shared/GoogleSignInButton";
 import {

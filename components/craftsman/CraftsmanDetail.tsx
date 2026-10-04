@@ -190,6 +190,7 @@ export function CraftsmanDetail({
         <CraftsmanReviewsSection
           craftsmanId={craftsman.id}
           craftsmanName={craftsman.name}
+          ownerUserId={craftsman.ownerUserId ?? null}
         />
       </Suspense>
 

@@ -257,6 +257,7 @@ export type Database = {
           image_url: string | null
           is_published: boolean
           name: string
+          owner_user_id: string | null
           phone: string
           slug: string | null
           social_links: Json
@@ -277,6 +278,7 @@ export type Database = {
           image_url?: string | null
           is_published?: boolean
           name: string
+          owner_user_id?: string | null
           phone: string
           slug?: string | null
           social_links?: Json
@@ -297,6 +299,7 @@ export type Database = {
           image_url?: string | null
           is_published?: boolean
           name?: string
+          owner_user_id?: string | null
           phone?: string
           slug?: string | null
           social_links?: Json
@@ -436,7 +439,6 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
-          craftsman_id: string | null
           created_at: string
           display_name: string | null
           id: string
@@ -445,7 +447,6 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
-          craftsman_id?: string | null
           created_at?: string
           display_name?: string | null
           id: string
@@ -454,7 +455,6 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
-          craftsman_id?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
@@ -766,6 +766,7 @@ export type Database = {
         Args: { craftsman_id_input: string; user_email_input: string }
         Returns: boolean
       }
+      mark_all_notifications_read: { Args: Record<PropertyKey, never>; Returns: number }
       mark_notifications_read: { Args: { p_ids: string[] }; Returns: number }
       normalize_arabic: { Args: { p_text: string }; Returns: string }
       notify_all_admins: {

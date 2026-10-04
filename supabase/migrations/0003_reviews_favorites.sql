@@ -172,7 +172,7 @@ BEGIN
     END IF;
 
     IF NEW.craftsman_id IS DISTINCT FROM OLD.craftsman_id THEN
-      RAISE EXCEPTION 'لا يمكن نقل التقييم إلى صانع آخر';
+      RAISE EXCEPTION 'لا يمكن نقل التقييم إلى صنايعي آخر';
     END IF;
 
     NEW.updated_at := now();

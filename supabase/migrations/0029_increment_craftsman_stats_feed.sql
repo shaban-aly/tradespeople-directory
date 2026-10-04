@@ -117,6 +117,6 @@ REVOKE ALL ON FUNCTION public.increment_craftsman_stats(text, text, text, uuid, 
 GRANT EXECUTE ON FUNCTION public.increment_craftsman_stats(text, text, text, uuid, text) TO anon, authenticated;
 
 COMMENT ON FUNCTION public.increment_craftsman_stats(text, text, text, uuid, text) IS
-  'تسجيل تفاعل (مشاهدة/اتصال/واتساب) مع صانع، وزيادة العداد التراكمي واليومي وتدوين سجل التفاعل اللحظي في معاملة واحدة';
+  'تسجيل تفاعل (مشاهدة/اتصال/واتساب) مع صنايعي، وزيادة العداد التراكمي واليومي وتدوين سجل التفاعل اللحظي في معاملة واحدة';
 
 COMMIT;

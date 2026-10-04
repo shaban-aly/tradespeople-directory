@@ -9,10 +9,10 @@ import {
 } from "@/lib/storage/images";
 import { revalidateProfileAfterSave } from "@/app/dashboard/actions";
 import {
-  updateCraftsmanSelfProfile,
   type CraftsmanSelfProfile,
   type DashboardSocialLink,
 } from "@/lib/db/craftsman-dashboard";
+import { updateCraftsmanSelfProfile } from "@/lib/db/craftsman-mutations";
 
 import {
   anyError,
@@ -85,7 +85,7 @@ export function useCraftsmanProfileForm(
   useEffect(() => {
     if (initialAreas) return;
     let mounted = true;
-    void import("@/lib/db/craftsman-dashboard")
+    void import("@/lib/db/craftsman-mutations")
       .then(({ getAreasList }) => getAreasList())
       .then((res) => {
         if (mounted) setAreas(res);

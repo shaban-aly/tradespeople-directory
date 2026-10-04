@@ -5,6 +5,7 @@ import { useSession } from "@/hooks/auth/useSession";
 import { useNotifications } from "@/hooks/useNotifications";
 import { EmptyState } from "@/components/shared/ui/EmptyState";
 import { formatRelativeTime } from "@/lib/utils/formatTime";
+import { resolveNotificationHref } from "@/lib/utils/notificationLink";
 import type { NotificationRow } from "@/lib/db/notifications";
 import {
   IconAlert,
@@ -14,19 +15,13 @@ import {
   IconInbox,
   IconLink,
   IconMail,
+  IconRefresh,
   IconShieldCheck,
   IconSparkles,
   IconStar,
   IconUserPlus,
   IconX,
 } from "@/components/shared/icons";
-
-const PAGE_LIMIT = 200;
-
-type NotificationMeta = {
-  slug?: string;
-  link?: string;
-};
 
 function iconForType(type: string) {
   switch (type) {
@@ -63,19 +58,17 @@ function iconForType(type: string) {
 function NotificationRow({
   n,
   onMarkRead,
+  isAdmin,
+  currentUserId,
 }: {
   n: NotificationRow;
   onMarkRead?: (id: string) => void;
+  isAdmin: boolean;
+  currentUserId: string | null;
 }) {
   const { Icon, tone } = iconForType(n.type);
-  const meta = (n.metadata ?? {}) as NotificationMeta;
-  const href = meta.link
-    ? meta.link
-    : meta.slug
-      ? `/craftsman/${meta.slug}`
-      : n.type === "new_request" || n.type === "new_report" || n.type === "new_message"
-        ? "/admin"
-        : null;
+  // رابط داخلي مُتحقَّق منه فقط — لا خروج عن الموقع ولا javascript:
+  const href = resolveNotificationHref(n, { isAdmin, currentUserId });
 
   const row = (
     <>
@@ -142,12 +135,26 @@ function NotificationRow({
 }
 
 export function NotificationsFullPage() {
-  const { isLoggedIn } = useSession();
-  const { items, unreadCount, loading, markAllRead, markAsRead } = useNotifications(PAGE_LIMIT);
+  const { isLoggedIn, isAdmin, user } = useSession();
+  const {
+    items,
+    unreadCount,
+    loading,
+    error,
+    markingAll,
+    markError,
+    refresh,
+    markAllRead,
+    markAsRead,
+  } = useNotifications();
 
   if (!isLoggedIn) {
     return null;
   }
+
+  // الخطأ حالة منفصلة عن الفراغ: لا «لا توجد إشعارات» إلا بنجاح حقيقي بلا صفوف.
+  const showErrorState = error !== null && items.length === 0;
+  const showEmptyState = error === null && !loading && items.length === 0;
 
   return (
     <div className="mx-auto w-full max-w-2xl">
@@ -162,13 +169,46 @@ export function NotificationsFullPage() {
           <button
             type="button"
             onClick={() => void markAllRead()}
-            className="flex min-h-12 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-accent transition-colors hover:bg-accent/10"
+            disabled={markingAll}
+            aria-busy={markingAll}
+            className="flex min-h-12 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-accent transition-colors hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <IconCheck className="h-4 w-4" />
-            تعليم الكل كمقروء
+            {markingAll ? "جارٍ التعليم…" : "تعليم الكل كمقروء"}
           </button>
         )}
         </div>
+
+        {markError && (
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-xl border border-danger/20 bg-danger/10 p-3 text-sm leading-relaxed text-danger"
+          >
+            <IconAlert className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>لم يتم حفظ التعديل: {markError}</span>
+          </div>
+        )}
+
+        {/* فشل العدّاد وحده: القائمة سليمة لكن العدد غير موثوق */}
+        {error !== null && items.length > 0 && (
+          <div
+            role="status"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-danger/20 bg-danger/10 p-3 text-sm leading-relaxed text-danger"
+          >
+            <span className="flex items-start gap-2">
+              <IconAlert className="mt-0.5 h-4 w-4 shrink-0" />
+              تعذّر تحديث عدّاد الإشعارات: {error}
+            </span>
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              className="flex min-h-12 items-center gap-2 rounded-xl px-3 font-semibold text-danger underline-offset-4 hover:underline"
+            >
+              <IconRefresh className="h-4 w-4" />
+              إعادة المحاولة
+            </button>
+          </div>
+        )}
       </div>
 
       {loading && items.length === 0 ? (
@@ -180,7 +220,23 @@ export function NotificationsFullPage() {
             />
           ))}
         </div>
-      ) : items.length === 0 ? (
+      ) : showErrorState ? (
+        <EmptyState
+          icon={<IconAlert className="h-6 w-6" />}
+          title="تعذّر تحميل إشعاراتك"
+          description={error ?? "حدث خطأ أثناء الاتصال. جرّب مرة أخرى."}
+          action={
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              className="flex min-h-12 items-center gap-2 rounded-xl px-4 text-base font-semibold text-accent transition-colors hover:bg-accent/10"
+            >
+              <IconRefresh className="h-4 w-4" />
+              إعادة المحاولة
+            </button>
+          }
+        />
+      ) : showEmptyState ? (
         <EmptyState
           icon={<IconInbox className="h-6 w-6" />}
           title="لا توجد إشعارات"
@@ -189,7 +245,13 @@ export function NotificationsFullPage() {
       ) : (
         <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-card">
           {items.map((n) => (
-            <NotificationRow key={n.id} n={n} onMarkRead={markAsRead} />
+            <NotificationRow
+              key={n.id}
+              n={n}
+              onMarkRead={markAsRead}
+              isAdmin={isAdmin}
+              currentUserId={user?.id ?? null}
+            />
           ))}
         </ul>
       )}

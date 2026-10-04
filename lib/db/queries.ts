@@ -8,39 +8,15 @@ import type {
   CraftsmanSort,
   SocialLink,
 } from "../data/craftsmen";
-import { CACHE_TAGS, DATA_CACHE_KEYS, SEARCH_CACHE_KEYS, SEARCH_CACHE_REVALIDATE, SEARCH_TAG } from "./cache";
+import { CACHE_TAGS, DATA_CACHE_KEYS, SEARCH_CACHE_KEYS, SEARCH_CACHE_REVALIDATE, SEARCH_TAG, makeKeyedCache } from "./cache";
 import { matchScore, matchesQuery, normalizeArabic, type SearchData } from "../search";
 
 const CRAFTSMAN_SELECT =
-  "id, slug, name, image_url, avatar_position, phone, whatsapp, description, verified, added_at, updated_at, social_links, category:categories(slug, name, singular_name, plural_name, icon), area:areas(name)";
+  "id, slug, name, image_url, avatar_position, phone, whatsapp, description, verified, added_at, updated_at, social_links, owner_user_id, category:categories(slug, name, singular_name, plural_name, icon), area:areas(name)";
 const CRAFTSMAN_BY_CATEGORY_SELECT =
   "id, slug, name, image_url, avatar_position, phone, whatsapp, description, verified, added_at, updated_at, social_links, category:categories!inner(slug, name, singular_name, plural_name, icon), area:areas(name), stats:craftsman_stats(views, calls, whatsapp)";
 
-/**
- * غلاف يكش لكل مماثلة (slug...) نسخة كاش منفصلة بمفتاح ووسم خاصين بها
- * (`craftsman:slug:<slug>`)، بحيث يمكن إبطال صفحة صنايعي واحدة دون المساس
- * بوسوم quint العامة. `unstable_cache` يثبّت الوسوم وقت الإنشاء، لذا ننشئ
- * نسخة لكل مفتاح ونعيد استعمالها من سجل داخلي (slug universe محصور من DB).
- */
-function keyedCache<TArgs extends unknown[], TResult>(
-  fn: (...args: TArgs) => Promise<TResult>,
-  namespace: string,
-  tagFor: (...args: TArgs) => string,
-) {
-  const registry = new Map<string, ReturnType<typeof unstable_cache<typeof fn>>>();
-  return async (...args: TArgs): Promise<TResult> => {
-    const key = JSON.stringify(args);
-    let cached = registry.get(key);
-    if (!cached) {
-      cached = unstable_cache(fn, [namespace, key], {
-        revalidate: SEARCH_CACHE_REVALIDATE,
-        tags: [tagFor(...args), CACHE_TAGS.craftsmenList, CACHE_TAGS.stats, SEARCH_TAG],
-      });
-      registry.set(key, cached);
-    }
-    return cached(...args);
-  };
-}
+
 
 type CategoryRow = { slug: string; name: string; singular_name: string; plural_name: string; icon: string };
 type AreaRow = { name: string };
@@ -103,6 +79,7 @@ function mapCraftsman(row: CraftsmanRow): Craftsman {
     rating: { average: 0, totalReviews: 0 },
     addedAt: row.added_at,
     updatedAt: row.updated_at ?? row.added_at,
+    ownerUserId: (row as { owner_user_id?: string | null }).owner_user_id ?? null,
     socialLinks,
   };
 }
@@ -195,7 +172,7 @@ async function getCraftsmenImpl(): Promise<Craftsman[]> {
 
 export const getCraftsmen = unstable_cache(getCraftsmenImpl, [
   DATA_CACHE_KEYS.craftsmen,
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.stats, SEARCH_TAG] });
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.allCraftsmen, SEARCH_TAG] });
 
 async function getCraftsmanBySlugImpl(slug: string): Promise<Craftsman | undefined> {
   let normalizedSlug = slug;
@@ -215,7 +192,7 @@ async function getCraftsmanBySlugImpl(slug: string): Promise<Craftsman | undefin
   return mapCraftsman(data);
 }
 
-export const getCraftsmanBySlug = keyedCache(
+export const getCraftsmanBySlug = makeKeyedCache(
   getCraftsmanBySlugImpl,
   "data-craftsman-by-slug",
   (slug) => CACHE_TAGS.craftsmanSlug(slug),
@@ -241,9 +218,12 @@ async function getCraftsmenByCategoryImpl(slug: string): Promise<CraftsmanWithSt
  * ملاحظة: تقوم unstable_cache بتضمين وسيط التخصص (slug) تلقائياً في مفتاح الكاش،
  * بينما وسوم الكاش (tags) تُستخدم للإبطال الشامل عند تحديث أي صنايعي أو تصنيف.
  */
-export const getCraftsmenByCategory = unstable_cache(getCraftsmenByCategoryImpl, [
+export const getCraftsmenByCategory = makeKeyedCache(
+  getCraftsmenByCategoryImpl,
   "data-craftsmen-by-category",
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.categories, CACHE_TAGS.stats, SEARCH_TAG] });
+  (slug) => CACHE_TAGS.categoryList(slug),
+  [CACHE_TAGS.categories, SEARCH_TAG]
+);
 
 type CategoryCountRow = { slug: string; craftsman_count: number };
 
@@ -268,7 +248,7 @@ async function getCategoryCountsImpl(): Promise<Record<string, number>> {
 
 export const getCategoryCounts = unstable_cache(getCategoryCountsImpl, [
   "data-category-counts-v2",
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.categories, SEARCH_TAG] });
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.allCraftsmen, CACHE_TAGS.categories, SEARCH_TAG] });
 
 export async function getCategoriesWithCounts(): Promise<CategoryWithCount[]> {
   const [categories, counts] = await Promise.all([getCategories(), getCategoryCounts()]);
@@ -323,7 +303,7 @@ async function getStatsImpl(): Promise<{ craftsmen: number; categories: number; 
 export const getStats = unstable_cache(
   getStatsImpl,
   [DATA_CACHE_KEYS.stats],
-  { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.stats, CACHE_TAGS.craftsmenList] },
+  { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.homeStats, CACHE_TAGS.allCraftsmen] },
 );
 
 type StatsRow = { views: number; calls: number; whatsapp: number };
@@ -410,7 +390,7 @@ async function getFeaturedCraftsmenImpl(
 
 export const getFeaturedCraftsmen = unstable_cache(getFeaturedCraftsmenImpl, [
   "featured-craftsmen",
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.stats, SEARCH_TAG] });
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.allCraftsmen] });
 
 async function getVerifiedCraftsmenImpl(
   count: number = 10,
@@ -448,7 +428,7 @@ async function getVerifiedCraftsmenImpl(
 
 export const getVerifiedCraftsmen = unstable_cache(getVerifiedCraftsmenImpl, [
   "verified-craftsmen",
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.stats, SEARCH_TAG] });
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.homeVerified, CACHE_TAGS.allCraftsmen] });
 
 /** صنايعي مع إحصائياته الحقيقية — مجموعة اقتراحات «مقترحات لك». */
 export type CraftsmanWithStats = Craftsman & {
@@ -475,7 +455,7 @@ async function getRecommendationPoolImpl(
 
 export const getRecommendationPool = unstable_cache(getRecommendationPoolImpl, [
   "recommendation-pool",
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, CACHE_TAGS.stats, SEARCH_TAG] });
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.allCraftsmen] });
 
 async function getSearchDataImpl(): Promise<SearchData> {
   const [categories, areas, craftsmen] = await Promise.all([
@@ -504,7 +484,7 @@ async function getSearchDataImpl(): Promise<SearchData> {
 
 export const getSearchData = unstable_cache(getSearchDataImpl, [
   SEARCH_CACHE_KEYS.data,
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.categories, CACHE_TAGS.areas, CACHE_TAGS.craftsmenList, SEARCH_TAG] });
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.categories, CACHE_TAGS.areas, CACHE_TAGS.allCraftsmen, SEARCH_TAG] });
 
 async function searchCraftsmenImpl(
   query: string,
@@ -530,4 +510,4 @@ async function searchCraftsmenImpl(
 
 export const searchCraftsmen = unstable_cache(searchCraftsmenImpl, [
   SEARCH_CACHE_KEYS.craftsmen,
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.craftsmenList, SEARCH_TAG] });
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.allCraftsmen, SEARCH_TAG] });

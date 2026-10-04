@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "@/hooks/auth/useSession";
+import { type RatingSummary, type ReviewItem } from "@/lib/db/reviews";
 import {
-  getCraftsmanRatingSummary,
-  getCraftsmanReviews,
-  getUserReviewForCraftsman,
-  type RatingSummary,
-  type ReviewItem,
-} from "@/lib/db/reviews";
+  fetchCraftsmanRatingSummaryAction,
+  fetchCraftsmanReviewsAction,
+  fetchUserReviewAction,
+} from "@/app/actions/reviews-queries-actions";
 
 /**
  * جلب بيانات التقييمات (دالة خالصة على مستوى الموديول — بلا setState).
@@ -17,11 +16,11 @@ import {
  */
 async function fetchReviewsData(craftsmanId: string, userId: string | undefined) {
   const [summary, reviews] = await Promise.all([
-    getCraftsmanRatingSummary(craftsmanId),
-    getCraftsmanReviews(craftsmanId),
+    fetchCraftsmanRatingSummaryAction(craftsmanId),
+    fetchCraftsmanReviewsAction(craftsmanId),
   ]);
   const userReview = userId
-    ? await getUserReviewForCraftsman(userId, craftsmanId)
+    ? await fetchUserReviewAction(userId, craftsmanId)
     : null;
   return { summary, reviews, userReview };
 }
