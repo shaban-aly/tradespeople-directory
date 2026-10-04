@@ -70,14 +70,15 @@ export function CraftsmanHeroImage({ image, name, avatarPosition }: CraftsmanHer
         aria-label={`معاينة وتكبير صورة ${name}`}
         className="group relative flex h-64 w-full cursor-pointer items-center justify-center overflow-hidden bg-neutral-900/90 sm:h-80 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
       >
-        {/* خلفية ضبابية سينمائية محيطة بألوان الصورة الأصلية (Ambient Backdrop) */}
+        {/* خلفية ضبابية سينمائية — img عادية بلا optimization لأنها مخفية بـ blur + opacity */}
         <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={image}
             alt=""
-            fill
-            sizes="96px"
-            className="scale-125 object-cover opacity-40 blur-2xl filter"
+            className="absolute inset-0 h-full w-full scale-125 object-cover opacity-40 blur-2xl filter"
+            loading="lazy"
+            decoding="async"
           />
           <div className="absolute inset-0 bg-black/25 backdrop-blur-xs" />
         </div>

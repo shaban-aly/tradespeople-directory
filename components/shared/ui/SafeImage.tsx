@@ -11,6 +11,8 @@ export function SafeImage({
   src,
   fallbackSrc = "/favicon-96x96.png",
   alt,
+  className,
+  style,
   ...rest
 }: SafeImageProps) {
   const [error, setError] = useState(false);
@@ -20,12 +22,16 @@ export function SafeImage({
   }, [src]);
 
   if (error || !src) {
+    // Fallback: img عادية بدون next/image optimization
+    // لأن الصورة البديلة محلية ولا تحتاج optimization، ولأن كل طلب يُحسب كـ optimization
+    // eslint-disable-next-line @next/next/no-img-element
     return (
-      <Image
-        key="fallback"
-        {...rest}
+      <img
         src={fallbackSrc}
-        alt={alt || "Fallback"}
+        alt={alt as string || ""}
+        className={className}
+        style={style}
+        aria-hidden={!alt ? true : undefined}
       />
     );
   }
@@ -36,6 +42,8 @@ export function SafeImage({
       {...rest}
       src={src}
       alt={alt}
+      className={className}
+      style={style}
       onError={() => setError(true)}
     />
   );

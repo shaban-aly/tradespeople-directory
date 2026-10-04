@@ -2,8 +2,12 @@
 const nextConfig = {
   allowedDevOrigins: ["192.168.1.6"],
   images: {
+    // Custom loader: صور Supabase → Supabase Transform (مجاني) | الخارجية → Vercel
+    loaderFile: "./lib/utils/image-loader.ts",
     deviceSizes: [640, 750, 828, 1080, 1200],
     imageSizes: [32, 48, 64, 96, 128, 256, 384, 480, 512],
+    // 30 يوم — يجبر Vercel على كاش الصور المحسَّنة لمدة أطول بغض النظر عن Cache-Control الخارجي
+    minimumCacheTTL: 2592000,
     remotePatterns: [
       { protocol: "https", hostname: "*.googleusercontent.com" },
       { protocol: "https", hostname: "*.supabase.co" },
