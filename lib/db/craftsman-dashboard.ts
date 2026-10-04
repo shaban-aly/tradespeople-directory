@@ -130,21 +130,21 @@ export async function getCraftsmanDashboardData(
   client: SupabaseClient<Database> = createSupabase(),
 ): Promise<CraftsmanDashboardData | null> {
   // 1. تحديد الملف المطلوب والتحقق من الملكية
-  let query = client.from("craftsmen").select("id").eq("owner_user_id", userId);
-  
+  let ownerQuery = client.from("craftsmen").select("id").eq("owner_user_id", userId);
+
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(craftsmanSlugOrId)) {
-    query = query.eq("id", craftsmanSlugOrId);
+    ownerQuery = ownerQuery.eq("id", craftsmanSlugOrId);
   } else {
-    query = query.eq("slug", craftsmanSlugOrId);
+    ownerQuery = ownerQuery.eq("slug", craftsmanSlugOrId);
   }
 
-  const { data: matchedRows, error: matchError } = await query.limit(1);
+  const { data: matchedRow, error: matchError } = await ownerQuery.maybeSingle();
 
-  if (matchError || !matchedRows || matchedRows.length === 0) {
+  if (matchError || !matchedRow) {
     return null;
   }
 
-  const craftsmanId = matchedRows[0].id;
+  const craftsmanId = matchedRow.id;
 
   // 2. جلب بيانات الصنايعي مع التخصص والمنطقة وروابط السوشيال
   const { data: craftsman, error: craftsmanError } = await client
