@@ -216,7 +216,7 @@ export function ImagePositionEditor({
 
       {/* رسائل التنبيه */}
       {errorMsg && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs font-semibold text-red-600 dark:text-red-400">
+        <div className="rounded-xl border border-danger/20 bg-danger/10 p-3 text-xs font-semibold text-danger">
           {errorMsg}
         </div>
       )}

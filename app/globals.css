@@ -11,6 +11,8 @@
   --on-accent: #ffffff;
   --action: #22c55e;
   --on-action: #14142b;
+  --warning: #f59e0b;       /* كهرماني — إشارات التنبيه والأذونات */
+  --on-warning: #14142b;
   --danger: #ef4444;
   --on-danger: #ffffff;
   --card: #ffffff;
@@ -53,6 +55,8 @@
   --on-accent: #10131f;
   --action: #34d399;
   --on-action: #10131f;
+  --warning: #fbbf24;       /* كهرماني فاتح أكثر إضاءة للوضع الغامق */
+  --on-warning: #10131f;
   --danger: #f87171;
   --on-danger: #10131f;
   --card: #181c2c;
@@ -80,6 +84,8 @@
   --color-on-accent: var(--on-accent);
   --color-action: var(--action);
   --color-on-action: var(--on-action);
+  --color-warning: var(--warning);
+  --color-on-warning: var(--on-warning);
   --color-danger: var(--danger);
   --color-on-danger: var(--on-danger);
   --color-card: var(--card);

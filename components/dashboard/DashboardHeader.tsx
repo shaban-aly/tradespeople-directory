@@ -93,13 +93,13 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
             <div className="mt-1.5 flex items-center gap-2 text-xs">
               <span className="text-muted">حالة الظهور:</span>
               {profile.isPublished ? (
-                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <span className="inline-flex items-center gap-1 rounded-md bg-action/10 px-2 py-0.5 font-bold text-action border border-action/20">
+                  <span className="h-1.5 w-1.5 rounded-full bg-action" />
                   منشور للجمهور
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                <span className="inline-flex items-center gap-1 rounded-md bg-warning/10 px-2 py-0.5 font-bold text-warning border border-warning/20">
+                  <span className="h-1.5 w-1.5 rounded-full bg-warning" />
                   قيد المراجعة
                 </span>
               )}

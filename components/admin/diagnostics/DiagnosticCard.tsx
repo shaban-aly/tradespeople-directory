@@ -16,8 +16,8 @@ const REASON_LABELS: Record<string, string> = {
 };
 
 const GROUP_BADGE: Record<string, string> = {
-  technical: "bg-red-500/10 text-red-600 dark:text-red-400",
-  permission: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  technical: "bg-danger/10 text-danger",
+  permission: "bg-warning/10 text-warning",
   capability: "bg-muted/20 text-muted",
 };
 
@@ -49,12 +49,12 @@ export function DiagnosticCard({ row }: { row: PushDiagnosticRow }) {
       <dl className="grid gap-1 text-sm text-muted">
         <div className="flex gap-2">
           <dt className="shrink-0 font-bold">المرحلة:</dt>
-          <dd className="min-w-0 break-words">{row.stage}</dd>
+          <dd className="min-w-0 wrap-break-word">{row.stage}</dd>
         </div>
         {row.detail ? (
           <div className="flex gap-2">
             <dt className="shrink-0 font-bold">التفاصيل:</dt>
-            <dd className="min-w-0 break-words">{row.detail}</dd>
+            <dd className="min-w-0 wrap-break-word">{row.detail}</dd>
           </div>
         ) : null}
         <div className="flex gap-2">
