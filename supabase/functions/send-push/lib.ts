@@ -1,4 +1,4 @@
-// المنطق النقي لـ Edge Function send-push — بلا اعتماديات Deno/بالذي تُختبَر عبر vitest
+// المنطق النقي لـ Edge Function send-push — بلا اعتماديات Deno، وبذلك تُختبر عبر vitest
 // كل الدوال هنا معيارية (Web Crypto / TextEncoder) بحيث تعمل في Deno وفي Node.
 
 export interface ServiceAccount {
@@ -142,31 +142,24 @@ export function isSafeInternalLink(link: unknown): link is string {
 }
 
 /**
- * يبني رابطاً مطلقاً من مسار داخلي صالح فقط.
- * يرجع `undefined` عند غياب siteUrl أو عند رفض المسار — فلا يُرسَل أبداً
- * رابط خارجي أو javascript: في رسالة push.
+ * وجهة نقرة الإشعار كـ**مسار داخلي نسبي** (مثال `/craftsman/x`).
+ *
+ * النسبي مقصود لا المطلق: المضيف الذي يفتحه المستخدم هو نفسه الذي يبنيه
+ * Service Worker (`self.location.origin`) والواجهة (`window.location.origin`).
+ * أي رابط مطلق كان يستمد المضيف من `PUSH_SITE_URL`، فلو اختلف ذلك السر عن
+ * مضيف الجهاز الحقيقي (نطاق بديل / www / host آخر) كان `normalizeInternalLink`
+ * يرفضه ويفتح التنبيه مساراً فارغاً. النسبي يزيل هذا السر من المعادلة.
+ *
+ * الأمان: لا تخرج القيمة إلا من مسار موثوق — `metadata.link` المختبر أصلاً
+ * بـ`isSafeInternalLink`، أو slug مبني داخلياً، أو `/notifications`.
  */
-export function toAbsoluteInternalUrl(
-  siteUrl: string | undefined,
-  internalPath: string,
-): string | undefined {
-  if (!siteUrl) return undefined;
-  if (!isSafeInternalLink(internalPath)) return undefined;
-  return `${siteUrl.replace(/\/$/, "")}${internalPath}`;
-}
-
-/** رابط نقرة الإشعار: metadata.link (داخلي فقط) → صفحة الصنايعي → صفحة الإشعارات */
 export const defaultLinkResolver: LinkResolver = (metadata) => {
-  const base = metadata.siteUrl as string | undefined;
-  const directLink = metadata.link as string | undefined;
-  const slug = metadata.slug as string | undefined;
+  const directLink = metadata.link;
+  const slug = metadata.slug;
 
-  if (base && isSafeInternalLink(directLink)) {
-    return `${base.replace(/\/$/, "")}${directLink}`;
+  if (isSafeInternalLink(directLink)) return directLink;
+  if (typeof slug === "string" && slug.trim().length > 0) {
+    return `/craftsman/${encodeURIComponent(slug.trim())}`;
   }
-  if (base && typeof slug === "string" && slug.trim().length > 0) {
-    return toAbsoluteInternalUrl(base, `/craftsman/${encodeURIComponent(slug.trim())}`);
-  }
-  if (base) return toAbsoluteInternalUrl(base, "/notifications");
-  return undefined;
+  return "/notifications";
 };

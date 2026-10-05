@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 /**
  * تفعيل إشعارات المتصفح عند أول تفاعل حقيقي من المستخدم.
  *
  * القاعدة: `Notification.requestPermission()` يجب أن يُستدعى داخل user gesture،
- * وإلا رفضته المتصفحات (Safari/iOS وChrome على 일부 الأنسجة) ورُفضت الفرصة
+ * وإلا رفضته المتصفحات (Safari/iOS وChrome على بعض الأنسجة) ورُفضت الفرصة
  * نهائياً دون أن يُعرف المستخدم أصلاً أن هناك إذناً يُطلب.
  *
  * لماذا كان التفعيل التلقائي عند التحميل فكرة سيئة:
@@ -18,21 +18,30 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
  *
  * السلوك الصحيح هنا:
  *   1) لا طلب تلقائي عند التحميل — فقط تسجيل المستمعين.
- *   2) `attemptedRef` يُضبط فقط عند بدء طلب الإذن من تفاعل حقيقي.
+ *   2) العلم يُضبط أثناء المحاولة الجارية فقط (لا يُثبَّت)، فإذا فشلت تُعاد
+ *      دورة الإصغاء من جديد ويُتاح للمستخدم فرصة ثانية بلا إعادة تحميل.
  *   3) إن لم يتفاعل المستخدم، لا يُسجَّل رفض ولا تُلغى فرصة التفعيل.
  *   4) التفعيل اليدوي متاح دائماً عبر زر الإعدادات (PushSettingsCard).
  */
 export function useAutoPushEnabler(): void {
   const { status, enable } = usePushNotifications();
-  const attemptedRef = useRef(false);
-  // نحتفظ بمرجع لدالة enable المستقرة حتى لا نُعيد ربط المستمعين كل رندر
+  const inFlightRef = useRef(false);
+  // `cycle` يُعيد تشغيل تأثير الإصغاء بعد كل محاولة فاشلة. الاعتماد على
+  // `status` وحده لا يكفي لأن الحالة تعود إلى نفس القيمة "idle" فلا يُعاد
+  // تشغيل التأثير، فتبقى فرصة المستخدم الثانية ضائعة.
+  const [cycle, setCycle] = useState(0);
+
   const enableRef = useRef(enable);
   useEffect(() => {
     enableRef.current = enable;
   }, [enable]);
 
+  const rearm = useCallback(() => {
+    setCycle((n) => n + 1);
+  }, []);
+
   useEffect(() => {
-    if (attemptedRef.current) return;
+    if (inFlightRef.current) return;
     if (status !== "idle") return;
     if (typeof Notification === "undefined") return;
     // permission === "denied" قرار من المستخدم — نحترمه ولا نلمس شيئاً.
@@ -41,11 +50,18 @@ export function useAutoPushEnabler(): void {
 
     // الفحص آمن ولا يرمي استثناءات، فبلا try/catch
     const attempt = () => {
-      if (attemptedRef.current) return;
-      // نضبط العلامة فقط الآن — أي بعد وجود تفاعل حقيقي وبلا رمي
-      attemptedRef.current = true;
+      if (inFlightRef.current) return;
+      inFlightRef.current = true;
       cleanup();
-      void enableRef.current();
+      void enableRef
+        .current()
+        .catch(() => undefined)
+        .finally(() => {
+          inFlightRef.current = false;
+          // أي فشل (ف 네트워크، أو رفض المتصفح بلا gesture، أو تعذّر
+          // التسجيل) يعيد بناء المستمعين بدل تثبيت اللوحة إلى الأبد.
+          rearm();
+        });
     };
 
     function cleanup() {
@@ -61,5 +77,5 @@ export function useAutoPushEnabler(): void {
     window.addEventListener("touchstart", attempt, { passive: true });
 
     return cleanup;
-  }, [status]);
+  }, [status, cycle, rearm]);
 }

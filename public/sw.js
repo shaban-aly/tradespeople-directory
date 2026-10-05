@@ -27,8 +27,8 @@ self.addEventListener("push", (event) => {
 
   const title = (payload && payload.title) || "إشعار جديد";
   const body = payload.body || "";
-  // رابط غير صالح ⇒ لا نمرره إطلاقاً (لا نافذة خارجية ولا javascript:)
-  const link = isSafeInternalPath(payload.link) ? payload.link : "";
+  // رابط غير صالح أو خارجي ⇒ لا نمرره إطلاقاً (لا نافذة خارجية ولا javascript:)
+  const link = normalizeInternalLink(payload.link) || "";
 
   event.waitUntil(
     self.registration.showNotification(title, {
@@ -116,11 +116,45 @@ function isSafeInternalPath(link) {
   return true;
 }
 
-/** يحوّل رابطاً داخلياً صالحاً إلى URL مطلق، أو null إن كان غير صالح */
-function resolveInternalLink(link) {
-  if (!isSafeInternalPath(link)) return null;
+/**
+ * يحوّل رابط payload إلى **مسار داخلي نسبي** أو null.
+ *
+ * المصدر الأمثل هو `payload.link` النسبي: `send-push` يرسل المسار الداخلي كما
+ * هو (مثال `/craftsman/x`) فيُبنى الرابط النهائي من `self.location.origin`
+ * محلياً، فلا يعتمد على `PUSH_SITE_URL` إطلاقاً ⇒ أصل الرابط صحيح بالبناء
+ * مهما كان مضيف الجهاز.
+ *
+ * ما يبقى هنا للاستيعاب الأقدم: إشعارات قديمة كانت تُرسل رابطاً مطلقاً
+ * (`PUSH_SITE_URL + metadata.link`). المطلق يُقبل فقط إن كان نفس الأصل ثم
+ * يُختزل إلى pathname+search، وأي رابط خارجي أو مخطّط خطير يُسقط.
+ */
+function normalizeInternalLink(raw) {
+  if (typeof raw !== "string" || raw.length < 1) return null;
+
+  // مسار داخلي نسبي: يُتحقق منه كما هو
+  if (raw.startsWith("/")) {
+    return isSafeInternalPath(raw) ? raw : null;
+  }
+
+  // رابط مطلق قديم: يُقبل فقط لنفس الأصل ثم يُختزل لمسار نسبي
+  let parsed;
   try {
-    const target = new URL(link, self.location.origin);
+    parsed = new URL(raw);
+  } catch {
+    return null;
+  }
+  if (parsed.origin !== self.location.origin) return null;
+
+  const relative = parsed.pathname + parsed.search;
+  return isSafeInternalPath(relative) ? relative : null;
+}
+
+/** يحوّل رابط payload صالحاً إلى URL مطلق، أو null إن كان غير صالح */
+function resolveInternalLink(link) {
+  const safe = normalizeInternalLink(link);
+  if (!safe) return null;
+  try {
+    const target = new URL(safe, self.location.origin);
     if (target.origin !== self.location.origin) return null;
     return target.href;
   } catch (err) {

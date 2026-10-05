@@ -16,34 +16,52 @@ export type Database = {
     Tables: {
       anonymous_push_outbox: {
         Row: {
+          attempts: number
           body: string
           category_slug: string
           craftsman_id: string
           created_at: string
           id: string
           key: string
+          last_attempt_at: string | null
+          last_error: string
+          lease_id: string | null
+          next_attempt_at: string
+          sent_at: string | null
           status: string
           title: string
           url: string
         }
         Insert: {
+          attempts?: number
           body: string
           category_slug: string
           craftsman_id: string
           created_at?: string
           id?: string
           key: string
+          last_attempt_at?: string | null
+          last_error?: string
+          lease_id?: string | null
+          next_attempt_at?: string
+          sent_at?: string | null
           status?: string
           title: string
           url?: string
         }
         Update: {
+          attempts?: number
           body?: string
           category_slug?: string
           craftsman_id?: string
           created_at?: string
           id?: string
           key?: string
+          last_attempt_at?: string | null
+          last_error?: string
+          lease_id?: string | null
+          next_attempt_at?: string
+          sent_at?: string | null
           status?: string
           title?: string
           url?: string
@@ -76,7 +94,7 @@ export type Database = {
           interests?: string[]
           last_notified_at?: string | null
           notification_count?: number
-          platform?: string
+          platform: string
           status?: string
           token: string
           updated_at?: string
@@ -136,8 +154,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
-          plural_name: string
-          singular_name: string
+          plural_name?: string
+          singular_name?: string
           slug: string
           sort_order?: number
         }
@@ -224,7 +242,7 @@ export type Database = {
         Insert: {
           calls?: number
           craftsman_id: string
-          day?: string
+          day: string
           views?: number
           whatsapp?: number
         }
@@ -379,7 +397,7 @@ export type Database = {
           id?: never
           metadata?: Json | null
           user_id?: string | null
-          user_status?: string
+          user_status: string
         }
         Update: {
           contact_method?: string
@@ -400,6 +418,107 @@ export type Database = {
           },
         ]
       }
+      notification_push_deliveries: {
+        Row: {
+          attempts: number
+          created_at: string
+          id: string
+          last_error: string
+          next_attempt_at: string
+          outbox_id: string
+          sent_at: string | null
+          status: string
+          token_id: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string
+          next_attempt_at?: string
+          outbox_id: string
+          sent_at?: string | null
+          status?: string
+          token_id: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string
+          next_attempt_at?: string
+          outbox_id?: string
+          sent_at?: string | null
+          status?: string
+          token_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_push_deliveries_outbox_id_fkey"
+            columns: ["outbox_id"]
+            isOneToOne: false
+            referencedRelation: "notification_push_outbox"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_push_deliveries_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "user_push_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_push_outbox: {
+        Row: {
+          attempts: number
+          created_at: string
+          id: string
+          last_attempt_at: string | null
+          last_error: string
+          lease_id: string | null
+          next_attempt_at: string
+          notification_id: string
+          recipient_id: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string
+          lease_id?: string | null
+          next_attempt_at?: string
+          notification_id: string
+          recipient_id: string
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string
+          lease_id?: string | null
+          next_attempt_at?: string
+          notification_id?: string
+          recipient_id?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_push_outbox_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: true
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string
@@ -416,7 +535,7 @@ export type Database = {
           body: string
           created_at?: string
           id?: string
-          key: string
+          key?: string
           metadata?: Json
           read_at?: string | null
           recipient_id: string
@@ -461,12 +580,45 @@ export type Database = {
           role?: string
           updated_at?: string
         }
+        Relationships: []
+      }
+      push_client_diagnostics: {
+        Row: {
+          created_at: string
+          detail: string
+          device_hash: string
+          id: string
+          reason: string
+          stage: string
+          user_agent: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: string
+          device_hash?: string
+          id?: string
+          reason: string
+          stage?: string
+          user_agent?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detail?: string
+          device_hash?: string
+          id?: string
+          reason?: string
+          stage?: string
+          user_agent?: string
+          user_id?: string | null
+        }
         Relationships: [
           {
-            foreignKeyName: "profiles_craftsman_id_fkey"
-            columns: ["craftsman_id"]
+            foreignKeyName: "push_client_diagnostics_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "craftsmen"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -497,7 +649,7 @@ export type Database = {
           count?: number
           key: string
           updated_at?: string
-          window_start: string
+          window_start?: string
         }
         Update: {
           count?: number
@@ -672,13 +824,61 @@ export type Database = {
       }
       broadcast_admin_notification: {
         Args: {
-          p_title: string
-          p_body: string
-          p_link?: string | null
           p_audience?: string
-          p_user_id?: string | null
+          p_body: string
+          p_link?: string
+          p_title: string
+          p_user_id?: string
         }
         Returns: number
+      }
+      claim_anonymous_push_outbox: {
+        Args: { p_limit?: number }
+        Returns: {
+          attempts: number
+          body: string
+          category_slug: string
+          craftsman_id: string
+          created_at: string
+          id: string
+          key: string
+          last_attempt_at: string | null
+          last_error: string
+          lease_id: string | null
+          next_attempt_at: string
+          sent_at: string | null
+          status: string
+          title: string
+          url: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "anonymous_push_outbox"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      claim_push_outbox: {
+        Args: { p_limit?: number }
+        Returns: {
+          attempts: number
+          created_at: string
+          id: string
+          last_attempt_at: string | null
+          last_error: string
+          lease_id: string | null
+          next_attempt_at: string
+          notification_id: string
+          recipient_id: string
+          sent_at: string | null
+          status: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "notification_push_outbox"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       create_notification: {
         Args: {
@@ -691,6 +891,22 @@ export type Database = {
         }
         Returns: undefined
       }
+      drain_stale_push_outbox: { Args: never; Returns: number }
+      finish_anonymous_push_outbox: {
+        Args: {
+          p_error_text?: string
+          p_failed?: number
+          p_lease_id: string
+          p_outbox_id: string
+          p_sent?: number
+          p_terminal?: string
+        }
+        Returns: undefined
+      }
+      finish_push_outbox: {
+        Args: { p_error_text?: string; p_lease_id: string; p_outbox_id: string }
+        Returns: undefined
+      }
       get_admin_activity_feed: {
         Args: { p_limit?: number; p_offset?: number; p_timeframe?: string }
         Returns: {
@@ -701,7 +917,7 @@ export type Database = {
           created_at: string
           log_id: number
           metadata: Json
-          user_display_name: string | null
+          user_display_name: string
           user_status: string
         }[]
       }
@@ -716,27 +932,52 @@ export type Database = {
       get_admin_users: {
         Args: never
         Returns: {
-          avatar_url: string | null
-          craftsman_id: string | null
-          craftsman_name: string | null
-          craftsman_slug: string | null
+          avatar_url: string
+          craftsman_id: string
+          craftsman_name: string
+          craftsman_slug: string
           created_at: string
-          display_name: string | null
-          email: string | null
+          display_name: string
+          email: string
           id: string
           role: string
         }[]
       }
-      get_craftsman_activity_feed: {
-        Args: { p_limit?: number }
+      get_admin_users_test: {
+        Args: never
         Returns: {
-          contact_method: string
+          avatar_url: string
+          craftsman_id: string
+          craftsman_name: string
+          craftsman_slug: string
           created_at: string
-          log_id: number
-          user_display_name: string | null
-          user_status: string
+          display_name: string
+          email: string
+          id: string
+          role: string
         }[]
       }
+      get_craftsman_activity_feed:
+        | {
+            Args: { p_craftsman_id?: string; p_limit?: number }
+            Returns: {
+              contact_method: string
+              created_at: string
+              log_id: number
+              user_display_name: string
+              user_status: string
+            }[]
+          }
+        | {
+            Args: { p_limit?: number }
+            Returns: {
+              contact_method: string
+              created_at: string
+              log_id: number
+              user_display_name: string
+              user_status: string
+            }[]
+          }
       get_craftsman_favorites_count: {
         Args: { p_craftsman_id: string }
         Returns: number
@@ -748,25 +989,37 @@ export type Database = {
           total_reviews: number
         }[]
       }
-      get_my_craftsman_id: { Args: never; Returns: string }
       get_my_role: { Args: never; Returns: string }
-      get_site_stats: { Args: never; Returns: Json }
-      increment_craftsman_stats: {
-        Args: {
-          p_action: string
-          p_ip?: string
-          p_slug: string
-          p_user_id?: string
-          p_user_status?: string
-        }
-        Returns: boolean
+      get_public_reviewer_avatars: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          avatar_url: string | null
+          user_id: string
+        }[]
       }
+      get_site_stats: { Args: never; Returns: Json }
+      increment_craftsman_stats:
+        | {
+            Args: { p_column_name: string; p_craftsman_id: string }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_action: string
+              p_ip?: string
+              p_slug: string
+              p_user_id?: string
+              p_user_status?: string
+            }
+            Returns: boolean
+          }
       is_admin: { Args: never; Returns: boolean }
+      is_safe_internal_link: { Args: { p_link: string }; Returns: boolean }
       link_craftsman_user: {
         Args: { craftsman_id_input: string; user_email_input: string }
         Returns: boolean
       }
-      mark_all_notifications_read: { Args: Record<PropertyKey, never>; Returns: number }
+      mark_all_notifications_read: { Args: never; Returns: number }
       mark_notifications_read: { Args: { p_ids: string[] }; Returns: number }
       normalize_arabic: { Args: { p_text: string }; Returns: string }
       notify_all_admins: {
@@ -791,6 +1044,18 @@ export type Database = {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: Json
       }
+      record_push_delivery_result: {
+        Args: {
+          p_error_text?: string
+          p_invalid?: boolean
+          p_lease_id: string
+          p_ok: boolean
+          p_outbox_id: string
+          p_token_id: string
+        }
+        Returns: undefined
+      }
+      refresh_notification_push_cron: { Args: never; Returns: Json }
       register_anonymous_push: {
         Args: { p_interests?: string[]; p_platform?: string; p_token: string }
         Returns: undefined
@@ -808,6 +1073,16 @@ export type Database = {
       reject_craftsman_application: {
         Args: { p_craftsman_id: string }
         Returns: undefined
+      }
+      report_push_diagnostic: {
+        Args: {
+          p_detail?: string
+          p_device_id?: string
+          p_reason: string
+          p_stage?: string
+          p_user_agent?: string
+        }
+        Returns: boolean
       }
       search_craftsmen: {
         Args: {
@@ -836,6 +1111,7 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      sync_craftsman_role: { Args: { p_user_id: string }; Returns: undefined }
       unregister_anonymous_push: {
         Args: { p_token: string }
         Returns: undefined
@@ -951,9 +1227,7 @@ export type Enums<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never) = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]

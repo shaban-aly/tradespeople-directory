@@ -3,6 +3,7 @@
 import { IconBell, IconX } from "@/components/shared/icons";
 import { ToggleSwitch } from "@/components/shared/ui/ToggleSwitch";
 import { usePushNotifications, type PushStatus } from "@/hooks/usePushNotifications";
+import type { PushFailureReason } from "@/lib/push/client";
 
 function StatusIndicator({ status }: { status: PushStatus }) {
   if (status === "enabled") {
@@ -53,8 +54,31 @@ function getStatusDescription(status: PushStatus): string {
   }
 }
 
+/**
+ * تلميح قابل للإصلاح لآخر فشل.
+ * الأسباب التي تشرحها `getStatusDescription` (blocked/unsupported/unconfigured)
+ * مقصودة هنا — لا نكرر نفس النص مرتين.
+ */
+function getErrorHint(reason: PushFailureReason | null): string | null {
+  switch (reason) {
+    case "sw_failed":
+      return "تعذّر تجهيز خدمة الإشعارات في متصفحك. أعد تحميل الصفحة ثم حاول مجدداً.";
+    case "messaging_failed":
+      return "تعذّر الاتصال بخدمة الإشعارات. تحقّق من اتصالك بالإنترنت ثم أعد المحاولة.";
+    case "token_failed":
+      return "لم يُصدر متصفحك رمزاً للإشعارات. انتظر لحظات ثم أعد المحاولة.";
+    case "register_failed":
+      return "تعذّر حفظ رمز الإشعارات على الخادم. أعد المحاولة بعد قليل.";
+    case "not_granted":
+      return "لم يُمنح إذن الإشعارات بعد — اضغط المفتاح مرة أخرى لعرض نافذة الموافقة.";
+    default:
+      return null;
+  }
+}
+
 export function PushSettingsCard() {
   const push = usePushNotifications();
+  const errorHint = getErrorHint(push.lastError);
 
   const isSwitchDisabled =
     push.status === "unsupported" ||
@@ -113,6 +137,16 @@ export function PushSettingsCard() {
           <p>
             لتشغيل الإشعارات مجدداً: افتح إعدادات المتصفح على جهازك (أو إعدادات الموقع)، واسمح بإرسال الإشعارات لدليل الصنايعية.
           </p>
+        </div>
+      )}
+
+      {errorHint && push.status !== "blocked" && (
+        <div
+          role="status"
+          className="flex items-start gap-2 rounded-xl bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-700 dark:text-amber-300 border border-amber-500/20"
+        >
+          <IconX className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+          <p>{errorHint}</p>
         </div>
       )}
     </div>

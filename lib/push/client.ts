@@ -1,11 +1,54 @@
 // أدوات المتصفح لإشعارات Web Push (Firebase Messaging).
 // لا تُستدعى هذه الدوال إلا من داخل useEffect/event handlers — لا قراءة
 // للبيئة أثناء الريندر؛ القاعدة: انقديم بقيمة محايدة ثم behave في التأثير.
+//
+// قاعدة التصميم الحاكمة: **لا تُبتلع أخطاء التسجيل أبداً**.
+// كل فشل يُعاد كـ PushTokenResult يحمل `reason` صريحاً، لأن ابتلاعه هو ما كان
+// يجعل الواجهة تعرض «مفعّل» لجهاز لا يستقبل شيئاً ولا يمكن تشخيصه.
 
 import { firebaseConfig, PUSH_APP_NAME } from "./config";
 import type { Messaging } from "firebase/messaging";
 
 export const SW_PATH = "/sw.js";
+
+/**
+ * أسباب فشل تفعيل/تجديد تسجيل الإشعارات.
+ * `blocked` قرار من المتصفح ولا يُحاول تجاوزه؛ الباقي أسباب تقنية قابلة للإصلاح.
+ */
+export type PushFailureReason =
+  | "unsupported" // لا Notification ولا ServiceWorker (أو iOS بلا تثبيت)
+  | "unconfigured" // مفاتيح Firebase غير معبّأة
+  | "blocked" // permission === "denied" — قرار المستخدم في المتصفح
+  | "not_granted" // permission === "default" ولم يُطلب بعد (أو طُلب بلا gesture)
+  | "sw_failed" // فشل تسجيل Service Worker
+  | "messaging_failed" // فشل تهيئة firebase/messaging
+  | "token_failed" // getToken رجع null أو threw
+  | "register_failed"; // فشل تسجيل التوكن في القاعدة (RPC)
+
+export type PushTokenResult =
+  | { ok: true; token: string }
+  | { ok: false; reason: PushFailureReason; detail?: string };
+
+/** أي أسباب الفشل يستحق إعادة محاولة تلقائية (الشبكة/SW/token) */
+const RETRYABLE_REASONS: ReadonlySet<PushFailureReason> = new Set([
+  "sw_failed",
+  "messaging_failed",
+  "token_failed",
+  "register_failed",
+]);
+
+export function isRetryablePushFailure(reason: PushFailureReason): boolean {
+  return RETRYABLE_REASONS.has(reason);
+}
+
+function errorDetail(err: unknown): string | undefined {
+  if (err instanceof Error) {
+    const msg = err.message || err.name;
+    return msg.slice(0, 200) || undefined;
+  }
+  if (typeof err === "string" && err.trim()) return err.trim().slice(0, 200);
+  return undefined;
+}
 
 let messaging: Promise<Messaging | null> | null = null;
 
@@ -38,50 +81,90 @@ function getMessagingSafe(): Promise<Messaging | null> {
   return messaging;
 }
 
-/** تسجيل الـ Service Worker الموحد الخاص بالمشروع (idempotent) */
-async function ensurePushSw(): Promise<ServiceWorkerRegistration | null> {
+type SwResult =
+  | { ok: true; reg: ServiceWorkerRegistration }
+  | { ok: false; reason: PushFailureReason; detail?: string };
+
+/**
+ * تسجيل الـ Service Worker الموحد (idempotent).
+ * `updateViaCache: "none"` يمنع المتصفح من خدمة نسخة قديمة من سكربت الـ SW من
+ * HTTP cache دون إعادة تحقق — بدونه قد يبقى جهاز فوقي version مشغّلاً لأسابيع.
+ */
+async function ensurePushSw(): Promise<SwResult> {
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
-    return null;
+    return { ok: false, reason: "unsupported" };
   }
   try {
-    const reg = await navigator.serviceWorker.register(SW_PATH, { scope: "/" });
+    const reg = await navigator.serviceWorker.register(SW_PATH, {
+      scope: "/",
+      updateViaCache: "none",
+    });
     await navigator.serviceWorker.ready;
-    return reg;
-  } catch {
-    return null;
+    return { ok: true, reg };
+  } catch (err) {
+    return { ok: false, reason: "sw_failed", detail: errorDetail(err) };
   }
 }
 
-/** طلب إذن الإخطارات من المستخدم + الحصول على FCM token للتسجيل */
-export async function requestPushToken(): Promise<string | null> {
-  if (typeof Notification === "undefined") return null;
+export interface PushTokenOptions {
+  /**
+   * `true` (الافتراضي): يُسمح بطلب الإذن — يجب استدعاؤها داخل user gesture.
+   * `false`: لا يطلب الإذن إطلاقاً؛ يُفشل فوراً بـ`not_granted` إن لم يكن ممنوحاً.
+   *   يُستخدم في الفحص الذاتي عند التحميل، لأن طلب الإذن بلا gesture يُرفض
+   *   ويُسجّل كرفض دائم في بعض المتصفحات.
+   */
+  prompt?: boolean;
+}
+
+/** الحصول على FCM token للتسجيل، مع سبب صريح عند الفشل (لا null صامت) */
+export async function requestPushToken(
+  options: PushTokenOptions = {},
+): Promise<PushTokenResult> {
+  const prompt = options.prompt !== false;
+
+  if (typeof Notification === "undefined") {
+    return { ok: false, reason: "unsupported" };
+  }
+  if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
+    return { ok: false, reason: "unsupported" };
+  }
   const cfg = firebaseConfig();
-  if (!cfg) return null;
+  if (!cfg) return { ok: false, reason: "unconfigured" };
 
   let permission: NotificationPermission;
   try {
-    permission = await Notification.requestPermission();
-  } catch {
-    return null;
+    if (Notification.permission === "granted") {
+      permission = "granted";
+    } else if (Notification.permission === "denied") {
+      return { ok: false, reason: "blocked" };
+    } else if (!prompt) {
+      return { ok: false, reason: "not_granted" };
+    } else {
+      permission = await Notification.requestPermission();
+    }
+  } catch (err) {
+    return { ok: false, reason: "token_failed", detail: errorDetail(err) };
   }
-  if (permission !== "granted") return null;
+  if (permission !== "granted") return { ok: false, reason: "blocked" };
 
-  const swReg = await ensurePushSw();
+  const sw = await ensurePushSw();
+  if (!sw.ok) return { ok: false, reason: sw.reason, detail: sw.detail };
+
   const msg = await getMessagingSafe();
-  if (!msg || !swReg) return null;
+  if (!msg) return { ok: false, reason: "messaging_failed" };
 
   try {
     const { getToken } = await import("firebase/messaging");
     const token = await getToken(msg, {
       vapidKey: cfg.vapidKey,
-      serviceWorkerRegistration: swReg,
+      serviceWorkerRegistration: sw.reg,
     });
-    return token || null;
-  } catch (err) {
-    if (process.env.NODE_ENV !== "production") {
-      console.warn("[Push Client] Failed to get FCM token:", err);
+    if (!token) {
+      return { ok: false, reason: "token_failed", detail: "getToken returned empty" };
     }
-    return null;
+    return { ok: true, token };
+  } catch (err) {
+    return { ok: false, reason: "token_failed", detail: errorDetail(err) };
   }
 }
 
@@ -100,6 +183,65 @@ export async function revokePushToken(): Promise<boolean> {
   }
 }
 
+export type PushPermissionState = NotificationPermission | "unsupported";
+export type PushSwState =
+  | "unsupported"
+  | "none"
+  | "installing"
+  | "waiting"
+  | "activated";
+
+export interface PushHealth {
+  supported: boolean;
+  configured: boolean;
+  permission: PushPermissionState;
+  swState: PushSwState;
+  /** هل يسيطر SW على الصفحة الحالية (يعني أن الـ push سيصل بلا فتح تبويب) */
+  controlled: boolean;
+}
+
+/**
+ * فحص صحة سلسلة Push بلا أي طلب إذن وبلا minting لـ token.
+ * آمن للاستدعاء عند التحميل: لا يعرض أي شيء على المستخدم ولا يغيّر حالة.
+ */
+export async function getPushHealth(): Promise<PushHealth> {
+  const base: PushHealth = {
+    supported: false,
+    configured: false,
+    permission: "unsupported",
+    swState: "unsupported",
+    controlled: false,
+  };
+
+  if (typeof window === "undefined") return base;
+
+  base.configured = firebaseConfig() !== null;
+
+  if (typeof Notification === "undefined") {
+    base.permission = "unsupported";
+    return base;
+  }
+  base.permission = Notification.permission;
+
+  if (!("serviceWorker" in navigator)) return base;
+
+  base.supported = true;
+  base.swState = "none";
+  base.controlled = !!navigator.serviceWorker.controller;
+
+  try {
+    const reg = await navigator.serviceWorker.getRegistration("/");
+    if (!reg) return base;
+    if (reg.installing) base.swState = "installing";
+    else if (reg.waiting) base.swState = "waiting";
+    else if (reg.active) base.swState = "activated";
+  } catch {
+    // فحص فقط — الفشل يُترك للخطوة الحقيقية التي تُرجع سبباً صريحاً
+  }
+
+  return base;
+}
+
 export interface ForegroundPushMessage {
   title: string;
   body: string;
@@ -110,7 +252,7 @@ export interface ForegroundPushMessage {
 /**
  * الاستماع لإشعارات FCM الواردة أثناء فتح واستخدام التطبيق (Foreground).
  * يستخرج البيانات من payload.data فقط (data-only).
- * يعيد دالة إلغاء اشتراك (cleanup) لفك الـ listener بأمان.
+ * يُعيد دالة إلغاء اشتراك (cleanup) لفك الـ listener بأمان.
  */
 export function listenToForegroundPush(
   callback: (message: ForegroundPushMessage) => void,

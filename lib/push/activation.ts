@@ -4,7 +4,7 @@
 // التفعيل يتم في لحظة قيمة (Contextual Value Moment) داخل user gesture تلقائياً،
 // ويوجه المسار بسلاسة للمسجل (register_push_token) أو الزائر (register_anonymous_push).
 
-import { requestPushToken } from "./client";
+import { requestPushToken, type PushFailureReason } from "./client";
 import {
   registerPushToken,
   registerAnonymousPush,
@@ -148,30 +148,38 @@ export interface ActivationResult {
   ok: boolean;
   status: "enabled" | "blocked" | "idle" | "unsupported";
   token: string | null;
+  /** سبب الفشل الصريح — يُستهلك في الواجهة وفي تقرير التشخيص */
+  reason?: PushFailureReason;
+  /** تفاصيل إضافية: رسالة الخطأ، أو التوكن نفسه عند فشل تسجيله في القاعدة */
+  detail?: string;
 }
 
 /**
- * تنفيذ التفعيل التلقائي (يجب استدعاؤها من داخل user gesture):
+ * تنفيذ التفعيل (يجب استدعاؤها من داخل user gesture ما لم تُمرَّر prompt:false):
  * 1. تطلب إذن المتصفح Notification.requestPermission()
  * 2. تجلب توكن FCM
  * 3. توجه التسجيل (مسجل عبر register_push_token / زائر عبر register_anonymous_push)
  * 4. تربط الاهتمام السياقي إن وُجد
+ *
+ * `prompt: false` تُستخدم للفحص الذاتي عند التحميل: لا يطلب الإذن إطلاقاً، فلا
+ * يُسجَّل رفض دائم في متصفحات ترفض طلب الإذن بلا user gesture.
  */
 export async function executePushActivation(options: {
   context?: ActivationContext;
   isLoggedIn: boolean;
   trigger?: "auto" | "manual";
+  prompt?: boolean;
 }): Promise<ActivationResult> {
   if (typeof window === "undefined" || typeof Notification === "undefined") {
-    return { ok: false, status: "unsupported", token: null };
+    return { ok: false, status: "unsupported", token: null, reason: "unsupported" };
   }
 
   if (Notification.permission === "denied") {
-    return { ok: false, status: "blocked", token: null };
+    return { ok: false, status: "blocked", token: null, reason: "blocked" };
   }
 
   // في حالة التفعيل التلقائي فقط: وضع علامة لمنع تكرار السؤال في نفس الجلسة
-  if (options.trigger !== "manual") {
+  if (options.trigger !== "manual" && options.prompt !== false) {
     try {
       window.sessionStorage.setItem(PUSH_SESSION_ASKED_KEY, "1");
     } catch {
@@ -179,16 +187,17 @@ export async function executePushActivation(options: {
     }
   }
 
-  const token = await requestPushToken();
-  if (!token) {
-    // نُعيد قراءة الإذن بعد requestPushToken — TypeScript ضيّق النوع مسبقاً فنتجاوزه بـ cast
-    const perm = (Notification as { permission: string }).permission;
+  const tokenResult = await requestPushToken({ prompt: options.prompt !== false });
+  if (!tokenResult.ok) {
     return {
       ok: false,
-      status: perm === "denied" ? "blocked" : "idle",
+      status: pushReasonToStatus(tokenResult.reason),
       token: null,
+      reason: tokenResult.reason,
+      detail: tokenResult.detail,
     };
   }
+  const token = tokenResult.token;
 
   let ok = false;
   if (options.isLoggedIn) {
@@ -229,20 +238,36 @@ export async function executePushActivation(options: {
     return { ok: true, status: "enabled", token };
   }
 
-  return { ok: false, status: "idle", token: null };
+  // التوكن سليم لكن تسجيله في القاعدة فشل — سبب مختلف عن فشل التوكن، ويُحتفظ
+  // بالـ token في detail حتى تُعيد الواجهة التسجيل دون minting جديد.
+  return {
+    ok: false,
+    status: "idle",
+    token: null,
+    reason: "register_failed",
+    detail: token,
+  };
+}
+
+/** يحوّل سبب فشل تقني إلى حالة واجهة مقروءة */
+function pushReasonToStatus(reason: PushFailureReason): ActivationResult["status"] {
+  if (reason === "unsupported") return "unsupported";
+  if (reason === "blocked") return "blocked";
+  return "idle";
 }
 
 /**
- * مزامنة تلقائية لتوكن الجهاز الحالي فور تسجيل الدخول إذا كان إذن المتصفح ممنوحاً مسبقاً
+ * مزامنة تلقائية لتوكن الجهاز الحالي فور تسجيل الدخول إذا كان إذن المتصفح ممنوحاً
+ * مسبقاً. لا تطلب الإذن إطلاقاً — هذا مسار خلفي بعد login.
  */
 export async function syncDevicePushOnLogin(): Promise<boolean> {
   if (typeof window === "undefined" || typeof Notification === "undefined") return false;
   if (Notification.permission !== "granted") return false;
 
-  const token = await requestPushToken();
-  if (!token) return false;
+  const tokenResult = await requestPushToken({ prompt: false });
+  if (!tokenResult.ok) return false;
 
-  const ok = await registerPushToken(token);
+  const ok = await registerPushToken(tokenResult.token);
   if (ok) {
     try {
       window.localStorage.setItem(PUSH_STORAGE_KEY, PUSH_ENABLED_VALUE);

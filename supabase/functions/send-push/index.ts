@@ -31,7 +31,6 @@
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY  (تُحقن تلقائياً)
 //   PUSH_FUNCTION_SECRET                     (مطابق لـ push_secret في push_settings)
 //   FCM_SERVICE_ACCOUNT                      (JSON ملف خدمة Firebase Messaging)
-//   PUSH_SITE_URL                            (اختياري — أساس روابط النقر)
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
@@ -39,16 +38,15 @@ import {
   buildFcmMessage,
   defaultLinkResolver,
   fcmSendEndpoint,
+  isSafeInternalLink,
   isUnregisteredStatus,
   signJwt,
-  toAbsoluteInternalUrl,
 } from "./lib.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const PUSH_FUNCTION_SECRET = Deno.env.get("PUSH_FUNCTION_SECRET") ?? "";
 const FCM_SERVICE_ACCOUNT = Deno.env.get("FCM_SERVICE_ACCOUNT") ?? "";
-const PUSH_SITE_URL = Deno.env.get("PUSH_SITE_URL") ?? "";
 
 interface FcmAccessToken {
   token: string;
@@ -158,7 +156,8 @@ async function deliverToDevices(
   }
 
   const endpoint = fcmSendEndpoint(account.project_id);
-  const link = defaultLinkResolver({ ...metadata, siteUrl: PUSH_SITE_URL });
+  // مسار داخلي نسبي — بلا مضيف: المستضيف يبنيه جهاز المستخدم.
+  const link = defaultLinkResolver(metadata);
   result.notifiedTokens = tokens?.length ?? 0;
 
   for (const row of tokens ?? []) {
@@ -356,15 +355,50 @@ async function runOutboxWorker(
 // ---------------------------------------------------------------------------
 // المسار الثاني: زوار مجهولون — anonymous_outbox_id
 // ---------------------------------------------------------------------------
+// يستخدم نفس آلة الحجز (lease) لمسار المسجَّلين منذ 20261005085902. قبلها كان
+// هذا المسار "trial and error": محاولة واحدة بمهلة 5 ثوانٍ ثم حالة نهائية
+// `skipped`/`failed` بلا cron يلتقطها ⇒ أي فشل عابر كان ضياعاً نهائياً لـ 110
+// مشتركاً. الفارق الدلالي الوحيد: لا يوجد جدول deliveries لكل جهاز، فالنجاح
+// الجزئي حالة نهائية (إعادة الإرسال تكرّر إشعاراً وصل فعلاً).
+/**
+ * ينفّذ `worker` على كل عناصر `items` بترتيب، بعدد متزامن محدود بـ`limit`.
+ *
+ * السبب: يبلغ المسار المجهول 110 مشتركاً وقت الإرسال. بالتسلسل، 110 طلب
+ * FCM بمهلة 5 ثوانٍ لكل واحد = 550 ثانية، أي أطول بكثير من مهلة cron (30s)
+ * والدالة (net.http_post بـ5s) ⇒ تسقط المحاولة في منتصفها. المتوازي المحدود
+ * يخفض الزمن إلى ~11 ثانية مع إبقاء الضغط على FCM معقولاً.
+ */
+async function forEachLimited<T>(
+  items: readonly T[],
+  limit: number,
+  worker: (item: T) => Promise<void>,
+): Promise<void> {
+  let cursor = 0;
+  const size = Math.max(1, Math.min(limit, items.length));
+  await Promise.all(
+    Array.from({ length: size }, async () => {
+      for (;;) {
+        const index = cursor++;
+        if (index >= items.length) return;
+        // `worker` تبتلع أخطاءها بنفسها، فلا رفض هنا يوقف بقية العناصر.
+        await worker(items[index]);
+      }
+    }),
+  );
+}
+
+/** توازي الإرسال للمشتركين المجهولين: 10 طلبات FCM في آن واحد. */
+const ANONYMOUS_SEND_CONCURRENCY = 10;
+
 async function handleAnonymousOutbox(
   supabase: ReturnType<typeof createClient>,
   outboxId: string,
+  leaseId: string,
   accessToken: string,
   account: ReturnType<typeof assertServiceAccount>,
 ): Promise<SendResult> {
   const result = emptySendResult();
 
-  // قراءة سجل الـ outbox
   const { data: outbox, error: outboxErr } = await supabase
     .from("anonymous_push_outbox")
     .select("id, category_slug, title, body, url, status")
@@ -373,38 +407,69 @@ async function handleAnonymousOutbox(
 
   if (outboxErr || !outbox) {
     console.error("anonymous_push_outbox select error", outboxErr?.message);
+    // نعالج السطر عبر finish بدل العودة صامتة: finish يتحقق من الـlease داخلياً،
+    // فإما يثبت أننا نحوز الصف ويعيده بتراجع، أو يتجاهل لغيرنا. بدونه يبقى الصف
+    // processing عشر دقائق كاملة قبل أن يلتقطه cron.
+    const { error: finErr } = await supabase.rpc("finish_anonymous_push_outbox", {
+      p_outbox_id: outboxId,
+      p_lease_id: leaseId,
+      p_error_text: `outbox select error: ${outboxErr?.message ?? "row not found"}`,
+    });
+    if (finErr) {
+      console.error("finish_anonymous_push_outbox failed", finErr.message);
+    }
     return result;
   }
 
-  // لا نُعيد الإرسال إن أُرسل أو أُلغي مسبقاً
-  if (outbox.status !== "pending") {
-    return result;
-  }
+  // لا نُعيد الإرسال إن أُرسل أو أُلغي مسبقاً. الصف بلا lease (أي أُنشئ بعد
+  // كسر أو استُدعي مباشرة بلا حجز) يُclaims عبر cron؛ لا نلمس صفاً غير محجوز.
+  if (outbox.status !== "processing") return result;
 
-  // جلب جميع التوكنات المهتمة بالتصنيف والنشطة
   const { data: subscriptions, error: subsErr } = await supabase
     .from("anonymous_push_subscriptions")
     .select("id, token")
     .eq("status", "active")
     .contains("interests", [outbox.category_slug]);
 
-  if (subsErr || !subscriptions || subscriptions.length === 0) {
-    // لا يوجد مشتركون — نُعلِّم كـ skipped
-    await supabase
-      .from("anonymous_push_outbox")
-      .update({ status: "skipped" })
-      .eq("id", outboxId);
+  if (subsErr) {
+    // خطأ قراءة عابر (شبكة أو قاعدة) ليس حالة نهائية، ولذلك نعيد الصف إلى
+    // pending بتراجع أسّي عبر finish بلا p_terminal. كان هذا يسلك مسار "لا
+    // مشتركين" فيضع skipped نهائياً، فيخسر 110 مشتركاً إلى الأبد بسبب تعطّل
+    // لحظي في القاعدة.
+    const { error: finErr } = await supabase.rpc("finish_anonymous_push_outbox", {
+      p_outbox_id: outboxId,
+      p_lease_id: leaseId,
+      p_error_text: `subscriptions select error: ${subsErr.message}`,
+    });
+    if (finErr) {
+      console.error("finish_anonymous_push_outbox failed", finErr.message);
+    }
+    return result;
+  }
+
+  // لا مشتركين مطابقين ⇒ حالة نهائية `skipped`: فلتر الاهتمامات لن يتغيّر
+  // بإعادة المحاولة. هذا هو التمييز الحاسم بين "لا يوجد من يستقبل" (نهائي)
+  // و"تعذّر معرفة من يستقبل" (إعادة محاولة) في السطر أعلاه.
+  if (!subscriptions || subscriptions.length === 0) {
+    await supabase.rpc("finish_anonymous_push_outbox", {
+      p_outbox_id: outboxId,
+      p_lease_id: leaseId,
+      p_terminal: "skipped",
+      p_error_text: "no matching active subscriptions",
+    });
     return result;
   }
 
   const endpoint = fcmSendEndpoint(account.project_id);
-  // رابط المجهولين كذلك لا يُبنى إلا من مسار داخلي مُتحقَّق منه
-  const link = toAbsoluteInternalUrl(PUSH_SITE_URL, outbox.url);
+  // مسار داخلي نسبي يعاد التحقق منه هنا أصلاً (طبقة دفاع ثانية: القاعدة
+  // تمنع التخزين غير الآمن وهذا يمنع الإرسال) — بلا مضيف داخل الرسالة.
+  const link = isSafeInternalLink(outbox.url) ? outbox.url : undefined;
 
   result.notifiedTokens = subscriptions.length;
   const staleIds: string[] = [];
+  let lastError = "";
 
-  for (const sub of subscriptions) {
+  await forEachLimited(subscriptions, ANONYMOUS_SEND_CONCURRENCY, async (sub) => {
     const message = buildFcmMessage(sub.token, outbox.title, outbox.body, link, outbox.id);
     try {
       const res = await fetch(endpoint, {
@@ -414,25 +479,24 @@ async function handleAnonymousOutbox(
           Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify(message),
+        signal: AbortSignal.timeout(5000),
       });
 
       if (res.ok) {
         result.sent += 1;
       } else if (isUnregisteredStatus(res.status)) {
-        // توكن معطّل — نُحدّث حالته إلى revoked
         staleIds.push(sub.id);
         result.removedTokens += 1;
       } else {
         result.failed += 1;
-        console.warn("fcm send failed (anonymous)", res.status);
+        lastError = `fcm ${res.status}`;
       }
     } catch (err) {
       result.failed += 1;
-      console.error("fcm send exception (anonymous)", (err as Error).message);
+      lastError = (err as Error).message.slice(0, 300);
     }
-  }
+  });
 
-  // حذف التوكنات المعطّلة دفعةً واحدة
   if (staleIds.length > 0) {
     await supabase
       .from("anonymous_push_subscriptions")
@@ -440,14 +504,79 @@ async function handleAnonymousOutbox(
       .in("id", staleIds);
   }
 
-  // تحديث حالة سجل الـ outbox
-  const finalStatus = result.failed > 0 && result.sent === 0 ? "failed" : "sent";
-  await supabase
-    .from("anonymous_push_outbox")
-    .update({ status: finalStatus })
-    .eq("id", outboxId);
+  // كل التوكنات غير صالحة ولم يبقَ منها هدف ⇒ لا معنى لإعادة
+  // محاولة القصة: finish كان سيعيدها إلى pending ما لم نخبره أنها نهائية، فتكرّر
+  // التوليد عشر مرات ثم failed. نطلب `skipped` صراحةً في هذه الحالة وحدها.
+  const allInvalid =
+    result.sent === 0 && result.failed === 0 && result.removedTokens > 0;
+
+  // `finish` يقرّر بنفسه: sent | partial-sent | requeue-with-backoff | failed.
+  const { error: finishErr } = await supabase.rpc("finish_anonymous_push_outbox", {
+    p_outbox_id: outboxId,
+    p_lease_id: leaseId,
+    p_sent: result.sent,
+    p_failed: result.failed,
+    p_terminal: allInvalid ? "skipped" : null,
+    p_error_text: lastError,
+  });
+  if (finishErr) {
+    // فشل الإنهاء ⇒ يبقى processing، وcron يستعيده بعد 10 دقائق
+    // (نفس سلوك drain للمسار المسجّل).
+    console.error("finish_anonymous_push_outbox failed", finishErr.message);
+  }
 
   return result;
+}
+
+/**
+ * وضع العامل لمسار المجهول: يلتقط القصص الجاهزة أو العالقة في processing
+ * (فشل شبكة، سقوط الدالة، أو backoff) ويعالجها.
+ */
+async function runAnonymousOutboxWorker(
+  supabase: ReturnType<typeof createClient>,
+  accessToken: string,
+  account: ReturnType<typeof assertServiceAccount>,
+  limit: number,
+): Promise<{ processed: number; sent: number; failed: number }> {
+  const { data: rows, error } = await supabase.rpc("claim_anonymous_push_outbox", {
+    p_limit: limit,
+  });
+
+  if (error || !rows || rows.length === 0) {
+    if (error) console.error("claim_anonymous_push_outbox error", error.message);
+    return { processed: 0, sent: 0, failed: 0 };
+  }
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const row of rows as Array<{ id: string; lease_id: string }>) {
+    // الحجز الذي أعادته claim_anonymous_push_outbox هو ما يثبت ملكيتنا للصف
+    if (!row.lease_id) {
+      console.error(`anonymous outbox ${row.id}: claimed without lease_id — skipping`);
+      continue;
+    }
+    try {
+      const result = await handleAnonymousOutbox(
+        supabase,
+        row.id,
+        row.lease_id,
+        accessToken,
+        account,
+      );
+      sent += result.sent;
+      failed += result.failed;
+    } catch (err) {
+      await supabase.rpc("finish_anonymous_push_outbox", {
+        p_outbox_id: row.id,
+        p_lease_id: row.lease_id,
+        p_error_text: (err as Error).message.slice(0, 500),
+      });
+      failed += 1;
+    }
+  }
+
+  return { processed: rows.length, sent, failed };
 }
 
 // ---------------------------------------------------------------------------
@@ -490,10 +619,22 @@ Deno.serve(async (req) => {
       const account = assertServiceAccount(FCM_SERVICE_ACCOUNT);
       const accessToken = await getFcmAccessToken(FCM_SERVICE_ACCOUNT);
       const worker = await runOutboxWorker(supabase, accessToken, account, 20);
-      return new Response(JSON.stringify({ ok: true, mode: "worker", ...worker }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
+      // المسار المجهول يُلتقط في الوضع العامل نفسه: نفس أمر الـ HTTP
+      // (body فارغ) يخدم jobّي `retry-notification-push-outbox`
+      // و`retry-anonymous-push-outbox`، فلا يحتاج مهمة منفصلة.
+      const anonWorker = await runAnonymousOutboxWorker(supabase, accessToken, account, 20);
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          mode: "worker",
+          ...worker,
+          anonymous: anonWorker,
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
     } catch (err) {
       console.error("send-push worker fatal", (err as Error).message);
       return new Response(JSON.stringify({ ok: false, error: (err as Error).message }), {
@@ -515,10 +656,11 @@ Deno.serve(async (req) => {
   if (targetId.length !== 36) {
     return new Response("invalid id format", { status: 400 });
   }
-  // المسار المسجّل يتطلّب lease: بدونه لا تستطيع الدالة إثبات أنها الحاجزة،
-  // فالسماح بالحاولة بلا lease يفتح تماماً سباق finish الذي وُجد له هذا
-  // الحقل.Trigger (enqueue_push_notification) يمرّره دائماً.
-  if (outboxId && leaseId.length !== 36) {
+  // المساران يتطلّبان lease: بدونه لا تستطيع الدالة إثبات أنها الحاجزة، فالسماح
+  // بالمحاولة بلا lease يفتح تماماً سباق finish الذي وُجد لها هذا الحقل.
+  // path المسجّل: `enqueue_push_notification` (trigger) يمرّره.
+  // path المجهول: `claim_anonymous_push_outbox` يولّده قبل الاستدعاء.
+  if (leaseId.length !== 36) {
     return new Response("missing or invalid lease_id", { status: 400 });
   }
 
@@ -532,7 +674,7 @@ Deno.serve(async (req) => {
     if (outboxId) {
       result = await handleRegisteredOutboxRow(supabase, outboxId, leaseId, accessToken, account);
     } else {
-      result = await handleAnonymousOutbox(supabase, anonOutboxId, accessToken, account);
+      result = await handleAnonymousOutbox(supabase, anonOutboxId, leaseId, accessToken, account);
     }
 
     return new Response(JSON.stringify({ ok: true, ...result }), {
