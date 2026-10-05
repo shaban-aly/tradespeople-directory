@@ -1,9 +1,14 @@
+"use client";
+
 import { SafeImage as Image } from "@/components/shared/ui/SafeImage";
+import { ImageViewer } from "@/components/shared/ImageViewer";
 import { Drawer } from "@/components/admin/Drawer";
 import { DetailField } from "@/components/admin/ui/DetailField";
 import { IconUsers } from "@/components/shared/icons";
 import type { JoinRequestRow } from "@/lib/db/admin";
 import { toArabicDigits } from "@/lib/utils/format";
+import { IMAGE_ASPECT, withImageAspect } from "@/lib/utils/image-transform";
+import { useState } from "react";
 
 export function RequestDetailsDrawer({
   request,
@@ -14,8 +19,16 @@ export function RequestDetailsDrawer({
   open: boolean;
   onClose: () => void;
 }) {
+  const [viewerSrc, setViewerSrc] = useState<string | null>(null);
+
   return (
     <Drawer open={open} onClose={onClose} title="تفاصيل طلب التسجيل">
+      <ImageViewer
+        open={Boolean(viewerSrc)}
+        src={viewerSrc}
+        alt={request?.name ?? "صورة الطلب"}
+        onClose={() => setViewerSrc(null)}
+      />
       {request && (
         <div className="grid gap-3 text-base text-muted">
           <DetailField label="الحالة">
@@ -55,15 +68,20 @@ export function RequestDetailsDrawer({
             </div>
           ) : null}
           {request.image_url && (
-            <div className="relative aspect-4/3 w-full overflow-hidden rounded-xl">
+            <button
+              type="button"
+              onClick={() => setViewerSrc(request.image_url)}
+              aria-label={`تكبير صورة ${request.name ?? "الطلب"}`}
+              className="relative aspect-4/3 w-full cursor-zoom-in overflow-hidden rounded-xl"
+            >
               <Image
-                src={request.image_url}
+                src={withImageAspect(request.image_url, IMAGE_ASPECT.CARD)}
                 alt={request.name ?? "صورة الطلب"}
                 fill
                 sizes="(min-width: 640px) 640px, 342px"
                 className="object-cover"
               />
-            </div>
+            </button>
           )}
           <div className="mt-2 flex items-center gap-2 rounded-xl bg-accent/10 p-4 text-accent">
             <IconUsers className="h-6 w-6 shrink-0" />

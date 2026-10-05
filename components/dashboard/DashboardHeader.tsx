@@ -6,6 +6,7 @@ import { IconExternalLink, IconPin } from "@/components/shared/icons";
 import { craftsmanHref } from "@/lib/utils/url";
 import { ShareProfileButton } from "@/components/dashboard/ShareProfileButton";
 import type { CraftsmanSelfProfile } from "@/lib/db/craftsman-dashboard";
+import { IMAGE_ASPECT, withImageAspect } from "@/lib/utils/image-transform";
 
 interface DashboardHeaderProps {
   profile: CraftsmanSelfProfile;
@@ -32,7 +33,7 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
             <div className="relative h-16 w-16 sm:h-20 sm:w-20 overflow-hidden rounded-2xl border-2 border-border/80 shadow-md ring-2 ring-accent/15">
               {profile.imageUrl ? (
                 <Image
-                  src={profile.imageUrl}
+                  src={withImageAspect(profile.imageUrl, IMAGE_ASPECT.SQUARE)}
                   alt={profile.name}
                   fill
                   sizes="(max-width: 640px) 64px, 80px"

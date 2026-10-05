@@ -7,6 +7,7 @@ import { CarouselIndicators } from "@/components/shared/ui/CarouselIndicators";
 import { Reveal } from "@/components/shared/ui/Reveal";
 import { SectionHeader } from "@/components/shared/ui/SectionHeader";
 import { IconShieldCheck } from "@/components/shared/icons";
+import { IMAGE_SIZES } from "@/lib/utils/image-transform";
 
 export function VerifiedCraftsmen({
   items,
@@ -53,6 +54,7 @@ export function VerifiedCraftsmen({
                   category={categoryBySlug.get(craftsman.category)}
                   recent={craftsman.id === mostRecentId}
                   priority={index === 0}
+                  imageSizes={IMAGE_SIZES.CARD_CAROUSEL}
                 />
               </div>
             ))}

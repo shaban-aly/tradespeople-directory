@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SafeImage as Image } from "@/components/shared/ui/SafeImage";
+import { resizeGoogleAvatar } from "@/lib/utils/image-loader";
 import { IconUser } from "@/components/shared/icons";
 
 interface UserAvatarProps {
@@ -29,12 +29,14 @@ export function UserAvatar({ url, name, size = 40 }: UserAvatarProps) {
       className="relative shrink-0 overflow-hidden rounded-full border border-border"
       style={{ width: size, height: size }}
     >
-      <Image
-        src={url}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={resizeGoogleAvatar(url, size * 2)}
         alt={name}
-        fill
-        sizes={`${size}px`}
-        className="object-cover"
+        width={size}
+        height={size}
+        className="h-full w-full object-cover"
+        referrerPolicy="no-referrer"
         onError={() => setHasError(true)}
       />
     </div>

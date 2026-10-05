@@ -11,6 +11,7 @@ import {
   IconLogOut,
   IconChevronLeft,
 } from "@/components/shared/icons";
+import { resizeGoogleAvatar } from "@/lib/utils/image-loader";
 
 export function UserMenu() {
   const { user, profile, isLoggedIn, isAdmin, isCraftsman, loading, signOut } =
@@ -56,9 +57,10 @@ export function UserMenu() {
   const avatarContent = profile?.avatarUrl ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={profile.avatarUrl}
+      src={resizeGoogleAvatar(profile.avatarUrl, 72)}
       alt={displayName}
       className="h-full w-full rounded-full object-cover"
+      referrerPolicy="no-referrer"
       onError={(e) => { e.currentTarget.src = "/favicon-96x96.png"; }}
     />
   ) : (
@@ -110,9 +112,10 @@ export function UserMenu() {
               {profile?.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={profile.avatarUrl}
+                  src={resizeGoogleAvatar(profile.avatarUrl, 80)}
                   alt={displayName}
                   className="h-full w-full object-cover"
+                  referrerPolicy="no-referrer"
                   onError={(e) => { e.currentTarget.src = "/favicon-96x96.png"; }}
                 />
               ) : (

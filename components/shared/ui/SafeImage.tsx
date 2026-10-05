@@ -1,7 +1,7 @@
 "use client";
 
 import Image, { ImageProps } from "next/image";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface SafeImageProps extends ImageProps {
   fallbackSrc?: string;
@@ -17,15 +17,20 @@ export function SafeImage({
 }: SafeImageProps) {
   const [error, setError] = useState(false);
 
-  useEffect(() => {
+  // تصفير حالة الخطأ عند تغيّر المصدر أثناء الريندر (النمط الرسمي من React)
+  // بدل useEffect — يمنع ريندر متتالٍ ووميضاً للصورة البديلة عند تغيير الصورة.
+  const srcKey = String(src);
+  const [lastSrcKey, setLastSrcKey] = useState(srcKey);
+  if (lastSrcKey !== srcKey) {
+    setLastSrcKey(srcKey);
     setError(false);
-  }, [src]);
+  }
 
   if (error || !src) {
     // Fallback: img عادية بدون next/image optimization
     // لأن الصورة البديلة محلية ولا تحتاج optimization، ولأن كل طلب يُحسب كـ optimization
-    // eslint-disable-next-line @next/next/no-img-element
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={fallbackSrc}
         alt={alt as string || ""}
@@ -38,7 +43,7 @@ export function SafeImage({
 
   return (
     <Image
-      key={String(src)}
+      key={srcKey}
       {...rest}
       src={src}
       alt={alt}

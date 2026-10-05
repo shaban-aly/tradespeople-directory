@@ -4,6 +4,7 @@ import { highlightQuery, type SearchSuggestion } from "@/lib/search";
 import { CategoryIcon } from "@/components/shared/ui/CategoryIcon";
 import { VerifiedBadge } from "@/components/shared/ui/VerifiedBadge";
 import { IconSearch, IconWrench } from "@/components/shared/icons";
+import { IMAGE_ASPECT, withImageAspect } from "@/lib/utils/image-transform";
 
 export function SearchResultRow({
   suggestion,
@@ -30,10 +31,11 @@ export function SearchResultRow({
         {suggestion.kind === "craftsman" ? (
           suggestion.image ? (
             <Image
-              src={suggestion.image}
+              src={withImageAspect(suggestion.image, IMAGE_ASPECT.SQUARE)}
               alt=""
               width={36}
               height={36}
+              sizes="36px"
               className="h-full w-full object-cover"
             />
           ) : (

@@ -15,6 +15,7 @@ import { useImageUpload } from "@/hooks/forms/useImageUpload";
 import { SocialLinksEditor } from "@/components/shared/ui/SocialLinksEditor";
 import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE_MB } from "@/lib/storage/images";
 import { Field, fieldErrorId } from "@/components/shared/form/Field";
+import { supabaseTransformUrl } from "@/lib/utils/image-transform";
 import { TextField } from "@/components/shared/form/TextField";
 import { TextArea } from "@/components/shared/form/TextArea";
 import { SelectField } from "@/components/shared/form/SelectField";
@@ -100,6 +101,7 @@ export function CraftsmanForm({
       [],
   );
   const [socialError, setSocialError] = useState("");
+  const [imageMissingError, setImageMissingError] = useState("");
 
   function handleSocialLinksChange(links: SocialLinkRow[]) {
     setSocialLinks(links);
@@ -169,6 +171,7 @@ export function CraftsmanForm({
   const existingImage =
     initial?.image_url && !removeExisting ? initial.image_url : null;
   const shownPreview = preview || existingImage;
+  const imageRequired = !isEdit && !existingImage && !file;
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -197,6 +200,14 @@ export function CraftsmanForm({
     const linksError = validateSocialLinks(activeLinks);
     setSocialError(linksError ?? "");
     if (linksError) return;
+
+    // التحقق من الصورة - مطلوبة عند إنشاء صنايعي جديد
+    if (!isEdit && !file && !initial?.image_url) {
+      setImageMissingError("يجب رفع صورة رئيسية للصنايعي");
+      return;
+    }
+
+    setImageMissingError("");
 
     await onSubmit({
       slug: slug.trim(),
@@ -394,14 +405,24 @@ export function CraftsmanForm({
 
       <div>
         <p className="mb-1 text-base font-bold text-foreground">
-          صورة الصنايعي <span className="font-normal text-muted">(اختياري)</span>
+          صورة الصنايعي <span className="font-normal text-muted">{isEdit ? "(اختياري عند التعديل)" : "(مطلوب)"}</span>
         </p>
         {shownPreview ? (
           <div className="relative overflow-hidden rounded-xl border border-border">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={shownPreview}
+              src={
+                preview ??
+                supabaseTransformUrl(existingImage, {
+                  width: 800,
+                  height: 600,
+                  resize: "cover",
+                }) ??
+                existingImage
+              }
               alt="معاينة صورة الصنايعي"
+              width={800}
+              height={600}
               className="aspect-4/3 w-full object-cover"
             />
             <div className="absolute bottom-3 left-3 flex flex-wrap gap-2">
@@ -412,6 +433,7 @@ export function CraftsmanForm({
                 className="hidden"
                 onChange={(event) => {
                   setRemoveExisting(false);
+                  setImageMissingError("");
                   void selectFile(event.target.files?.[0]);
                   event.target.value = "";
                 }}
@@ -420,22 +442,8 @@ export function CraftsmanForm({
                 htmlFor="admin-image-input-preview"
                 className="flex min-h-12 cursor-pointer items-center rounded-xl bg-card/90 px-4 text-base font-bold text-foreground shadow-card transition-colors hover:bg-background"
               >
-                غيّر الصورة
+                استبدال الصورة
               </label>
-              <button
-                type="button"
-                onClick={() => {
-                  if (preview) {
-                    removeImage();
-                  } else {
-                    setRemoveExisting(true);
-                  }
-                }}
-                className="flex min-h-12 items-center gap-2 rounded-xl bg-card/90 px-4 text-base font-bold text-danger shadow-card transition-colors hover:bg-background"
-              >
-                <IconX className="h-5 w-5" />
-                إزالة
-              </button>
             </div>
           </div>
         ) : (
@@ -447,6 +455,7 @@ export function CraftsmanForm({
               className="hidden"
               onChange={(event) => {
                 void selectFile(event.target.files?.[0]);
+                setImageMissingError("");
                 event.target.value = "";
               }}
             />
@@ -455,15 +464,17 @@ export function CraftsmanForm({
               className="flex min-h-28 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-background/40 p-6 text-muted transition-colors hover:border-accent hover:text-accent"
             >
               <IconCamera className="h-8 w-8" />
-              <span className="text-base font-bold">اضغط لرفع صورة</span>
+              <span className="text-base font-bold">{isEdit ? "اضغط لرفع صورة" : "اضغط لرفع صورة رئيسية (مطلوب)"}</span>
               <span className="text-base">
                 JPG أو PNG — بنحوّلها لـ WebP أوتوماتيك لحد {MAX_IMAGE_SIZE_MB} ميجا
               </span>
             </label>
           </div>
         )}
-        {imageError && (
-          <p className="mt-2 text-base font-bold text-accent">{imageError}</p>
+        {(imageError || imageMissingError) && (
+          <p className="mt-2 text-base font-bold text-accent">
+            {imageMissingError || imageError}
+          </p>
         )}
       </div>
 

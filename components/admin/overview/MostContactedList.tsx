@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/admin/EmptyState";
 import { IconTrendingUp, IconPhone, IconWhatsApp, IconUsers } from "@/components/shared/icons";
 import type { MostContactedItem } from "@/lib/db/admin-selectors";
 import { toArabicDigits } from "@/lib/utils/format";
+import { IMAGE_ASPECT, withImageAspect } from "@/lib/utils/image-transform";
 
 export function MostContactedList({
   items,
@@ -49,7 +50,7 @@ export function MostContactedList({
                   {item.craftsman.image_url ? (
                     <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-border">
                       <Image
-                        src={item.craftsman.image_url}
+                        src={withImageAspect(item.craftsman.image_url, IMAGE_ASPECT.SQUARE)}
                         alt={item.craftsman.name}
                         fill
                         sizes="40px"

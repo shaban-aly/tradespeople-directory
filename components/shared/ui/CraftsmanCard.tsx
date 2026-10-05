@@ -9,18 +9,29 @@ import { RatingBadge } from "@/components/shared/ui/RatingBadge";
 import { VerifiedBadge } from "@/components/shared/ui/VerifiedBadge";
 import { CraftsmanAvatar } from "@/components/shared/ui/CraftsmanAvatar";
 import { craftsmanHref } from "@/lib/utils/url";
+import { IMAGE_ASPECT, IMAGE_SIZES, withImageAspect } from "@/lib/utils/image-transform";
 
-function CraftsmanImage({ craftsman, priority }: { craftsman: Craftsman; priority?: boolean }) {
+function CraftsmanImage({
+  craftsman,
+  priority,
+  sizes,
+}: {
+  craftsman: Craftsman;
+  priority?: boolean;
+  sizes: string;
+}) {
   if (craftsman.image) {
     const posX = craftsman.avatarPosition?.x ?? 50;
     const posY = craftsman.avatarPosition?.y ?? 50;
     const zoom = craftsman.avatarPosition?.zoom ?? 1;
     return (
       <Image
-        src={craftsman.image}
+        // نسبة 4:3 = نسبة الحاوية داخل الكارت => يقصّها Supabase على السيرفر
+        // (resize=cover) بدل تحميل الصورة كاملة ثم قصّها في المتصفح.
+        src={withImageAspect(craftsman.image, IMAGE_ASPECT.CARD)}
         alt={craftsman.name}
         fill
-        sizes="(min-width: 1024px) 240px, (min-width: 640px) 33vw, 50vw"
+        sizes={sizes}
         className="object-cover transition-transform duration-500 group-hover:scale-105"
         style={{
           objectPosition: `${posX}% ${posY}%`,
@@ -47,12 +58,15 @@ export function CraftsmanCard({
   recent = false,
   reason,
   priority = false,
+  imageSizes = IMAGE_SIZES.CARD,
 }: {
   craftsman: Craftsman;
   category?: Category;
   recent?: boolean;
   reason?: string;
   priority?: boolean;
+  /** مقاس الصورة الفعلي على الشاشة — الجريد يستخدم الافتراضي، والكاروسيل يمرّر مقاسه */
+  imageSizes?: string;
 }) {
   return (
     <article
@@ -60,7 +74,7 @@ export function CraftsmanCard({
     >
       <Link href={craftsmanHref(craftsman.slug)} className="flex flex-1 flex-col">
         <div className="relative aspect-4/3 overflow-hidden bg-accent/10">
-          <CraftsmanImage craftsman={craftsman} priority={priority} />
+          <CraftsmanImage craftsman={craftsman} priority={priority} sizes={imageSizes} />
           {(craftsman.verified || recent) && (
             <div className="absolute right-2 top-2 flex flex-col items-start gap-1">
               {craftsman.verified && <VerifiedBadge />}

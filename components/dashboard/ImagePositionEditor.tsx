@@ -7,6 +7,7 @@ import type { AvatarPosition } from "@/lib/data/craftsmen";
 import { saveCraftsmanAvatarStandalone } from "@/lib/db/craftsman-mutations";
 import { revalidateProfileAfterSave } from "@/app/dashboard/actions";
 import { IconCheck, IconRefresh } from "@/components/shared/icons";
+import { supabaseTransformUrl } from "@/lib/utils/image-transform";
 
 interface ImagePositionEditorProps {
   craftsmanId: string;
@@ -43,6 +44,14 @@ export function ImagePositionEditor({
   }, [objectUrl]);
 
   const activeSrc = objectUrl || imageUrl || "";
+
+  // محرر القصّ يحتاج دقة كافية لتحديد نقطة التركيز، لكن ليس صورة 1200px كاملة:
+  // 800px تكفي تماماً، والمعاينة المصغّرة تستخدم نسخة 240px مقصوصة 4:3.
+  const cropperSrc = objectUrl ?? supabaseTransformUrl(imageUrl, { width: 800 }) ?? "";
+  const previewSrc =
+    objectUrl ??
+    supabaseTransformUrl(imageUrl, { width: 240, height: 180, resize: "cover" }) ??
+    "";
 
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(initialPosition?.zoom ?? 1);
@@ -143,7 +152,7 @@ export function ImagePositionEditor({
         {/* منطقة السحب والتكبير التفاعلية */}
         <div className="relative h-64 w-full overflow-hidden rounded-2xl bg-neutral-900 shadow-inner sm:h-80 lg:col-span-2">
           <Cropper
-            image={activeSrc}
+            image={cropperSrc}
             crop={crop}
             zoom={zoom}
             aspect={4 / 3}
@@ -161,8 +170,10 @@ export function ImagePositionEditor({
           <div className="relative aspect-4/3 w-40 overflow-hidden rounded-xl border border-border bg-accent/10 shadow-sm sm:w-48">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={activeSrc}
+              src={previewSrc}
               alt="معاينة الكارت"
+              width={192}
+              height={144}
               className="h-full w-full object-cover transition-transform duration-100 will-change-transform"
               style={{
                 objectPosition: `${focalPoint.x}% ${focalPoint.y}%`,

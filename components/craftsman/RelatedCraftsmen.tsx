@@ -7,6 +7,7 @@ import { CraftsmanCard } from "@/components/shared/ui/CraftsmanCard";
 import { CarouselIndicators } from "@/components/shared/ui/CarouselIndicators";
 import { Reveal } from "@/components/shared/ui/Reveal";
 import { SectionHeader } from "@/components/shared/ui/SectionHeader";
+import { IMAGE_SIZES } from "@/lib/utils/image-transform";
 
 // قسم «شاهد أيضاً» أسفل صفحة التفاصيل — نفس لغة كاروسيل الهوم:
 // تمرير أفقي على الموبايل وشبكة على الديسكتوب بنفس منظر الكروت.
@@ -62,6 +63,7 @@ export function RelatedCraftsmen({
                 <CraftsmanCard
                   craftsman={craftsman}
                   category={categoryBySlug.get(craftsman.category)}
+                  imageSizes={IMAGE_SIZES.CARD_CAROUSEL}
                 />
               </div>
             ))}

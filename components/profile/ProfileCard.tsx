@@ -13,6 +13,7 @@ import {
   IconChevronLeft,
 } from "@/components/shared/icons";
 import { toArabicDigits } from "@/lib/utils/format";
+import { resizeGoogleAvatar } from "@/lib/utils/image-loader";
 
 interface ProfileCardProps {
   user: User;
@@ -79,7 +80,7 @@ export function ProfileCard({
           {!imgError && avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={avatarUrl}
+              src={resizeGoogleAvatar(avatarUrl, 176)}
               alt=""
               referrerPolicy="no-referrer"
               onError={() => setImgError(true)}

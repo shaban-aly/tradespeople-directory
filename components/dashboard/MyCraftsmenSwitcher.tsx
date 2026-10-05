@@ -2,6 +2,7 @@
 
 import { type CraftsmanBrief } from "@/lib/db/craftsman-dashboard";
 import { IconPlus, IconCheck, IconUser } from "@/components/shared/icons";
+import { supabaseTransformUrl } from "@/lib/utils/image-transform";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -69,8 +70,14 @@ export function MyCraftsmenSwitcher({
                 {c.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={c.imageUrl}
+                    src={supabaseTransformUrl(c.imageUrl, {
+                      width: 80,
+                      height: 80,
+                      resize: "cover",
+                    }) ?? c.imageUrl}
                     alt={c.name}
+                    width={40}
+                    height={40}
                     className="h-full w-full object-cover"
                     onError={(e) => { e.currentTarget.src = "/favicon-96x96.png"; }}
                   />

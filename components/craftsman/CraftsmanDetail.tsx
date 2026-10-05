@@ -20,6 +20,12 @@ import { CraftsmanReviewsSection } from "@/components/craftsman/CraftsmanReviews
 import { CraftsmanHeroImage } from "@/components/craftsman/CraftsmanHeroImage";
 import { categoryHref } from "@/lib/utils/url";
 import { ViewsCounter } from "@/components/craftsman/ViewsCounter";
+import {
+  IMAGE_ASPECT,
+  IMAGE_SIZES,
+  supabaseBlurUrl,
+  withImageAspect,
+} from "@/lib/utils/image-transform";
 
 export function CraftsmanDetail({
   craftsman,
@@ -64,22 +70,21 @@ export function CraftsmanDetail({
             craftsman.image ? (
               <div className="relative flex h-64 w-full items-center justify-center overflow-hidden bg-neutral-900/90 sm:h-80">
                 <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-                  <Image
-                    src={craftsman.image}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={supabaseBlurUrl(craftsman.image) ?? craftsman.image}
                     alt=""
-                    fill
-                    sizes="96px"
-                    className="scale-125 object-cover opacity-40 blur-2xl filter"
+                    className="absolute inset-0 h-full w-full scale-125 object-cover opacity-40 blur-2xl filter"
                   />
                   <div className="absolute inset-0 bg-black/25 backdrop-blur-xs" />
                 </div>
                 <div className="relative flex h-full aspect-4/3 items-center justify-center overflow-hidden shadow-2xl">
                   <Image
-                    src={craftsman.image}
+                    src={withImageAspect(craftsman.image, IMAGE_ASPECT.CARD)}
                     alt={craftsman.name}
                     fill
                     priority
-                    sizes="(min-width: 640px) 428px, 342px"
+                    sizes={IMAGE_SIZES.HERO}
                     className="object-cover"
                     style={{
                       objectPosition: `${craftsman.avatarPosition?.x ?? 50}% ${craftsman.avatarPosition?.y ?? 50}%`,

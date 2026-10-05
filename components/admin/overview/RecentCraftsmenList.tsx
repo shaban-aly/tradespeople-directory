@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/admin/StatusBadge";
 import { AdminButtonLink } from "@/components/admin/ui/AdminButton";
 import { IconUsers } from "@/components/shared/icons";
 import type { CraftsmanRow } from "@/lib/db/admin";
+import { IMAGE_ASPECT, withImageAspect } from "@/lib/utils/image-transform";
 
 export function RecentCraftsmenList({ craftsmen }: { craftsmen: CraftsmanRow[] }) {
   return (
@@ -36,7 +37,7 @@ export function RecentCraftsmenList({ craftsmen }: { craftsmen: CraftsmanRow[] }
                 {craftsman.image_url ? (
                   <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-border">
                     <Image
-                      src={craftsman.image_url}
+                      src={withImageAspect(craftsman.image_url, IMAGE_ASPECT.SQUARE)}
                       alt={craftsman.name}
                       fill
                       sizes="44px"

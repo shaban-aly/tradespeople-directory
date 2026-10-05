@@ -12,6 +12,7 @@ import {
 import { ACCEPTED_IMAGE_TYPES } from "@/lib/storage/images";
 import type { AvatarPosition } from "@/lib/data/craftsmen";
 import type { CraftsmanSelfProfile } from "@/lib/db/craftsman-dashboard";
+import { IMAGE_ASPECT, withImageAspect } from "@/lib/utils/image-transform";
 
 interface ProfileAvatarSectionProps {
   profile: CraftsmanSelfProfile;

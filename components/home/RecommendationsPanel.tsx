@@ -7,6 +7,7 @@ import { CraftsmanCard } from "@/components/shared/ui/CraftsmanCard";
 import { CarouselIndicators } from "@/components/shared/ui/CarouselIndicators";
 import { SectionHeader } from "@/components/shared/ui/SectionHeader";
 import { IconActivity } from "@/components/shared/icons";
+import { IMAGE_SIZES } from "@/lib/utils/image-transform";
 
 export function RecommendationsPanel({
   pool,
@@ -55,6 +56,7 @@ export function RecommendationsPanel({
                 craftsman={craftsman}
                 category={categoryBySlug.get(craftsman.category)}
                 reason={craftsman.recommendationReason}
+                imageSizes={IMAGE_SIZES.CARD_CAROUSEL}
               />
             </div>
           ))}

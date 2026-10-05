@@ -1,13 +1,18 @@
 "use client";
 
-import { useCallback, startTransition } from "react";
+import { useState } from "react";
 import { SafeImage as Image } from "@/components/shared/ui/SafeImage";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CraftsmanAvatar } from "@/components/shared/ui/CraftsmanAvatar";
-import { ImageViewer } from "@/components/shared/ui/ImageViewer";
+import { ImageViewer } from "@/components/shared/ImageViewer";
 import { IconMaximize } from "@/components/shared/icons";
 
 import type { AvatarPosition } from "@/lib/data/craftsmen";
+import {
+  IMAGE_ASPECT,
+  IMAGE_SIZES,
+  supabaseBlurUrl,
+  withImageAspect,
+} from "@/lib/utils/image-transform";
 
 interface CraftsmanHeroImageProps {
   image?: string | null;
@@ -15,33 +20,16 @@ interface CraftsmanHeroImageProps {
   avatarPosition?: AvatarPosition | null;
 }
 
-export function CraftsmanHeroImage({ image, name, avatarPosition }: CraftsmanHeroImageProps) {
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const router = useRouter();
-
-  const isOpen = Boolean(image) && searchParams?.get("image") === "view";
-
-  const openViewer = useCallback(() => {
-    if (!image) return;
-    const current = new URLSearchParams(searchParams ? searchParams.toString() : "");
-    current.set("image", "view");
-    const search = current.toString();
-    const query = search ? `?${search}` : "";
-    startTransition(() => {
-      router.push(`${pathname}${query}`, { scroll: false });
-    });
-  }, [image, pathname, router, searchParams]);
-
-  const closeViewer = useCallback(() => {
-    const current = new URLSearchParams(searchParams ? searchParams.toString() : "");
-    current.delete("image");
-    const search = current.toString();
-    const query = search ? `?${search}` : "";
-    startTransition(() => {
-      router.push(`${pathname}${query}`, { scroll: false });
-    });
-  }, [pathname, router, searchParams]);
+export function CraftsmanHeroImage({
+  image,
+  name,
+  avatarPosition,
+}: CraftsmanHeroImageProps) {
+  // حالة المشاهد محلية بالـ state لا مرتبطة بالـ URL — الصفحة ستاتيك
+  // (generateStaticParams)، وربط الفتح بـ ?image=view يجعل Next.js يعيد
+  // تثبيت الـ query القديمة من الـ route cache عند router.replace على مسار
+  // نظيف، فيبقى المشاهد مفتوحاً بعد الإغلاق.
+  const [isOpen, setIsOpen] = useState(false);
 
   if (!image) {
     return (
@@ -60,21 +48,23 @@ export function CraftsmanHeroImage({ image, name, avatarPosition }: CraftsmanHer
       <div
         role="button"
         tabIndex={0}
-        onClick={openViewer}
+        onClick={() => setIsOpen(true)}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            openViewer();
+            setIsOpen(true);
           }
         }}
         aria-label={`معاينة وتكبير صورة ${name}`}
         className="group relative flex h-64 w-full cursor-pointer items-center justify-center overflow-hidden bg-neutral-900/90 sm:h-80 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
       >
-        {/* خلفية ضبابية سينمائية — img عادية بلا optimization لأنها مخفية بـ blur + opacity */}
+        {/* خلفية ضبابية سينمائية — نسخة مصغّرة جداً (32px) عبر Supabase Transformations
+            حتى لا ننزّل الصورة الأصلية لمجرد طمسها، مع رابط احتياطي لروابط
+            غير Supabase (blob أو روابط خارجية). */}
         <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={image}
+            src={supabaseBlurUrl(image) ?? image}
             alt=""
             className="absolute inset-0 h-full w-full scale-125 object-cover opacity-40 blur-2xl filter"
             loading="lazy"
@@ -86,11 +76,11 @@ export function CraftsmanHeroImage({ image, name, avatarPosition }: CraftsmanHer
         {/* الصورة الرئيسية بإطار 4:3 مطابق تماماً لنسبة الكروت والمحرر */}
         <div className="relative flex h-full aspect-4/3 items-center justify-center overflow-hidden shadow-2xl">
           <Image
-            src={image}
+            src={withImageAspect(image, IMAGE_ASPECT.CARD)}
             alt={name}
             fill
             priority
-            sizes="(min-width: 640px) 428px, 342px"
+            sizes={IMAGE_SIZES.HERO}
             className="object-cover transition-transform duration-300 group-hover:scale-102"
             style={{
               objectPosition: `${avatarPosition?.x ?? 50}% ${avatarPosition?.y ?? 50}%`,
@@ -113,7 +103,7 @@ export function CraftsmanHeroImage({ image, name, avatarPosition }: CraftsmanHer
 
       <ImageViewer
         open={isOpen}
-        onClose={closeViewer}
+        onClose={() => setIsOpen(false)}
         src={image}
         title={name}
       />

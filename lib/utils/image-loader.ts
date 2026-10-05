@@ -5,45 +5,54 @@
  *
  * المنطق:
  * - صور Supabase Storage  → Supabase Image Transform (/render/image/public/) — مجاني تماماً
- * - صور خارجية أخرى      → تُعرض بحجمها الأصلي (لا optimization) مع كاش المتصفح فقط
+ * - صور Google Avatars    → تصغير عبر معامل `=sNNN-c` الخاص بـ Google
+ * - أي صورة أخرى         → تُعرض بحجمها الأصلي (لا optimization)
  *
  * ⚠️ ملاحظة مهمة:
  *   عند استخدام loaderFile يُستدعى هذا الـ loader بدلاً من /_next/image — لا قبله ولا بعده.
- *   لذلك إعادة توجيه للـ /_next/image ستُسبب loop. الصور الخارجية (Google avatars) ترجع كما هي.
+ *   لذلك إعادة توجيه للـ /_next/image ستُسبب loop.
+ *
+ * كل منطق بناء روابط التحويل موجود في `lib/utils/image-transform.ts` (مصدر واحد
+ * مشترك مع الكومبوننتس) — هذا الملف طبقة رقيقة فوقه.
  *
  * يُستخدم في next.config.mjs:
  *   images: { loaderFile: './lib/utils/image-loader.ts' }
  */
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const SUPABASE_STORAGE_PREFIX = `${SUPABASE_URL}/storage/v1/object/public/`;
-const SUPABASE_TRANSFORM_PREFIX = `${SUPABASE_URL}/storage/v1/render/image/public/`;
+import {
+  IMAGE_QUALITY,
+  isGoogleImageUrl,
+  isSupabaseImageUrl,
+  splitImageAspectHint,
+  supabaseTransformUrl,
+} from "./image-transform";
 
 /**
- * هل الرابط من Supabase Storage؟
- */
-function isSupabaseStorageUrl(src: string): boolean {
-  // نتأكد أن SUPABASE_URL موجود لتجنب false positives
-  return Boolean(SUPABASE_URL) && src.startsWith(SUPABASE_STORAGE_PREFIX);
-}
-
-/**
- * حوّل رابط Supabase Storage العام إلى رابط Supabase Image Transform
+ * تصغير صور Google Avatars مباشرةً عبر URL parameter
  *
- * من: .../storage/v1/object/public/craftsman-images/craftsmen/abc.webp
- * إلى: .../storage/v1/render/image/public/craftsman-images/craftsmen/abc.webp?width=400&quality=80&format=webp
+ * Google Avatars تدعم =sNNN-c لتحديد الحجم بالـ pixel.
+ * نستخدم هذا بدلاً من تمريرها لـ /_next/image لتفادي استهلاك Vercel.
+ *
+ * من: .../a/ACg8oc...=s96-c
+ * إلى: .../a/ACg8oc...=s200-c
  */
-function toSupabaseTransformUrl(src: string, width: number, quality: number): string {
-  // احذف query string موجود على الرابط الأصلي إن وجد
-  const [base] = src.split("?");
-  const path = base.replace(SUPABASE_STORAGE_PREFIX, "");
-  const params = new URLSearchParams({
-    width: String(width),
-    quality: String(quality),
-    resize: "cover",
-    format: "webp",
-  });
-  return `${SUPABASE_TRANSFORM_PREFIX}${path}?${params.toString()}`;
+export function resizeGoogleAvatar(url: string, size: number): string {
+  if (!url) return url;
+
+  // نتأكد أن الرابط من Google قبل التعديل — إذا لم يكن Google نرجعه كما هو
+  if (!isGoogleImageUrl(url)) return url;
+
+  // نمط =sNNN-c الشائع في googleusercontent
+  if (url.includes("=s") && url.includes("-c")) {
+    return url.replace(/=s\d+-c/, `=s${size}-c`);
+  }
+  // نمط ?sz=NNN بديل
+  if (url.includes("?sz=")) {
+    return url.replace(/\?sz=\d+/, `?sz=${size}`);
+  }
+  // إذا لم يوجد parameter معروف — أضف =sNNN-c
+  const [base] = url.split("?");
+  return `${base}=s${size}-c`;
 }
 
 /**
@@ -58,15 +67,28 @@ export default function imageLoader({
   width: number;
   quality?: number;
 }): string {
-  const q = quality ?? 80;
+  // النسبة تصل مع الـ src عبر withImageAspect — لأنها لا تُمرَّر في واجهة الـ loader.
+  const { cleanSrc, aspect } = splitImageAspectHint(src);
 
-  if (isSupabaseStorageUrl(src)) {
-    // ✅ Supabase Transform — مجاني ومباشر، يُرجع WebP بالحجم المطلوب
-    return toSupabaseTransformUrl(src, width, q);
+  if (isSupabaseImageUrl(cleanSrc)) {
+    // الارتفاع = العرض ÷ نسبة الحاوية => `resize=cover` حقيقي على السيرفر.
+    // بلا نسبة نطلب تصغيراً بالعرض فقط محتفظاً بنسبة الصورة الأصلية.
+    const height = aspect ? Math.max(1, Math.round(width / aspect)) : undefined;
+    return (
+      supabaseTransformUrl(cleanSrc, {
+        width,
+        height,
+        quality: quality ?? IMAGE_QUALITY,
+      }) ?? cleanSrc
+    );
   }
 
-  // 🟡 صور خارجية (Google avatars، إلخ) — نرجع الرابط الأصلي كما هو
-  // لأن إعادة توجيهها لـ /_next/image داخل loaderFile سيُسبب loop
-  // هذه الصور نادرة في المشروع (فقط أفاتار حساب المستخدم)
-  return src;
+  if (isGoogleImageUrl(cleanSrc)) {
+    // العرض القادم من srcset مضروب أصلاً في كثافة البكسل — نمرّره كما هو.
+    return resizeGoogleAvatar(cleanSrc, width);
+  }
+
+  // صور خارجية أخرى — نرجع الرابط النظيف كما هو
+  // لأن إعادة توجيهها لـ /_next/image داخل loaderFile سيُسبب loop.
+  return cleanSrc;
 }
