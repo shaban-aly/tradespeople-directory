@@ -4,8 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useSession } from "@/hooks/auth/useSession";
 import { type RatingSummary, type ReviewItem } from "@/lib/db/reviews";
 import {
-  applyOptimisticReview,
-  buildOptimisticReview,
+  applyLocalReviewUpdate,
+  buildLocalReviewObject,
   removeReviewLocally,
 } from "@/lib/reviews";
 import {
@@ -81,7 +81,7 @@ export function useReviews(craftsmanId: string) {
       if (!userId) return;
       const now = new Date().toISOString();
       setData((prev) => {
-        const optimistic = buildOptimisticReview(
+        const localReview = buildLocalReviewObject(
           {
             craftsmanId,
             userId,
@@ -94,8 +94,8 @@ export function useReviews(craftsmanId: string) {
           now,
         );
         return {
-          ...applyOptimisticReview(prev.reviews, prev.summary, optimistic),
-          userReview: optimistic,
+          ...applyLocalReviewUpdate(prev.reviews, prev.summary, localReview),
+          userReview: localReview,
         };
       });
     },

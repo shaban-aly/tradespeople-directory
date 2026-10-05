@@ -73,11 +73,15 @@ export async function deleteReviewAction(
   const { supabase, user } = await getServerSessionOrSupabase();
   if (user?.id !== userId) return false;
 
-  const { error } = await supabase
-    .from("reviews")
-    .delete()
-    .eq("id", reviewId)
-    .eq("user_id", userId);
+  let query = supabase.from("reviews").delete().eq("user_id", userId);
+  
+  if (craftsmanId) {
+    query = query.eq("craftsman_id", craftsmanId);
+  } else {
+    query = query.eq("id", reviewId);
+  }
+
+  const { error } = await query;
 
   if (!error && craftsmanId) {
     revalidateTag(CACHE_TAGS.craftsmanReviews(craftsmanId), {});

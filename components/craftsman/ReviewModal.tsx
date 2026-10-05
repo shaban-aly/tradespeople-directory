@@ -137,7 +137,7 @@ export function ReviewModal({
       open={open}
       // أثناء فتح حوار تأكيد الحذف لا يُغلق هذا المودال بـ Escape أو النقر
       // على الخلفية، حتى لا يُغلق فورم الحذف في نفس اللحظة.
-      onClose={confirmDialogProps ? () => {} : onClose}
+      onClose={loading || deleting || confirmDialogProps ? () => {} : onClose}
       title={existingReview ? "تعديل تقييمك" : "تقييم الصنايعي"}
       description={
         <>

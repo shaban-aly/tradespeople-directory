@@ -78,7 +78,6 @@ export function CraftsmanReviewsSection({
   }) => {
     publishLocally(published.rating, published.comment);
     closeReviewModal();
-    void reload();
   };
 
   const handleDeleteReview = async (reviewId: string) => {
@@ -96,7 +95,6 @@ export function CraftsmanReviewsSection({
     setDeletingReviewId(null);
     if (ok) {
       removeLocally();
-      void reload();
     }
   };
 

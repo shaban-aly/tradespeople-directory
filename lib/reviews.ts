@@ -8,7 +8,7 @@ import type { RatingSummary, ReviewItem } from "@/lib/db/reviews";
  */
 
 /** تقييم مؤقت لمستخدم محلي؛ الـ id مؤقت حتى يصل رد السيرفر بالـ id الحقيقي. */
-export interface OptimisticReviewInput {
+export interface LocalReviewInput {
   craftsmanId: string;
   userId: string;
   userName: string;
@@ -23,8 +23,8 @@ export interface OptimisticReviewInput {
  * الـ id والتاريخ القديمين حتى لا يتكرر التقييم في القائمة
  * (السيرفر يعمل upsert على user_id + craftsman_id).
  */
-export function buildOptimisticReview(
-  input: OptimisticReviewInput,
+export function buildLocalReviewObject(
+  input: LocalReviewInput,
   existing: ReviewItem | null,
   now: string,
 ): ReviewItem {
@@ -46,15 +46,15 @@ export function buildOptimisticReview(
  * يضع التقييم في أول القائمة (الأحدث أولاً) أو يحدّث تقييمه إن كان موجوداً،
  * ويعيد حساب الملخص محلياً بنفس معادلة قاعدة البيانات.
  */
-export function applyOptimisticReview(
+export function applyLocalReviewUpdate(
   reviews: ReviewItem[],
   summary: RatingSummary,
-  optimistic: ReviewItem,
+  localReview: ReviewItem,
 ): { reviews: ReviewItem[]; summary: RatingSummary } {
-  const isUpdate = reviews.some((r) => r.userId === optimistic.userId);
+  const isUpdate = reviews.some((r) => r.userId === localReview.userId);
   const nextReviews = isUpdate
-    ? reviews.map((r) => (r.userId === optimistic.userId ? optimistic : r))
-    : [optimistic, ...reviews];
+    ? reviews.map((r) => (r.userId === localReview.userId ? localReview : r))
+    : [localReview, ...reviews];
 
   const total = nextReviews.reduce((sum, r) => sum + r.rating, 0);
   return {
