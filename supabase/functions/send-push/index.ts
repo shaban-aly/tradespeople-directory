@@ -401,7 +401,7 @@ async function handleAnonymousOutbox(
 
   const { data: outbox, error: outboxErr } = await supabase
     .from("anonymous_push_outbox")
-    .select("id, category_slug, title, body, url, status")
+    .select("id, category_slug, title, body, url, status, lease_id")
     .eq("id", outboxId)
     .maybeSingle();
 
@@ -421,9 +421,13 @@ async function handleAnonymousOutbox(
     return result;
   }
 
-  // لا نُعيد الإرسال إن أُرسل أو أُلغي مسبقاً. الصف بلا lease (أي أُنشئ بعد
-  // كسر أو استُدعي مباشرة بلا حجز) يُclaims عبر cron؛ لا نلمس صفاً غير محجوز.
-  if (outbox.status !== "processing") return result;
+  // لا نُعيد الإرسال إن أُرسل أو أُلغي مسبقاً. أو تم التقاطه بواسطة Cron (Race condition).
+  if (outbox.status !== "processing" || outbox.lease_id !== leaseId) {
+    console.warn(
+      `anonymous outbox ${outboxId}: stale lease (status=${outbox.status}, lease_match=${outbox.lease_id === leaseId}) — ignored`,
+    );
+    return result;
+  }
 
   const { data: subscriptions, error: subsErr } = await supabase
     .from("anonymous_push_subscriptions")

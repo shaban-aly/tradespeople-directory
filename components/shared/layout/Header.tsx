@@ -16,7 +16,7 @@ export function Header() {
               alt="دليل الصنايعية"
               width={96}
               height={96}
-              loading="lazy"
+              fetchPriority="high"
               decoding="async"
               className="h-9 w-9 shrink-0 object-contain sm:h-10 sm:w-10"
             />

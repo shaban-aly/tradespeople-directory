@@ -29,13 +29,17 @@ export function SafeImage({
   if (error || !src) {
     // Fallback: img عادية بدون next/image optimization
     // لأن الصورة البديلة محلية ولا تحتاج optimization، ولأن كل طلب يُحسب كـ optimization
+    const fallbackStyle = rest.fill 
+      ? { position: "absolute", height: "100%", width: "100%", left: 0, top: 0, right: 0, bottom: 0, color: "transparent", ...style } as React.CSSProperties
+      : style;
+      
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={fallbackSrc}
         alt={alt as string || ""}
         className={className}
-        style={style}
+        style={fallbackStyle}
         aria-hidden={!alt ? true : undefined}
       />
     );

@@ -82,14 +82,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       break;
 
     case "reviews":
-      // إبطال صفحة الصنايعي المُقيَّم فقط — التقييمات لا تظهر في الرئيسية
-      if (slug) invalidate(CACHE_TAGS.craftsmanSlug(slug));
+      // إبطال صفحة الصنايعي المُقيَّم
+      if (event.craftsman_slug) invalidate(CACHE_TAGS.craftsmanSlug(event.craftsman_slug));
+      // التقييمات تؤثر على النجوم وإحصائيات الرئيسية، فيجب تحديث القوائم
+      invalidate(CACHE_TAGS.allCraftsmen);
+      invalidate(CACHE_TAGS.homeStats);
       break;
 
     case "craftsman_stats":
     case "craftsman_stats_daily":
-      // الإحصائيات تظهر فقط في Admin (force-dynamic) — لا علاقة لها بكاش الزوار
-      return NextResponse.json({ skipped: true, table, type, reason: "admin-only-data" });
+      // الإحصائيات تتحدث مع كل زيارة، إبطال الكاش معها سيدمر أداء الموقع بالكامل (Cache Trashing).
+      // نكتفي بتحديث القوائم عند إضافة صنايعي جديد أو تقييم جديد.
+      return NextResponse.json({ skipped: true, table, type, reason: "prevent-cache-trashing" });
 
     default:
       // جدول غير مُسجَّل — تجاهل بهدوء
