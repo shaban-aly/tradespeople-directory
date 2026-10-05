@@ -169,3 +169,25 @@ export function invalidateUserFavoritesCache(userId?: string): void {
     slugToIdCache.clear();
   }
 }
+
+/**
+ * مزامنة المفضلات المحلية إلى السيرفر دفعة واحدة 
+ */
+export async function syncLocalFavoritesToServer(userId: string, localSlugs: string[]): Promise<void> {
+  if (localSlugs.length === 0) return;
+
+  const supabase = createSupabase();
+  const promises = localSlugs.map(async (slug) => {
+    const craftsmanId = await getCraftsmanIdBySlug(slug);
+    if (!craftsmanId) return;
+
+    await supabase.from("favorites").insert({
+      user_id: userId,
+      craftsman_id: craftsmanId,
+    });
+  });
+
+  await Promise.all(promises);
+  // بعد المزامنة يجب إبطال الكاش لكي يتم جلبه مجدداً
+  invalidateUserFavoritesCache(userId);
+}

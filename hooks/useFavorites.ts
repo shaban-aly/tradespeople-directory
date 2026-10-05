@@ -14,6 +14,7 @@ import {
   addFavorite,
   getUserFavorites,
   removeFavorite,
+  syncLocalFavoritesToServer,
 } from "@/lib/db/favorites";
 
 const EMPTY_FAVORITES: string[] = [];
@@ -33,14 +34,30 @@ export function useFavorites() {
     if (!isLoggedIn || !user?.id) return;
 
     let isMounted = true;
-    getUserFavorites(user.id).then((serverFavorites) => {
+    
+    const syncAndLoad = async () => {
+      const currentLocal = readFavoritesCached();
+      let serverFavorites = await getUserFavorites(user.id);
+      
       if (!isMounted) return;
-      if (serverFavorites && serverFavorites.length > 0) {
-        const currentLocal = readFavoritesCached();
-        const merged = Array.from(new Set([...serverFavorites, ...currentLocal]));
-        writeFavorites(merged);
+
+      // العثور على المفضلات المحلية التي لم تكن في السيرفر لرفعها أولاً (فقط إن وجدت)
+      const missingOnServer = currentLocal.filter((slug) => !serverFavorites.includes(slug));
+      
+      if (missingOnServer.length > 0) {
+        await syncLocalFavoritesToServer(user.id, missingOnServer);
+        if (!isMounted) return;
+        // جلبها مرة أخرى بعد الرفع
+        serverFavorites = await getUserFavorites(user.id);
+        if (!isMounted) return;
       }
-    });
+
+      // بمجرد تسجيل الدخول، حالة السيرفر هي المصدر المطلق للحقيقة
+      // تستبدل المفضلات المحلية بمفضلات السيرفر
+      writeFavorites(serverFavorites);
+    };
+
+    void syncAndLoad();
 
     return () => {
       isMounted = false;
