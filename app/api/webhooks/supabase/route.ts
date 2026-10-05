@@ -16,6 +16,7 @@ type WebhookEvent = {
   old_record?: { slug?: string; id?: string; craftsman_id?: string };
   category_slug?: string;
   old_category_slug?: string;
+  craftsman_slug?: string;
 };
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
