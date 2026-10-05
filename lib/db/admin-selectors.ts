@@ -5,11 +5,62 @@ import type {
   CountRow,
   CraftsmanRow,
   JoinRequestRow,
+  PushDiagnosticRow,
   ReportRow,
 } from "./admin";
 
 export type RequestStatusFilter = "all" | "pending" | "rejected";
 export type ReportStatusFilter = "all" | "pending" | "reviewed" | "dismissed";
+
+/**
+ * تصنيف ثلاثي لأسباب فشل الإشعارات — الغرض فرز ما يستحق تدخّلاً هندسياً:
+ * `permission` قرار المستخدم/المتصفح، `capability` حدود البيئة،
+ * و`technical` أعطال فعلية في مسارنا (SW/FCM/RPC) وهي وحدها القابلة للإصلاح.
+ */
+export type PushDiagnosticGroup = "all" | "permission" | "capability" | "technical";
+
+export const PUSH_DIAGNOSTIC_REASONS: Record<
+  Exclude<PushDiagnosticGroup, "all">,
+  readonly string[]
+> = {
+  permission: ["blocked", "not_granted"],
+  capability: ["unsupported", "unconfigured"],
+  technical: ["sw_failed", "messaging_failed", "token_failed", "register_failed"],
+};
+
+/** مجموعة السبب، أو `null` لسبب غير معروف (توسعة مستقبلية في الدالة) */
+export function pushDiagnosticGroupOf(
+  reason: string,
+): Exclude<PushDiagnosticGroup, "all"> | null {
+  for (const group of ["permission", "capability", "technical"] as const) {
+    if (PUSH_DIAGNOSTIC_REASONS[group].includes(reason)) return group;
+  }
+  return null;
+}
+
+export function filterPushDiagnostics(
+  rows: PushDiagnosticRow[],
+  group: PushDiagnosticGroup,
+): PushDiagnosticRow[] {
+  if (group === "all") return rows;
+  return rows.filter((row) => pushDiagnosticGroupOf(row.reason) === group);
+}
+
+export function countPushDiagnostics(
+  rows: PushDiagnosticRow[],
+): Record<PushDiagnosticGroup, number> {
+  const counts: Record<PushDiagnosticGroup, number> = {
+    all: rows.length,
+    permission: 0,
+    capability: 0,
+    technical: 0,
+  };
+  for (const row of rows) {
+    const group = pushDiagnosticGroupOf(row.reason);
+    if (group) counts[group] += 1;
+  }
+  return counts;
+}
 
 export type CraftsmanFilter = {
   search: string;

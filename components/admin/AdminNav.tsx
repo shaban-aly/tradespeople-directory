@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { LucideProps } from "lucide-react";
 import {
   IconAlert,
+  IconBell,
   IconInbox,
   IconLayoutDashboard,
   IconMail,
@@ -61,6 +62,7 @@ export const ADMIN_NAV_GROUPS: NavGroup[] = [
     label: "أدوات",
     items: [
       { href: "/admin/broadcast", label: "إشعار جماعي", icon: IconAlert },
+      { href: "/admin/diagnostics", label: "تشخيص الإشعارات", icon: IconBell },
     ],
   },
 ];

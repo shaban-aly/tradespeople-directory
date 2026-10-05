@@ -100,6 +100,24 @@ export type ReportRow = {
   updated_at: string;
 };
 
+/**
+ * صف تشخيص فشل إشعارات المتصفح (`push_client_diagnostics`).
+ *
+ * يُكتب من العميل عبر `report_push_diagnostic` (قائمة أسباب مغلقة، قصّ
+ * 300/60، وحدّ 20/ساعة لكل مستخدم أو جهاز)، ولا يُقرأ إلا بسياسة admin.
+ * `device_hash` مقصوص ولا يحمل التوكن الخام إطلاقاً.
+ */
+export type PushDiagnosticRow = {
+  id: string;
+  user_id: string | null;
+  device_hash: string;
+  reason: string;
+  stage: string;
+  detail: string;
+  user_agent: string;
+  created_at: string;
+};
+
 export type CategoryRow = {
   id: string;
   slug: string;
@@ -510,6 +528,7 @@ export async function createCategory(
   }
   const sortOrder = (categories.at(-1)?.sort_order ?? 0) + 1;
   const { error } = await createSupabase().from("categories").insert({
+    id: crypto.randomUUID(),
     slug: payload.slug,
     name: payload.name,
     singular_name: payload.name,
@@ -562,6 +581,7 @@ export async function createArea(name: string, areas: AreaRow[]): Promise<void> 
   if (errorMessage) throw new Error(errorMessage);
   const sortOrder = (areas.at(-1)?.sort_order ?? 0) + 1;
   const { error } = await createSupabase().from("areas").insert({
+    id: crypto.randomUUID(),
     name,
     sort_order: sortOrder,
   });
@@ -638,6 +658,15 @@ export async function createCraftsman(payload: CraftsmanInput): Promise<void> {
     imageUrl = uploaded.url;
     newlyUploadedUrl = uploaded.url;
   }
+
+  // إلزام الصورة عند الإنشاء
+  if (!imageUrl) {
+    if (newlyUploadedUrl) {
+      await deleteImageByUrl(newlyUploadedUrl);
+    }
+    throw new Error("يجب رفع صورة رئيسية للصنايعي");
+  }
+
   const socialLinks = Array.isArray(payload.socialLinks)
     ? payload.socialLinks.map((link) => ({
         platform: link.platform,
@@ -1120,6 +1149,30 @@ export async function fetchAdminUsers(
     craftsmanSlug: row.craftsman_slug,
     createdAt: row.created_at,
   }));
+}
+
+// ---------------------- تشخيصات إشعارات المتصفح ----------------------
+
+const PUSH_DIAGNOSTICS_SELECT =
+  "id, user_id, device_hash, reason, stage, detail, user_agent, created_at";
+
+/** سقف الصفوف المجلوبة — الجدول بلا تنظيف تلقائي فلا يُجلب كاملاً أبداً */
+export const PUSH_DIAGNOSTICS_LIMIT = 200;
+
+/**
+ * أحدث تشخيصات فشل الإشعارات. القراءة محكومة بسياسة admin في RLS،
+ * فأي جلسة غير مشرف تعود لها قائمة فارغة من القاعدة لا تسريب.
+ */
+export async function fetchPushDiagnostics(
+  client: SupabaseClient<Database> = createSupabase(),
+): Promise<PushDiagnosticRow[]> {
+  const { data, error } = await client
+    .from("push_client_diagnostics")
+    .select(PUSH_DIAGNOSTICS_SELECT)
+    .order("created_at", { ascending: false })
+    .limit(PUSH_DIAGNOSTICS_LIMIT);
+  if (error) throw new Error("مقدرناش نحمّل تشخيصات الإشعارات");
+  return data ?? [];
 }
 
 
