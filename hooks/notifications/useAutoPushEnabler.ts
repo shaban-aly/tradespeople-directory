@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { usePushNotifications } from "@/hooks/notifications/usePushNotifications";
 
 /**
  * تفعيل إشعارات المتصفح عند أول تفاعل حقيقي من المستخدم.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useStats } from "@/hooks/useStats";
+import { useStats } from "@/hooks/analytics/useStats";
 import { track } from "@/lib/analytics/track";
 import { recordUniqueCraftsmanView } from "@/lib/utils/view-dedup";
 

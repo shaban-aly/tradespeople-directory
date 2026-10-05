@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useSession } from "@/hooks/auth/useSession";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useNotifications } from "@/hooks/notifications/useNotifications";
 import { useHydratedValue } from "@/hooks/ui/useHydratedValue";
 import { formatRelativeTime } from "@/lib/utils/formatTime";
 import { resolveNotificationHref } from "@/lib/utils/notificationLink";

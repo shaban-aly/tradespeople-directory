@@ -1,7 +1,7 @@
 "use client";
 
 import type { Category, Craftsman } from "@/lib/data/craftsmen";
-import { useVerifiedCraftsmen } from "@/hooks/useVerifiedCraftsmen";
+import { useVerifiedCraftsmen } from "@/hooks/craftsman/useVerifiedCraftsmen";
 import { CraftsmanCard } from "@/components/shared/ui/CraftsmanCard";
 import { CarouselIndicators } from "@/components/shared/ui/CarouselIndicators";
 import { Reveal } from "@/components/shared/ui/Reveal";

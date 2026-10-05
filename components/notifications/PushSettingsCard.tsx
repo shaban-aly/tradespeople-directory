@@ -2,7 +2,7 @@
 
 import { IconBell, IconX } from "@/components/shared/icons";
 import { ToggleSwitch } from "@/components/shared/ui/ToggleSwitch";
-import { usePushNotifications, type PushStatus } from "@/hooks/usePushNotifications";
+import { usePushNotifications, type PushStatus } from "@/hooks/notifications/usePushNotifications";
 import type { PushFailureReason } from "@/lib/push/client";
 
 function StatusIndicator({ status }: { status: PushStatus }) {

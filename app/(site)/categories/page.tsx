@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getCategoriesWithCounts, getStats } from "@/lib/db/queries";
 import { toArabicDigits } from "@/lib/utils/format";
-import { CategoryGrid } from "@/components/categories/CategoryGrid";
+import { CategoryGrid } from "@/components/category/CategoryGrid";
 import { JsonLd } from "@/components/shared/seo/JsonLd";
 import { allCategoriesSchema } from "@/lib/seo/schema";
 import { categoriesSeo } from "@/lib/seo/metadata";

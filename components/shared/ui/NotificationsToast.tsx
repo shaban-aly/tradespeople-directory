@@ -2,10 +2,10 @@
 
 import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
-import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
-import { useForegroundPush } from "@/hooks/useForegroundPush";
-import { useBehaviorPushBridge } from "@/hooks/useBehaviorPushBridge";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useRealtimeNotifications } from "@/hooks/notifications/useRealtimeNotifications";
+import { useForegroundPush } from "@/hooks/notifications/useForegroundPush";
+import { useBehaviorPushBridge } from "@/hooks/notifications/useBehaviorPushBridge";
+import { useNotifications } from "@/hooks/notifications/useNotifications";
 import { isSafeInternalLink } from "@/lib/utils/internalLink";
 import { type NotificationRow } from "@/lib/db/notifications";
 import { type ForegroundPushMessage } from "@/lib/push/client";

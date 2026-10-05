@@ -2,7 +2,7 @@
 
 import { HeroClientCta } from "@/components/home/HeroClientCta";
 import { HeroCraftsmanCta } from "@/components/home/HeroCraftsmanCta";
-import { useHeroAudienceCarousel } from "@/hooks/useHeroAudienceCarousel";
+import { useHeroAudienceCarousel } from "@/hooks/ui/useHeroAudienceCarousel";
 
 const slides = [
   { label: "بطاقة البحث عن صنايعي", content: <HeroClientCta /> },

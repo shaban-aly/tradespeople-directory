@@ -1,5 +1,5 @@
 import type { CategoryWithCount } from "@/lib/data/craftsmen";
-import { CategoryCard } from "@/components/categories/CategoryCard";
+import { CategoryCard } from "@/components/category/CategoryCard";
 import { Reveal } from "@/components/shared/ui/Reveal";
 
 export function CategoryGrid({ categories }: { categories: CategoryWithCount[] }) {

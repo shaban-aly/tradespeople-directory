@@ -1,6 +1,6 @@
 "use client";
 
-import { useAutoPushEnabler } from "@/hooks/useAutoPushEnabler";
+import { useAutoPushEnabler } from "@/hooks/notifications/useAutoPushEnabler";
 
 /**
  * مكوّن غير مرئي (بلا أي UI) — مسؤول عن التفعيل التلقائي لإشعارات المتصفح

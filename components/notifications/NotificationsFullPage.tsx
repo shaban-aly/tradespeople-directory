@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSession } from "@/hooks/auth/useSession";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useNotifications } from "@/hooks/notifications/useNotifications";
 import { EmptyState } from "@/components/shared/ui/EmptyState";
 import { formatRelativeTime } from "@/lib/utils/formatTime";
 import { resolveNotificationHref } from "@/lib/utils/notificationLink";

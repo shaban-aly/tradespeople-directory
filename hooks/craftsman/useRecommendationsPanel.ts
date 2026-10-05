@@ -1,7 +1,7 @@
 import { useRef, useMemo } from "react";
 import type { Category } from "@/lib/data/craftsmen";
 import type { RecommendableCraftsman } from "@/lib/recommendations";
-import { useRecommendations } from "@/hooks/useRecommendations";
+import { useRecommendations } from "@/hooks/craftsman/useRecommendations";
 
 export function useRecommendationsPanel(
   pool: RecommendableCraftsman[],

@@ -9,7 +9,7 @@ import {
   IconStar,
   IconUser,
 } from "@/components/shared/icons";
-import { useFavorites } from "@/hooks/useFavorites";
+import { useFavorites } from "@/hooks/craftsman/useFavorites";
 import { useSession } from "@/hooks/auth/useSession";
 import { useSearchModal } from "@/hooks/search/useSearchModal";
 import { toArabicDigits } from "@/lib/utils/format";

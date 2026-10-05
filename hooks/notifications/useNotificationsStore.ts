@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "@/hooks/auth/useSession";
-import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
+import { useRealtimeNotifications } from "@/hooks/notifications/useRealtimeNotifications";
 import {
   getUnreadNotificationsCount,
   getUserNotifications,

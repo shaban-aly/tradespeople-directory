@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { SafeImage as Image } from "@/components/shared/ui/SafeImage";
 import { IconDownload, IconX, IconShare, IconPlus } from "@/components/shared/icons";
 import { Button } from "@/components/shared/ui/Button";
-import { useInstallPrompt, PWA_OPEN_INSTALL_EVENT } from "@/hooks/useInstallPrompt";
+import { useInstallPrompt, PWA_OPEN_INSTALL_EVENT } from "@/hooks/ui/useInstallPrompt";
 
 export function PwaInstallBanner() {
   const {

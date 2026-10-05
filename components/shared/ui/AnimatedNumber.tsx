@@ -1,6 +1,6 @@
 "use client";
 
-import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
+import { useAnimatedNumber } from "@/hooks/ui/useAnimatedNumber";
 import { toArabicDigits } from "@/lib/utils/format";
 
 // عدّ متحرّك للأرقام (من 0 للقيمة النهائية) — يظهر عربي.

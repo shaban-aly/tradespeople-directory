@@ -1,6 +1,6 @@
 "use client";
 
-import { useInstallPrompt } from "@/hooks/useInstallPrompt";
+import { useInstallPrompt } from "@/hooks/ui/useInstallPrompt";
 import { IconDownload } from "@/components/shared/icons";
 
 export function PwaInstallTrigger() {

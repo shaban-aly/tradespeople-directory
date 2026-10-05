@@ -2,7 +2,7 @@
 
 import { IconStar } from "@/components/shared/icons";
 import { AuthGuardModal } from "@/components/shared/auth/AuthGuardModal";
-import { useFavorites } from "@/hooks/useFavorites";
+import { useFavorites } from "@/hooks/craftsman/useFavorites";
 
 export function FavoriteButton({ slug }: { slug: string }) {
   const {

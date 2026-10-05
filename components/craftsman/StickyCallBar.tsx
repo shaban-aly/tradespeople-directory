@@ -2,7 +2,7 @@
 
 import { IconPhone, IconWhatsApp } from "@/components/shared/icons";
 import { ButtonAnchor } from "@/components/shared/ui/Button";
-import { useContactTracker } from "@/hooks/useContactTracker";
+import { useContactTracker } from "@/hooks/analytics/useContactTracker";
 import {
   craftsmanWhatsappMessage,
   telHref,

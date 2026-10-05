@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useStats } from "@/hooks/useStats";
+import { useStats } from "@/hooks/analytics/useStats";
 import { track } from "@/lib/analytics/track";
 
 export function useContactTracker({

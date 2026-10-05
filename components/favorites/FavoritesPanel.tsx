@@ -1,7 +1,7 @@
 "use client";
 
 import type { Category, Craftsman } from "@/lib/data/craftsmen";
-import { useFavorites } from "@/hooks/useFavorites";
+import { useFavorites } from "@/hooks/craftsman/useFavorites";
 import { CraftsmanGrid } from "@/components/shared/ui/CraftsmanGrid";
 import { ButtonLink } from "@/components/shared/ui/Button";
 import { toArabicDigits } from "@/lib/utils/format";

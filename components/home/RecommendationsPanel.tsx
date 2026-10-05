@@ -2,7 +2,7 @@
 
 import type { Category } from "@/lib/data/craftsmen";
 import type { RecommendableCraftsman } from "@/lib/recommendations";
-import { useRecommendationsPanel } from "@/hooks/useRecommendationsPanel";
+import { useRecommendationsPanel } from "@/hooks/craftsman/useRecommendationsPanel";
 import { CraftsmanCard } from "@/components/shared/ui/CraftsmanCard";
 import { CarouselIndicators } from "@/components/shared/ui/CarouselIndicators";
 import { SectionHeader } from "@/components/shared/ui/SectionHeader";

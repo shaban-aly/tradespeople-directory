@@ -4,7 +4,7 @@ import { createContext, useContext, type ReactNode } from "react";
 import {
   useNotificationsStore,
   type NotificationsContextValue,
-} from "@/hooks/useNotificationsStore";
+} from "@/hooks/notifications/useNotificationsStore";
 
 /**
  * مزوّد الحالة الوحيد على مستوى الشجرة — ومركّب في `app/layout.tsx` فيغطي
