@@ -1,20 +1,24 @@
+"use client";
+
 import { SafeImage as Image } from "@/components/shared/ui/SafeImage";
+import { ImageViewer } from "@/components/shared/ImageViewer";
 import { ToggleSwitch } from "@/components/admin/ToggleSwitch";
 import {
   DataTable,
   DataTableCell,
   DataTableRow,
 } from "@/components/admin/ui/DataTable";
-import {
-  IconPhone,
-  IconPin,
-  IconUsers,
-} from "@/components/shared/icons";
+import { IconPhone, IconPin, IconUsers } from "@/components/shared/icons";
 import { VerifiedBadge } from "@/components/shared/ui/VerifiedBadge";
-import { ActionMenu, type ActionMenuProps } from "@/components/admin/craftsmen/ActionMenu";
+import {
+  ActionMenu,
+  type ActionMenuProps,
+} from "@/components/admin/craftsmen/ActionMenu";
 import { CraftsmanMobileCard } from "@/components/admin/craftsmen/CraftsmanMobileCard";
 import type { CraftsmanRow } from "@/lib/db/admin";
 import { toArabicDigits } from "@/lib/utils/format";
+import { IMAGE_ASPECT, withImageAspect } from "@/lib/utils/image-transform";
+import { useState } from "react";
 
 export function CraftsmenTable({
   craftsmen,
@@ -36,14 +40,37 @@ export function CraftsmenTable({
     onLinkAccount,
   };
 
+  const [viewer, setViewer] = useState<{
+    open: boolean;
+    src: string | null;
+    alt?: string;
+  }>({
+    open: false,
+    src: null,
+    alt: "",
+  });
+
+  function openViewer(src: string | null, alt: string) {
+    if (!src) return;
+    setViewer({ open: true, src, alt });
+  }
+
   return (
     <>
+      <ImageViewer
+        open={viewer.open}
+        src={viewer.src}
+        alt={viewer.alt}
+        onClose={() => setViewer({ open: false, src: null, alt: "" })}
+      />
+
       {/* عرض الكروت المخصص للشاشات الصغيرة والموبايل */}
       <div className="grid gap-3 w-full max-w-full overflow-hidden lg:hidden">
         {craftsmen.map((craftsman) => (
           <CraftsmanMobileCard
             key={craftsman.id}
             craftsman={craftsman}
+            onViewImage={openViewer}
             {...actionProps}
           />
         ))}
@@ -53,11 +80,20 @@ export function CraftsmenTable({
       <div className="hidden lg:block">
         <DataTable
           minWidth={860}
-          headers={["الصنايعي", "التخصص", "المنطقة", "الهاتف", "التفاعل", "إجراءات"]}
+          headers={[
+            "الصنايعي",
+            "التخصص",
+            "المنطقة",
+            "الهاتف",
+            "التفاعل",
+            "إجراءات",
+          ]}
         >
           {craftsmen.map((craftsman) => {
-            const verifiedBusy = busyKey === `craftsman-verified-${craftsman.id}`;
-            const publishedBusy = busyKey === `craftsman-published-${craftsman.id}`;
+            const verifiedBusy =
+              busyKey === `craftsman-verified-${craftsman.id}`;
+            const publishedBusy =
+              busyKey === `craftsman-published-${craftsman.id}`;
 
             return (
               <DataTableRow key={craftsman.id}>
@@ -65,15 +101,25 @@ export function CraftsmenTable({
                 <DataTableCell edge="start">
                   <div className="flex items-center gap-3">
                     {craftsman.image_url ? (
-                      <div className="relative h-10 w-10 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openViewer(craftsman.image_url, craftsman.name)
+                        }
+                        aria-label={`تكبير صورة ${craftsman.name}`}
+                        className="relative h-10 w-10 shrink-0 cursor-zoom-in overflow-hidden rounded-xl border border-border"
+                      >
                         <Image
-                          src={craftsman.image_url}
+                          src={withImageAspect(
+                            craftsman.image_url,
+                            IMAGE_ASPECT.SQUARE,
+                          )}
                           alt={craftsman.name}
                           fill
                           sizes="40px"
-                          className="rounded-xl border border-border object-cover"
+                          className="object-cover"
                         />
-                      </div>
+                      </button>
                     ) : (
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
                         <IconUsers className="h-5 w-5" />

@@ -1,12 +1,15 @@
 "use client";
 
-import { useCraftsmanProfileForm, type AreaOption } from "@/hooks/dashboard/useCraftsmanProfileForm";
+import {
+  useCraftsmanProfileForm,
+  type AreaOption,
+} from "@/hooks/dashboard/useCraftsmanProfileForm";
 import { useProfileAvatarEditor } from "@/hooks/dashboard/useProfileAvatarEditor";
 import { ProfileAvatarSection } from "@/components/dashboard/profile/ProfileAvatarSection";
 import { ProfileContactSection } from "@/components/dashboard/profile/ProfileContactSection";
 import { ProfileBioSection } from "@/components/dashboard/profile/ProfileBioSection";
 import { ProfileSocialSection } from "@/components/dashboard/profile/ProfileSocialSection";
-import { ImageViewer } from "@/components/shared/ui/ImageViewer";
+import { ImageViewer } from "@/components/shared/ImageViewer";
 import { Button } from "@/components/shared/ui/Button";
 import { IconCheck, IconSave } from "@/components/shared/icons";
 import type { CraftsmanSelfProfile } from "@/lib/db/craftsman-dashboard";
@@ -17,7 +20,11 @@ interface ProfileEditFormProps {
   initialAreas?: AreaOption[];
 }
 
-export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditFormProps) {
+export function ProfileEditForm({
+  profile,
+  onSaved,
+  initialAreas,
+}: ProfileEditFormProps) {
   const {
     fileInputRef,
     currentAvatarUrl,
@@ -53,10 +60,7 @@ export function ProfileEditForm({ profile, onSaved, initialAreas }: ProfileEditF
   const activeViewerSrc = previewUrl || currentAvatarUrl;
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col gap-6"
-    >
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {/* رسائل التنبيه والنجاح */}
       {error && (
         <div
