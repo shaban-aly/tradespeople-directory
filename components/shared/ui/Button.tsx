@@ -23,7 +23,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   primary: "bg-accent text-on-accent hover:bg-accent/90",
   action: "bg-action text-on-action hover:bg-action/90",
   // danger للإجراءات المدمّرة المؤكدة (حذف) — مقابل AdminButton.danger في لوحة المشرف
-  danger: "bg-danger text-on-accent hover:bg-danger/90",
+  danger: "bg-danger text-on-danger hover:bg-danger/90",
   outline:
     "border-2 border-accent text-accent hover:bg-accent hover:text-on-accent",
   ghost:
