@@ -2,12 +2,10 @@
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
-import {
-  IconStar,
-  IconEdit,
-  IconTrash,
-  IconArrow,
-} from "@/components/shared/icons";
+import { IconStar, IconArrow } from "@/components/shared/icons";
+import { ConfirmDialog } from "@/components/shared/ui/ConfirmDialog";
+import { ReviewCard } from "@/components/craftsman/ReviewCard";
+import { useConfirmDialog } from "@/hooks/ui/useConfirmDialog";
 import { toArabicDigits } from "@/lib/utils/format";
 import { type ReviewItem } from "@/lib/db/reviews";
 import { getUserAllReviews, type UserReviewDetail } from "@/lib/db/reviews-queries";
@@ -27,16 +25,27 @@ export function MyReviewsSection({
   const [refreshing, setRefreshing] = useState(false);
   const [editingReview, setEditingReview] = useState<UserReviewDetail | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { ask: askConfirm, dialogProps: confirmDialogProps } = useConfirmDialog();
 
-  const refreshData = useCallback(async () => {
-    setRefreshing(true);
-    const data = await getUserAllReviews(userId);
-    setReviews(data);
-    setRefreshing(false);
-  }, [userId]);
+  const refreshData = useCallback(
+    async (options: { silent?: boolean } = {}) => {
+      // التحميل الصامت لتوفيق البيانات بعد تحديث تفاؤلي بلا إظهار هيكل تحميل.
+      if (!options.silent) setRefreshing(true);
+      const data = await getUserAllReviews(userId);
+      setReviews(data);
+      setRefreshing(false);
+    },
+    [userId],
+  );
 
   async function handleDelete(reviewId: string, craftsmanId: string) {
-    if (!window.confirm("هل أنت متأكد من رغبتك في حذف هذا التقييم؟")) return;
+    const confirmed = await askConfirm({
+      title: "حذف التقييم",
+      message: "هل أنت متأكد من رغبتك في حذف هذا التقييم؟ لن تتمكن من التراجع عن هذا الإجراء.",
+      confirmLabel: "نعم، احذف التقييم",
+      danger: true,
+    });
+    if (!confirmed) return;
 
     setDeletingId(reviewId);
     const success = await deleteReviewAction(userId, reviewId, craftsmanId);
@@ -95,91 +104,33 @@ export function MyReviewsSection({
         ) : (
           <div className="space-y-4">
             {reviews.map((rev) => (
-              <div
+              <ReviewCard
                 key={rev.id}
-                className="rounded-2xl border border-border bg-background/50 p-5 transition-colors hover:border-accent/30"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/60 pb-3">
-                  {/* معلومات الصنايعي */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 font-bold text-accent overflow-hidden">
-                      {rev.craftsmanImage ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={rev.craftsmanImage}
-                          alt={rev.craftsmanName}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        rev.craftsmanName.charAt(0)
-                      )}
-                    </div>
-                    <div>
-                      <Link
-                        href={`/craftsman/${rev.craftsmanSlug}`}
-                        className="font-bold text-base text-foreground hover:text-accent transition-colors"
-                      >
-                        {rev.craftsmanName}
-                      </Link>
-                      <p className="text-xs text-muted">{rev.categoryName}</p>
-                    </div>
-                  </div>
-
-                  {/* النجوم وأزرار الإجراء */}
-                  <div className="flex items-center justify-between sm:justify-end gap-4">
-                    <div className="flex items-center gap-0.5 text-amber-500">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <IconStar
-                          key={i}
-                          className={`h-4 w-4 ${
-                            i < rev.rating ? "fill-current" : "text-border"
-                          }`}
-                        />
-                      ))}
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setEditingReview(rev)}
-                        title="تعديل التقييم"
-                        aria-label="تعديل التقييم"
-                        className="rounded-lg border border-border p-2 text-muted transition-colors hover:border-accent hover:text-accent"
-                      >
-                        <IconEdit className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(rev.id, rev.craftsmanId)}
-                        disabled={deletingId === rev.id}
-                        title="حذف التقييم"
-                        aria-label="حذف التقييم"
-                        className="rounded-lg border border-border p-2 text-muted transition-colors hover:border-red-500 hover:text-red-500 disabled:opacity-50"
-                      >
-                        <IconTrash className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* نص التعليق والتاريخ */}
-                <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <p className="text-sm text-foreground/90 leading-relaxed">
-                    {rev.comment ? `«${rev.comment}»` : <span className="text-xs text-muted">بدون تعليق مكتوب</span>}
-                  </p>
-                  <span className="text-xs text-muted shrink-0">
-                    {new Date(rev.createdAt).toLocaleDateString("ar-EG", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
-                </div>
-              </div>
+                name={
+                  <Link
+                    href={`/craftsman/${rev.craftsmanSlug}`}
+                    className="transition-colors hover:text-accent"
+                  >
+                    {rev.craftsmanName}
+                  </Link>
+                }
+                subtitle={rev.categoryName}
+                avatarUrl={rev.craftsmanImage}
+                avatarName={rev.craftsmanName}
+                rating={rev.rating}
+                comment={rev.comment}
+                createdAt={rev.createdAt}
+                onEdit={() => setEditingReview(rev)}
+                onDelete={() => handleDelete(rev.id, rev.craftsmanId)}
+                deleting={deletingId === rev.id}
+              />
             ))}
           </div>
         )}
       </div>
+
+      {/* حوار تأكيد الحذف */}
+      {confirmDialogProps && <ConfirmDialog {...confirmDialogProps} />}
 
       {/* مودال التعديل عند النقر على تعديل */}
       {editingReview && (
@@ -190,9 +141,21 @@ export function MyReviewsSection({
           craftsmanName={editingReview.craftsmanName}
           userId={userId}
           existingReview={editingReview as unknown as ReviewItem}
-          onSuccess={() => {
+          onSuccess={(published) => {
+            // تحديث تفاؤلي: تعديل الكارت في مكانه بلا انتظار إعادة الجلب.
             setEditingReview(null);
-            refreshData();
+            setReviews((prev) =>
+              prev.map((r) =>
+                r.id === editingReview.id
+                  ? { ...r, rating: published.rating, comment: published.comment }
+                  : r,
+              ),
+            );
+            void refreshData({ silent: true });
+          }}
+          onDeleted={() => {
+            setEditingReview(null);
+            setReviews((prev) => prev.filter((r) => r.id !== editingReview.id));
           }}
         />
       )}

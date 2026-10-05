@@ -2,6 +2,7 @@ import { createSupabase } from "./client";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 import type { ReviewItem } from "./reviews";
+import { getReviewerAvatars } from "./reviewer-avatars";
 
 export interface UserReviewDetail extends ReviewItem {
   craftsmanName: string;
@@ -42,6 +43,8 @@ export async function getUserAllReviews(
     return [];
   }
 
+  const avatars = await getReviewerAvatars(data.map((row) => row.user_id));
+
   return data.map((row) => {
     const c = row.craftsman as unknown as {
       name: string;
@@ -55,6 +58,7 @@ export async function getUserAllReviews(
       craftsmanId: row.craftsman_id,
       userId: row.user_id,
       userName: row.user_name,
+      userAvatarUrl: avatars[row.user_id] ?? null,
       rating: row.rating,
       comment: row.comment,
       createdAt: row.created_at,
@@ -86,11 +90,14 @@ export async function getUserReviewForCraftsman(
     return null;
   }
 
+  const avatars = await getReviewerAvatars([data.user_id]);
+
   return {
     id: data.id,
     craftsmanId: data.craftsman_id,
     userId: data.user_id,
     userName: data.user_name,
+    userAvatarUrl: avatars[data.user_id] ?? null,
     rating: data.rating,
     comment: data.comment,
     createdAt: data.created_at,

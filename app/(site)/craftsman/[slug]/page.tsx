@@ -16,6 +16,7 @@ import { rankRelatedCraftsmen } from "@/lib/recommendations";
 import { getCraftsmanRatingSummary } from "@/lib/db/reviews";
 import { PushActivationLayer } from "@/components/notifications/PushActivationLayer";
 import { siteUrl } from "@/lib/data/site";
+import { supabaseTransformUrl } from "@/lib/utils/image-transform";
 
 
 export async function generateStaticParams() {
@@ -41,7 +42,15 @@ export async function generateMetadata({
     area: craftsman.area,
     customDescription: craftsman.description,
   });
-  const imageUrl = craftsman.image || "/og.jpg";
+  // og/twitter: نطلب من Supabase نسخة 1200×630 مقصوصة (نفس الأبعاد المعلنة)
+  // بدل إرسال الصورة الأصلية — الروابط تُبنى وقت الطلب والأصل لا يُمس.
+  const ogImage = craftsman.image
+    ? supabaseTransformUrl(craftsman.image, {
+        width: 1200,
+        height: 630,
+        resize: "cover",
+      }) ?? craftsman.image
+    : "/og.jpg";
 
   return {
     title: seo.title,
@@ -54,7 +63,7 @@ export async function generateMetadata({
       type: "profile",
       images: [
         {
-          url: imageUrl,
+          url: ogImage,
           width: 1200,
           height: 630,
           alt: seo.imageAlt,
@@ -62,10 +71,10 @@ export async function generateMetadata({
       ],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: `${craftsman.name} — ${categoryName} في السويس`,
       description: seo.description,
-      images: [imageUrl],
+      images: [ogImage],
     },
   };
 }

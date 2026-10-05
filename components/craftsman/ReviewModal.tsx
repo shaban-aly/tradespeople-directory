@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { Modal } from "@/components/shared/ui/Modal";
 import { Button } from "@/components/shared/ui/Button";
+import { ConfirmDialog } from "@/components/shared/ui/ConfirmDialog";
 import { IconStar, IconTrash } from "@/components/shared/icons";
+import { useConfirmDialog } from "@/hooks/ui/useConfirmDialog";
 import { type ReviewItem } from "@/lib/db/reviews";
 import { upsertReviewAction, deleteReviewAction } from "@/app/actions/reviews";
 
@@ -14,7 +16,10 @@ interface ReviewModalProps {
   craftsmanName: string;
   userId: string;
   existingReview?: ReviewItem | null;
-  onSuccess: () => void;
+  /** يُستدعى فور نجاح الحفظ مع التقييم المنشور لإعادة ترتيب القائمة فوراً. */
+  onSuccess: (published: { rating: number; comment: string | null }) => void;
+  /** يُستدعى فور نجاح الحذف — لفرض التقييم من القائمة بلا انتظار. */
+  onDeleted?: () => void;
 }
 
 export function ReviewModal({
@@ -25,6 +30,7 @@ export function ReviewModal({
   userId,
   existingReview,
   onSuccess,
+  onDeleted,
 }: ReviewModalProps) {
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
@@ -32,6 +38,7 @@ export function ReviewModal({
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { ask: askConfirm, dialogProps: confirmDialogProps } = useConfirmDialog();
 
   // تهيئة الفورم من التقييم الحالي عند فتح المودال.
   // التعديل يتم أثناء الريندر عبر مقارنة الهوية (النمط الرسمي من React)
@@ -56,7 +63,13 @@ export function ReviewModal({
 
   async function handleDelete() {
     if (!existingReview) return;
-    if (!window.confirm("هل أنت متأكد من رغبتك في حذف هذا التقييم؟")) return;
+    const confirmed = await askConfirm({
+      title: "حذف التقييم",
+      message: "هل أنت متأكد من رغبتك في حذف هذا التقييم؟ لن تتمكن من التراجع عن هذا الإجراء.",
+      confirmLabel: "نعم، احذف التقييم",
+      danger: true,
+    });
+    if (!confirmed) return;
 
     setDeleting(true);
     setError(null);
@@ -65,7 +78,7 @@ export function ReviewModal({
     setDeleting(false);
 
     if (success) {
-      onSuccess();
+      onDeleted?.();
       onClose();
     } else {
       setError("فشل حذف التقييم، يرجى المحاولة مرة أخرى");
@@ -101,7 +114,7 @@ export function ReviewModal({
     setLoading(false);
 
     if (res.success) {
-      onSuccess();
+      onSuccess({ rating, comment: commentTrimmed || null });
       onClose();
     } else {
       setError(res.error || "حدث خطأ أثناء حفظ التقييم");
@@ -119,9 +132,12 @@ export function ReviewModal({
   };
 
   return (
+    <>
     <Modal
       open={open}
-      onClose={onClose}
+      // أثناء فتح حوار تأكيد الحذف لا يُغلق هذا المودال بـ Escape أو النقر
+      // على الخلفية، حتى لا يُغلق فورم الحذف في نفس اللحظة.
+      onClose={confirmDialogProps ? () => {} : onClose}
       title={existingReview ? "تعديل تقييمك" : "تقييم الصنايعي"}
       description={
         <>
@@ -242,6 +258,9 @@ export function ReviewModal({
           </div>
         </form>
       </div>
-    </Modal>
+      </Modal>
+
+    {confirmDialogProps && <ConfirmDialog {...confirmDialogProps} />}
+    </>
   );
 }

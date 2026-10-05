@@ -1,11 +1,14 @@
 import { createServerReadClient } from "./client";
 import { CACHE_TAGS, makeKeyedCache } from "./cache";
+import { getReviewerAvatars } from "./reviewer-avatars";
 
 export interface ReviewItem {
   id: string;
   craftsmanId: string;
   userId: string;
   userName: string;
+  /** صورة صاحب التقييم (profiles.avatar_url) — NULL فالحرف الأول هو البديل. */
+  userAvatarUrl: string | null;
   rating: number;
   comment: string | null;
   createdAt: string;
@@ -38,11 +41,15 @@ async function getCraftsmanReviewsImpl(
     return [];
   }
 
+  // صورة صاحب كل تقييم: `profiles` ممنوعة على anon فالقراءة عبر RPC عام مقيّد.
+  const avatars = await getReviewerAvatars(data.map((row) => row.user_id));
+
   const reviews: ReviewItem[] = data.map((row) => ({
     id: row.id,
     craftsmanId: row.craftsman_id,
     userId: row.user_id,
     userName: row.user_name,
+    userAvatarUrl: avatars[row.user_id] ?? null,
     rating: row.rating,
     comment: row.comment,
     createdAt: row.created_at,

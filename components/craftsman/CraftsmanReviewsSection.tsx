@@ -1,12 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/shared/ui/Button";
 import { EmptyState } from "@/components/shared/ui/EmptyState";
-import { IconEdit, IconStar, IconTrash } from "@/components/shared/icons";
+import { ConfirmDialog } from "@/components/shared/ui/ConfirmDialog";
+import { IconStar } from "@/components/shared/icons";
+import { ReviewCard } from "@/components/craftsman/ReviewCard";
 import { toArabicDigits } from "@/lib/utils/format";
 import { useAuthGuard } from "@/hooks/auth/useAuthGuard";
+import { useConfirmDialog } from "@/hooks/ui/useConfirmDialog";
 import { useReviews } from "@/hooks/craftsman/useReviews";
 import { AuthGuardModal } from "@/components/shared/auth/AuthGuardModal";
 import { ReviewModal } from "@/components/craftsman/ReviewModal";
@@ -25,15 +27,25 @@ export function CraftsmanReviewsSection({
   craftsmanName,
   ownerUserId,
 }: CraftsmanReviewsSectionProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
-
-  const { user, isLoggedIn, profile, loading: sessionLoading } = useSession();
+  const { user, isLoggedIn } = useSession();
   const isOwner = Boolean(user?.id && user.id === ownerUserId);
-  const { summary, reviews, userReview, loading, reload } = useReviews(craftsmanId);
+  const {
+    summary,
+    reviews,
+    userReview,
+    loading,
+    reload,
+    publishLocally,
+    removeLocally,
+  } = useReviews(craftsmanId);
+  const { ask: askConfirm, dialogProps: confirmDialogProps } = useConfirmDialog();
   const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null);
+  // حالة فتح المودالات محلية بالـ state لا مرتبطة بالـ URL: الصفحة ستاتيك
+  // (generateStaticParams) وغير متأثرة بالـ query، وربط الفتح والإغلاق بالـ URL
+  // يجعل Next.js يعيد تثبيت الـ query القديمة من الـ route cache عند
+  // router.replace على مسار نظيف، فيبقى المودال مفتوحاً بعد الإرسال.
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isAllReviewsOpen, setIsAllReviewsOpen] = useState(false);
   const {
     isOpen: isAuthGuardOpen,
     guardOptions,
@@ -42,67 +54,49 @@ export function CraftsmanReviewsSection({
     handleClose: handleAuthClose,
   } = useAuthGuard();
 
-  // حالة فتح المودالات عبر الـ URL
-  const isAllReviewsOpen = searchParams?.get("reviews") === "all";
-  const isReviewModalOpen = searchParams?.get("review") === "new";
-
-  // دالة تحديث معلمات الرابط بدون ريفريش كامل
-  const updateUrlParam = useCallback(
-    (key: string, value: string | null) => {
-      const current = new URLSearchParams(searchParams ? searchParams.toString() : "");
-      if (value) {
-        current.set(key, value);
-      } else {
-        current.delete(key);
-      }
-      const search = current.toString();
-      const query = search ? `?${search}` : "";
-      startTransition(() => {
-        // replace بدل push عشان إزالة الباراميتر ما تضيفش entry جديد في الـ history
-        // وده بيمنع التعليق عند الإغلاق لما المودال بيتفتح مباشرة من رابط مشارك
-        router.replace(`${pathname}${query}`, { scroll: false });
-      });
-    },
-    [pathname, router, searchParams]
-  );
-
-  // لو المستخدم فتح الرابط وفيه ?review=new لكنه مش مسجل دخول بعد تحميل الـ session
-  // نمسح الباراميتر لتفادي إظهار المودال في state غلطة تسبب التعليق
-  useEffect(() => {
-    if (!sessionLoading && isReviewModalOpen && !isLoggedIn) {
-      updateUrlParam("review", null);
-    }
-  }, [sessionLoading, isLoggedIn, isReviewModalOpen, updateUrlParam]);
+  const openReviewModal = useCallback(() => setIsReviewModalOpen(true), []);
+  const closeReviewModal = useCallback(() => setIsReviewModalOpen(false), []);
 
   // الضغط على إضافة تقييم مع حارس تسجيل الدخول
   const handleAddReviewClick = () => {
     if (isOwner) return;
-    requireAuth(
-      () => {
-        updateUrlParam("review", "new");
-      },
-      {
-        title: "تسجيل الدخول لإضافة تقييم",
-        message:
-          "يرجى تسجيل الدخول بحساب جوجل لنشر تقييمك الحقيقي؛ فنحن نعرض تقييمات الحسابات الموثقة فقط لضمان المصداقية.",
-        actionDescription: `تقييم تجربة التعامل مع ${craftsmanName}`,
-      }
-    );
+    requireAuth(openReviewModal, {
+      title: "تسجيل الدخول لإضافة تقييم",
+      message:
+        "يرجى تسجيل الدخول بحساب جوجل لنشر تقييمك الحقيقي؛ فنحن نعرض تقييمات الحسابات الموثقة فقط لضمان المصداقية.",
+      actionDescription: `تقييم تجربة التعامل مع ${craftsmanName}`,
+    });
   };
 
-  const handleReviewSuccess = () => {
-    reload();
-    updateUrlParam("review", null);
+  /**
+   * بعد نجاح الحفظ: يُدرَج التقييم في القائمة فوراً (تفاؤلياً) ويُغلق المودال،
+   * ثم تُجلب البيانات الحقيقية في الخلفية لتوفيق الحالة دون إظهار أي انتظار.
+   */
+  const handleReviewSuccess = (published: {
+    rating: number;
+    comment: string | null;
+  }) => {
+    publishLocally(published.rating, published.comment);
+    closeReviewModal();
+    void reload();
   };
 
   const handleDeleteReview = async (reviewId: string) => {
     if (!user) return;
-    if (!window.confirm("هل أنت متأكد من رغبتك في حذف تقييمك؟")) return;
+    const confirmed = await askConfirm({
+      title: "حذف التقييم",
+      message:
+        "هل أنت متأكد من رغبتك في حذف تقييمك؟ لن تتمكن من التراجع عن هذا الإجراء.",
+      confirmLabel: "نعم، احذف التقييم",
+      danger: true,
+    });
+    if (!confirmed) return;
     setDeletingReviewId(reviewId);
     const ok = await deleteReviewAction(user.id, reviewId, craftsmanId);
     setDeletingReviewId(null);
     if (ok) {
-      reload();
+      removeLocally();
+      void reload();
     }
   };
 
@@ -181,93 +175,32 @@ export function CraftsmanReviewsSection({
             }
           />
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {visibleReviews.map((rev) => {
               const isMyReview = Boolean(user && rev.userId === user.id);
               return (
-                <div
+                <ReviewCard
                   key={rev.id}
-                  className="rounded-2xl border border-border bg-background/40 p-4 transition-colors hover:border-accent/30 sm:p-5"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/15 text-xs font-bold text-accent">
-                        {rev.userName.charAt(0) || "ع"}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-bold text-foreground">
-                            {rev.userName}
-                          </h4>
-                          {isMyReview && (
-                            <span className="rounded-md bg-accent/15 px-2 py-0.5 text-[11px] font-bold text-accent">
-                              تقييمك
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-muted">
-                          {new Date(rev.createdAt).toLocaleDateString("ar-EG", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-0.5 text-amber-500">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <IconStar
-                            key={i}
-                            className={`h-3.5 w-3.5 ${
-                              i < rev.rating ? "fill-current" : "text-border"
-                            }`}
-                          />
-                        ))}
-                      </div>
-
-                      {isMyReview && (
-                        <div className="flex items-center gap-1 border-r border-border/80 pr-2 mr-1">
-                          <button
-                            type="button"
-                            onClick={() => updateUrlParam("review", "new")}
-                            className="rounded-lg border border-border p-1.5 text-muted transition-colors hover:border-accent hover:text-accent"
-                            title="تعديل تقييمك"
-                            aria-label="تعديل تقييمك"
-                          >
-                            <IconEdit className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteReview(rev.id)}
-                            disabled={deletingReviewId === rev.id}
-                            className="rounded-lg border border-border p-1.5 text-muted transition-colors hover:border-danger hover:text-danger disabled:opacity-50"
-                            title="حذف تقييمك"
-                            aria-label="حذف تقييمك"
-                          >
-                            <IconTrash className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {rev.comment && (
-                    <p className="mt-2.5 text-sm text-foreground/90 leading-relaxed">
-                      «{rev.comment}»
-                    </p>
-                  )}
-                </div>
+                  name={rev.userName}
+                  avatarUrl={rev.userAvatarUrl}
+                  avatarName={rev.userName}
+                  rating={rev.rating}
+                  comment={rev.comment}
+                  createdAt={rev.createdAt}
+                  showBadge={isMyReview}
+                  onEdit={isMyReview ? openReviewModal : undefined}
+                  onDelete={isMyReview ? () => handleDeleteReview(rev.id) : undefined}
+                  deleting={deletingReviewId === rev.id}
+                />
               );
             })}
 
-            {/* رابط عرض كل التقييمات إذا كانت أكثر من 3 برابط في الـ URL */}
+            {/* عرض كل التقييمات إذا كانت أكثر من 3 */}
             {reviews.length > 3 && (
               <div className="pt-2 text-center">
                 <Button
                   variant="ghost"
-                  onClick={() => updateUrlParam("reviews", "all")}
+                  onClick={() => setIsAllReviewsOpen(true)}
                 >
                   عرض جميع التقييمات ({toArabicDigits(reviews.length)}) ←
                 </Button>
@@ -276,6 +209,9 @@ export function CraftsmanReviewsSection({
           </div>
         )}
       </div>
+
+      {/* حوار تأكيد الحذف */}
+      {confirmDialogProps && <ConfirmDialog {...confirmDialogProps} />}
 
       {/* مودال الحارس لتسجيل الدخول */}
       <AuthGuardModal
@@ -287,23 +223,27 @@ export function CraftsmanReviewsSection({
         actionDescription={guardOptions.actionDescription}
       />
 
-      {/* مودال كتابة / تعديل التقييم (برابط ?review=new) */}
+      {/* مودال كتابة / تعديل التقييم */}
       {!isOwner && isLoggedIn && user && (
         <ReviewModal
           open={isReviewModalOpen}
-          onClose={() => updateUrlParam("review", null)}
+          onClose={closeReviewModal}
           craftsmanId={craftsmanId}
           craftsmanName={craftsmanName}
           userId={user.id}
           existingReview={userReview}
           onSuccess={handleReviewSuccess}
+          onDeleted={() => {
+            removeLocally();
+            void reload();
+          }}
         />
       )}
 
-      {/* مودال عرض جميع التقييمات (برابط ?reviews=all) */}
+      {/* مودال عرض جميع التقييمات */}
       <AllReviewsModal
         open={isAllReviewsOpen}
-        onClose={() => updateUrlParam("reviews", null)}
+        onClose={() => setIsAllReviewsOpen(false)}
         craftsmanName={craftsmanName}
         summary={summary}
         reviews={reviews}
@@ -311,10 +251,11 @@ export function CraftsmanReviewsSection({
         isOwner={isOwner}
         currentUserId={user?.id}
         onEditReview={() => {
-          updateUrlParam("reviews", null);
-          updateUrlParam("review", "new");
+          setIsAllReviewsOpen(false);
+          openReviewModal();
         }}
         onDeleteReview={handleDeleteReview}
+        deletingReviewId={deletingReviewId}
       />
     </section>
   );

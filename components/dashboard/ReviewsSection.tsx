@@ -256,7 +256,7 @@ export function ReviewsSection({
                     </div>
 
                     {rev.comment ? (
-                      <p className="mt-3 text-xs sm:text-sm text-foreground/90 leading-relaxed font-medium">
+                      <p className="mt-3 text-xs sm:text-sm break-words leading-relaxed font-medium text-foreground/90">
                         «{rev.comment}»
                       </p>
                     ) : (
