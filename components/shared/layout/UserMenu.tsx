@@ -11,10 +11,11 @@ import {
   IconLogOut,
   IconChevronLeft,
 } from "@/components/shared/icons";
+import { Bell } from "lucide-react";
 import { resizeGoogleAvatar } from "@/lib/utils/image-loader";
 
 export function UserMenu() {
-  const { user, profile, isLoggedIn, isAdmin, isCraftsman, loading, signOut } =
+  const { user, profile, isLoggedIn, isAdmin, isCraftsman, isClient, loading, signOut } =
     useSession();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -146,6 +147,18 @@ export function UserMenu() {
               <span>سجل نشاطاتي</span>
             </Link>
 
+            {isClient && (
+              <Link
+                href="/profile/requests"
+                role="menuitem"
+                className="flex w-full items-center gap-2.5 px-4 py-2 text-right text-sm text-foreground transition-colors hover:bg-accent/10 font-bold"
+                onClick={() => setOpen(false)}
+              >
+                <Bell className="h-4 w-4 text-accent" />
+                <span className="text-accent">طلباتي</span>
+              </Link>
+            )}
+
             <Link
               href="/favorites"
               role="menuitem"
@@ -155,6 +168,18 @@ export function UserMenu() {
               <IconBookmark className="h-4 w-4 text-muted" />
               <span>المفضلة والمحفوظات</span>
             </Link>
+
+            {isCraftsman && (
+              <Link
+                href="/dashboard/leads"
+                role="menuitem"
+                className="flex w-full items-center gap-2.5 px-4 py-2 text-right text-sm text-foreground transition-colors hover:bg-accent/10 font-bold"
+                onClick={() => setOpen(false)}
+              >
+                <Bell className="h-4 w-4 text-action" />
+                <span className="text-action">عروض العملاء</span>
+              </Link>
+            )}
 
             {isCraftsman && (
               <Link

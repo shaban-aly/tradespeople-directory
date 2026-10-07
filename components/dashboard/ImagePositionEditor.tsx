@@ -138,19 +138,11 @@ export function ImagePositionEditor({
   const isNewUpload = Boolean(imageFile);
 
   return (
-    <div className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-card" dir="rtl">
-      <div>
-        <h3 className="font-heading text-lg font-bold text-foreground sm:text-xl">
-          {isNewUpload ? "تنسيق وحفظ الصورة الجديدة" : "تنسيق الصورة"}
-        </h3>
-        <p className="mt-1 text-xs text-muted sm:text-sm">
-          اسحب الصورة لتحديد الجزء الذي يظهر، واستخدم شريط التكبير لضبط الحجم المناسب ثم اضغط حفظ.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* منطقة السحب والتكبير التفاعلية */}
-        <div className="relative h-64 w-full overflow-hidden rounded-2xl bg-neutral-900 shadow-inner sm:h-80 lg:col-span-2">
+    <div className="flex flex-col gap-4" dir="rtl">
+      {/* شبكة العمل: منطقة القص التفاعلية بكامل الصورة + المعاينة الحية لكارت الدليل 4:3 */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* منطقة السحب والقص التفاعلية — تعرض الصورة الأصلية كاملة لتحديد أي جزء منها بدقة */}
+        <div className="relative h-72 w-full overflow-hidden rounded-2xl bg-neutral-950 shadow-inner sm:h-80 lg:col-span-2">
           <Cropper
             image={cropperSrc}
             crop={crop}
@@ -163,34 +155,39 @@ export function ImagePositionEditor({
           />
         </div>
 
-        {/* قسم المعاينة الحية الفورية (Live Preview) */}
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border/70 bg-background/50 p-4">
-          <span className="text-xs font-bold text-muted">معاينة كما ستظهر في الكروت والبروفايل</span>
-          
-          <div className="relative aspect-4/3 w-40 overflow-hidden rounded-xl border border-border bg-accent/10 shadow-sm sm:w-48">
+        {/* كارت المعاينة الحية الفورية لكيفية ظهور الصورة في كروت الدليل والبروفايل */}
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border/80 bg-background/50 p-4 shadow-xs">
+          <span className="text-xs font-bold text-foreground">
+            المعاينة الحية (كارت الدليل 4:3)
+          </span>
+
+          <div className="relative aspect-4/3 w-44 overflow-hidden rounded-xl border border-border/80 bg-accent/10 shadow-sm sm:w-52">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={previewSrc}
-              alt="معاينة الكارت"
-              width={192}
-              height={144}
+              alt="معاينة كارت الدليل"
+              width={208}
+              height={156}
               className="h-full w-full object-cover transition-transform duration-100 will-change-transform"
               style={{
                 objectPosition: `${focalPoint.x}% ${focalPoint.y}%`,
-                transform: `scale(${zoom})`,
+                transform: zoom > 1 ? `scale(${zoom})` : undefined,
                 transformOrigin: `${focalPoint.x}% ${focalPoint.y}%`,
               }}
             />
           </div>
 
-          <div className="text-center font-mono text-xs text-muted">
-            X: {focalPoint.x}% | Y: {focalPoint.y}% | زووم: {zoom.toFixed(1)}x
+          <div className="text-center font-mono text-xs text-muted" dir="ltr">
+            X: {focalPoint.x}% | Y: {focalPoint.y}% | {zoom.toFixed(1)}x
           </div>
+          <p className="text-[11px] text-center text-muted leading-tight">
+            هكذا ستظهر صورتك للعملاء بعد تطبيق أبعاد وقص سوبابيز التلقائي
+          </p>
         </div>
       </div>
 
-      {/* شريط التحكم في التكبير والتصغير */}
-      <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border bg-background p-3">
+      {/* شريط التحكم في التكبير والتصغير وإعادة الضبط */}
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/70 bg-background/60 p-2.5 sm:p-3">
         <label htmlFor="zoom-range" className="shrink-0 text-xs font-bold text-foreground">
           التكبير ({zoom.toFixed(1)}x):
         </label>
@@ -207,14 +204,14 @@ export function ImagePositionEditor({
         <button
           type="button"
           onClick={handleReset}
-          className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground active:scale-95"
+          className="flex items-center gap-1.5 rounded-lg border border-border/80 bg-card px-2.5 py-1 text-xs font-semibold text-muted transition-colors hover:text-foreground active:scale-95"
         >
           <IconRefresh className="h-3.5 w-3.5" />
           <span>إعادة ضبط</span>
         </button>
       </div>
 
-      {/* رسائل التنبيه */}
+      {/* رسائل التنبيه والنجاح */}
       {errorMsg && (
         <div className="rounded-xl border border-danger/20 bg-danger/10 p-3 text-xs font-semibold text-danger">
           {errorMsg}
@@ -227,25 +224,35 @@ export function ImagePositionEditor({
         </div>
       )}
 
-      {/* أزرار الإجراءات */}
-      <div className="flex items-center justify-end gap-3 pt-2">
+      {/* أزرار الإجراءات: حفظ التنسيق أو إلغاء والعودة للوضع الطبيعي */}
+      <div className="flex items-center justify-end gap-2.5 pt-1">
         {onClose && (
           <button
             type="button"
             onClick={onClose}
             disabled={saving}
-            className="rounded-xl border border-border px-5 py-2.5 text-sm font-bold text-foreground hover:bg-muted/10 active:scale-95 disabled:opacity-50"
+            className="rounded-xl border border-border/80 bg-card px-4 py-2.5 text-xs sm:text-sm font-bold text-foreground hover:bg-muted/10 active:scale-95 disabled:opacity-50"
           >
-            إلغاء
+            إلغاء التعديل
           </button>
         )}
         <button
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center gap-2 rounded-xl bg-accent px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:brightness-110 active:scale-95 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-xs sm:text-sm font-bold text-on-accent shadow-xs transition-all hover:brightness-110 active:scale-95 disabled:opacity-50"
         >
-          {saving ? (isNewUpload ? "جاري رفع وحفظ الصورة..." : "جاري الحفظ...") : (isNewUpload ? "حفظ وتثبيت الصورة" : "حفظ التنسيق")}
+          {saving ? (
+            <>
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              <span>{isNewUpload ? "جاري رفع الصورة..." : "جاري الحفظ..."}</span>
+            </>
+          ) : (
+            <>
+              <IconCheck className="h-4 w-4" />
+              <span>{isNewUpload ? "حفظ وتثبيت الصورة" : "حفظ التنسيق والموضع"}</span>
+            </>
+          )}
         </button>
       </div>
     </div>

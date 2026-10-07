@@ -1,3 +1,4 @@
+import { ToastProvider } from "@/components/admin/ToastProvider";
 import { Header } from "@/components/shared/layout/Header";
 import { Footer } from "@/components/shared/layout/Footer";
 import { BottomNav } from "@/components/shared/layout/BottomNav";
@@ -12,18 +13,23 @@ export default function SiteLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="flex min-h-screen flex-col pb-[calc(env(safe-area-inset-bottom)+56px)] sm:pb-0">
-      <Header />
-      <main className="flex-1 pb-16 sm:pb-0">
-        <PageTransition>{children}</PageTransition>
-      </main>
-      <Footer />
-      {/* فراغ موبايل يسمح بظهور آخر الفوتر فوق الشريط السفلي (بدل حشوة داخل الفوتر) */}
-      <div className="h-[calc(env(safe-area-inset-bottom)+88px)] sm:hidden" aria-hidden />
-      <BottomNav />
-      <SearchModal />
-      <BackToTop />
-      <NotificationsToast />
-    </div>
+    <ToastProvider>
+      <div className="flex min-h-screen flex-col pb-[calc(env(safe-area-inset-bottom)+56px)] sm:pb-0">
+        <Header />
+        <main className="flex-1 pb-16 sm:pb-0">
+          <PageTransition>{children}</PageTransition>
+        </main>
+        <Footer />
+        {/* فراغ موبايل يسمح بظهور آخر الفوتر فوق الشريط السفلي (بدل حشوة داخل الفوتر) */}
+        <div
+          className="h-[calc(env(safe-area-inset-bottom)+88px)] sm:hidden"
+          aria-hidden
+        />
+        <BottomNav />
+        <SearchModal />
+        <BackToTop />
+        <NotificationsToast />
+      </div>
+    </ToastProvider>
   );
 }

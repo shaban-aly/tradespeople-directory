@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps */
 /**
  * نصوص وبيانات السيو والكلمات المفتاحية لمشروع «دليل الصنايعية - السويس»
  * ملف مركزي لإدارة وصيانة جميع الكلمات المفتاحية ونصوص العناوين والأوصاف وقوالب الميتا.

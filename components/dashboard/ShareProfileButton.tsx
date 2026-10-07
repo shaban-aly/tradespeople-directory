@@ -8,9 +8,12 @@ import { useToast } from "@/hooks/ui/useToast";
 export function ShareProfileButton({
   slug,
   name,
+  iconOnly = false,
 }: {
   slug: string;
   name: string;
+  /** نسخة أيقونة مدمجة للهيدر المختصر — بلا نص. */
+  iconOnly?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
@@ -45,22 +48,35 @@ export function ShareProfileButton({
   return (
     <Button
       type="button"
-      variant="outline"
+      variant={iconOnly ? "ghost" : "outline"}
+      size={iconOnly ? "icon" : "md"}
       onClick={() => void handleShare()}
-      className="min-h-11 sm:min-h-12 text-xs sm:text-sm font-semibold justify-center gap-2 w-full sm:w-auto"
+      aria-label={iconOnly ? "مشاركة رابط صفحتك" : undefined}
+      className={
+        iconOnly
+          ? ""
+          : "min-h-12 text-base font-bold justify-center gap-2 w-full sm:w-auto whitespace-nowrap"
+      }
       title="مشاركة رابط صفحتك مع عملائك"
     >
       {copied ? (
         <>
           <IconCheck className="h-4 w-4 text-emerald-500" />
-          <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-            تم النسخ!
-          </span>
+          {!iconOnly && (
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+              تم النسخ!
+            </span>
+          )}
         </>
       ) : (
         <>
           <IconShare className="h-4 w-4" />
-          <span>مشاركة صفحتي</span>
+          {!iconOnly && (
+            <>
+              <span className="md:hidden">مشاركة</span>
+              <span className="hidden md:inline">مشاركة صفحتي</span>
+            </>
+          )}
         </>
       )}
     </Button>

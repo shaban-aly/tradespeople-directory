@@ -10,6 +10,8 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import {
+  IconChevronLeft,
+  IconChevronRight,
   IconMinus,
   IconPlus,
   IconRefresh,
@@ -24,6 +26,10 @@ export interface ImageViewerProps {
   title?: string;
   open: boolean;
   onClose: () => void;
+  /** وضع المعرض: قائمة صور وفهرس متحكم به — زرّا التنقل والأسهم تعمل عند توفره. */
+  images?: string[];
+  index?: number;
+  onIndexChange?: (index: number) => void;
 }
 
 const MIN_SCALE = 1;
@@ -36,7 +42,14 @@ export function ImageViewer({
   title,
   open,
   onClose,
+  images,
+  index = 0,
+  onIndexChange,
 }: ImageViewerProps) {
+  // الصورة الفعلية: من وضع المعرض عند توفره، وإلا src المفردة (توافق خلفي).
+  const gallery = images && images.length > 0 ? images : null;
+  const safeIndex = gallery ? Math.min(Math.max(index, 0), gallery.length - 1) : 0;
+  const currentSrc = gallery ? gallery[safeIndex] : src;
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -63,7 +76,7 @@ export function ImageViewer({
   // يتم تعديل الحالة أثناء الريندر (النمط الرسمي المعتمد من React) بدل
   // useEffect، لتفادي ريندر متتالٍ. `resetKey` يغطي الحالتين: فتح العارض
   // وانتقال الصورة-src أثناء فتحه — نفس ما كان تفعله الاعتماديات [open, src].
-  const resetKey = `${open ? "1" : "0"}:${src ?? ""}`;
+  const resetKey = `${open ? "1" : "0"}:${currentSrc ?? ""}`;
   const [lastResetKey, setLastResetKey] = useState(resetKey);
   if (lastResetKey !== resetKey) {
     setLastResetKey(resetKey);
@@ -110,12 +123,19 @@ export function ImageViewer({
         handleZoomOut();
       } else if (e.key === "0") {
         handleReset();
+      } else if (gallery && onIndexChange) {
+        // في RTL: السهم الأيسر = التالي، الأيمن = السابق.
+        if (e.key === "ArrowLeft") {
+          onIndexChange((safeIndex + 1) % gallery.length);
+        } else if (e.key === "ArrowRight") {
+          onIndexChange((safeIndex - 1 + gallery.length) % gallery.length);
+        }
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose, handleZoomIn, handleZoomOut, handleReset]);
+  }, [open, onClose, handleZoomIn, handleZoomOut, handleReset, gallery, safeIndex, onIndexChange]);
 
   // حساب المسافة بين نقطتي لمس للـ Pinch
   const getDistance = (t1: React.Touch, t2: React.Touch) => {
@@ -277,7 +297,7 @@ export function ImageViewer({
     dragStartRef.current = null;
   };
 
-  if (!open || !src || !mounted) return null;
+  if (!open || !currentSrc || !mounted) return null;
 
   return createPortal(
     <div
@@ -381,8 +401,8 @@ export function ImageViewer({
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={src}
-            alt={alt}
+            src={currentSrc}
+            alt={gallery ? `${alt} ${safeIndex + 1}` : alt}
             draggable={false}
             className="max-h-[82vh] max-w-[92vw] rounded-2xl object-contain shadow-2xl pointer-events-none"
           />
@@ -391,7 +411,33 @@ export function ImageViewer({
 
       {/* تلميح التكبير أسفل الشاشة للموبايل */}
       <footer className="border-t border-white/10 bg-black/40 px-4 py-2.5 text-center text-xs text-white/70 backdrop-blur-md">
-        <span>اضغط مرتين للتكبير السريع أو قرّب بإصبعين (Pinch to zoom)</span>
+        {gallery && gallery.length > 1 && onIndexChange ? (
+          <div className="flex items-center justify-center gap-4">
+            <button
+              type="button"
+              onClick={() => onIndexChange((safeIndex + 1) % gallery.length)}
+              aria-label="الصورة التالية"
+              className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-white transition-colors hover:bg-white/20 active:scale-95"
+            >
+              <IconChevronLeft className="h-5 w-5" />
+            </button>
+            <span className="min-w-12 font-bold text-white">
+              {safeIndex + 1} / {gallery.length}
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                onIndexChange((safeIndex - 1 + gallery.length) % gallery.length)
+              }
+              aria-label="الصورة السابقة"
+              className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-white transition-colors hover:bg-white/20 active:scale-95"
+            >
+              <IconChevronRight className="h-5 w-5" />
+            </button>
+          </div>
+        ) : (
+          <span>اضغط مرتين للتكبير السريع أو قرّب بإصبعين (Pinch to zoom)</span>
+        )}
       </footer>
     </div>,
     document.body

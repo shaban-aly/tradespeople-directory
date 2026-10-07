@@ -24,6 +24,7 @@ const REASON_MESSAGES: Record<string, string> = {
   join: "سجّل دخولك الأول عشان تقدّم صنايعي للدليل",
   admin: "المنطقة دي خاصة بالمشرفين — سجّل دخولك بحساب المشرف",
   notifications: "سجّل دخولك لمتابعة إشعاراتك",
+  "request-lead": "سجّل دخولك عشان تطلب صنايعي",
 };
 
 export default async function LoginPage({ searchParams }: Props) {

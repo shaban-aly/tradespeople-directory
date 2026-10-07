@@ -131,7 +131,7 @@ export function AdminShell({
       <div className="flex min-h-screen bg-background">
         {/* Desktop Collapsible Sidebar */}
         <aside
-          className={`sticky top-0 hidden h-screen shrink-0 border-e border-border bg-elevated transition-all duration-300 ease-in-out lg:flex ${
+          className={`sticky top-0 hidden h-dvh shrink-0 border-e border-border bg-elevated transition-all duration-300 ease-in-out lg:flex ${
             collapsed ? "w-20" : "w-64"
           }`}
         >

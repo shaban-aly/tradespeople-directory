@@ -8,6 +8,8 @@ import {
   IconSearch,
   IconStar,
   IconUser,
+  IconInbox,
+  IconLayoutDashboard,
 } from "@/components/shared/icons";
 import { useFavorites } from "@/hooks/craftsman/useFavorites";
 import { useSession } from "@/hooks/auth/useSession";
@@ -17,7 +19,7 @@ import { toArabicDigits } from "@/lib/utils/format";
 export function BottomNav() {
   const pathname = usePathname();
   const { count: favoritesCount } = useFavorites();
-  const { profile, isLoggedIn } = useSession();
+  const { profile, isLoggedIn, isCraftsman, isAdmin, isClient } = useSession();
   const { isOpen: isSearchOpen, openSearch } = useSearchModal();
 
   // عدم إظهار الشريط السفلي داخل لوحة تحكم المشرف أو شاشة تسجيل الدخول
@@ -49,12 +51,21 @@ export function BottomNav() {
       isProminent: true,
     },
     {
-      id: "favorites",
-      label: "المفضلة",
-      href: "/favorites",
-      icon: IconStar,
-      isActive: pathname === "/favorites",
-      badge: favoritesCount > 0 ? favoritesCount : null,
+      id: "role-slot",
+      // الخانة الرابعة حسب الدور: فني/مشرف → لوحة التحكم، عميل → طلباتي، زائر → المفضلة
+      label: isCraftsman || isAdmin ? "لوحة التحكم" : isClient ? "طلباتي" : "المفضلة",
+      href: isCraftsman ? "/dashboard" : isAdmin ? "/admin" : isClient ? "/profile/requests" : "/favorites",
+      icon: isCraftsman || isAdmin ? IconLayoutDashboard : isClient ? IconInbox : IconStar,
+      isActive:
+        isCraftsman
+          ? pathname?.startsWith("/dashboard")
+          : isAdmin
+            ? false
+            : isClient
+              ? pathname === "/profile/requests"
+              : pathname === "/favorites",
+      badge:
+        !isCraftsman && !isAdmin && !isClient && favoritesCount > 0 ? favoritesCount : null,
     },
     {
       id: "profile",

@@ -1,4 +1,5 @@
 import type {
+  AdminLeadRow,
   AreaRow,
   CategoryRow,
   ContactMessageRow,
@@ -11,6 +12,19 @@ import type {
 
 export type RequestStatusFilter = "all" | "pending" | "rejected";
 export type ReportStatusFilter = "all" | "pending" | "reviewed" | "dismissed";
+
+export type LeadStatus = "open" | "claimed" | "completed" | "expired" | "cancelled";
+export type LeadStatusFilter = "all" | LeadStatus;
+export type LeadVisibilityFilter = "all" | "visible" | "hidden";
+export type LeadSort = "newest" | "oldest" | "expiring";
+
+export type LeadFilter = {
+  search: string;
+  category: string; // slug أو "all"
+  status: LeadStatusFilter;
+  visibility: LeadVisibilityFilter;
+  sort: LeadSort;
+};
 
 /**
  * تصنيف ثلاثي لأسباب فشل الإشعارات — الغرض فرز ما يستحق تدخّلاً هندسياً:
@@ -83,6 +97,7 @@ export type OverviewMetrics = {
   activeAreas: number;
   totalAreas: number;
   unreadMessages: number;
+  openLeads: number;
   recentCraftsmen: CraftsmanRow[];
   categoryChart: CategoryChartItem[];
   maxCount: number;
@@ -171,6 +186,141 @@ export function paginate<T>(
   return { page: safePage, pageCount, pageItems };
 }
 
+const LEAD_STATUS_VALUES: readonly string[] = [
+  "all",
+  "open",
+  "claimed",
+  "completed",
+  "expired",
+  "cancelled",
+];
+const LEAD_VISIBILITY_VALUES: readonly string[] = ["all", "visible", "hidden"];
+const LEAD_SORT_VALUES: readonly string[] = ["newest", "oldest", "expiring"];
+
+/** قراءة فلتر الليدز من query string — أي قيمة غريبة تُسقط للافتراضي. */
+export function parseLeadFilterParams(params: Pick<URLSearchParams, "get">): {
+  filter: LeadFilter;
+  page: number;
+} {
+  const pick = (key: string, allowed: readonly string[], fallback: string) => {
+    const value = params.get(key);
+    return value !== null && allowed.includes(value) ? value : fallback;
+  };
+  const category = (params.get("category") ?? "").trim().slice(0, 100);
+  const rawPage = Number.parseInt(params.get("page") ?? "", 10);
+  return {
+    filter: {
+      search: (params.get("q") ?? "").slice(0, 200),
+      category: category || "all",
+      status: pick("status", LEAD_STATUS_VALUES, "all") as LeadStatusFilter,
+      visibility: pick(
+        "visibility",
+        LEAD_VISIBILITY_VALUES,
+        "all",
+      ) as LeadVisibilityFilter,
+      sort: pick("sort", LEAD_SORT_VALUES, "newest") as LeadSort,
+    },
+    page:
+      Number.isFinite(rawPage) && rawPage > 0 ? Math.min(Math.floor(rawPage), 1000) : 1,
+  };
+}
+
+/** تسلسل الفلتر لـ query string — القيم الافتراضية تُحذف لروابط نظيفة قابلة للمشاركة. */
+export function serializeLeadFilterParams(filter: LeadFilter, page: number): string {
+  const qs = new URLSearchParams();
+  if (filter.search.trim()) qs.set("q", filter.search.trim());
+  if (filter.category !== "all") qs.set("category", filter.category);
+  if (filter.status !== "all") qs.set("status", filter.status);
+  if (filter.visibility !== "all") qs.set("visibility", filter.visibility);
+  if (filter.sort !== "newest") qs.set("sort", filter.sort);
+  if (page > 1) qs.set("page", String(page));
+  return qs.toString();
+}
+
+/** فلترة وبحث وفرز عروض العملاء (admin) — توحي بالسلوك مع filterCraftsmen. */
+export function filterLeads(
+  leads: AdminLeadRow[],
+  filter: LeadFilter,
+): AdminLeadRow[] {
+  const query = filter.search.trim().toLowerCase();
+  const result = leads.filter((lead) => {
+    if (
+      query &&
+      !lead.customer_phone.includes(query) &&
+      !lead.description.toLowerCase().includes(query) &&
+      !(lead.category?.name ?? "").toLowerCase().includes(query)
+    ) {
+      return false;
+    }
+    if (filter.category !== "all" && lead.category?.slug !== filter.category) {
+      return false;
+    }
+    if (filter.status !== "all" && lead.status !== filter.status) {
+      return false;
+    }
+    if (filter.visibility === "visible" && lead.hidden) return false;
+    if (filter.visibility === "hidden" && !lead.hidden) return false;
+    return true;
+  });
+
+  if (filter.sort === "oldest") {
+    result.sort((a, b) => a.created_at.localeCompare(b.created_at));
+  } else if (filter.sort === "expiring") {
+    result.sort((a, b) => a.expires_at.localeCompare(b.expires_at));
+  } else {
+    result.sort((a, b) => b.created_at.localeCompare(a.created_at));
+  }
+  return result;
+}
+
+export type LeadFacetCounts = {
+  /** عدد الصفوف بعد باقي الفلاتر عدا الحالة (لتاب "الكل" في صف الحالة). */
+  statusAll: number;
+  status: Record<LeadStatus, number>;
+  /** بعد باقي الفلاتر عدا الرؤية (لمenu "الكل" في فلتر الرؤية). */
+  visibilityAll: number;
+  visible: number;
+  hidden: number;
+};
+
+/**
+ * عدّادات facet لكل تبويب/خيار: كل بُعد يُحسب بعد تطبيق باقي الأبعاد
+ * عدا نفسه — حتى يرى المشرف ما سيحصل له لو ضغط على الخيار.
+ */
+export function countLeadFacets(
+  leads: AdminLeadRow[],
+  filter: LeadFilter,
+): LeadFacetCounts {
+  const statusBase = filterLeads(leads, { ...filter, status: "all" });
+  const visibilityBase = filterLeads(leads, { ...filter, visibility: "all" });
+
+  const status: Record<LeadStatus, number> = {
+    open: 0,
+    claimed: 0,
+    completed: 0,
+    expired: 0,
+    cancelled: 0,
+  };
+  for (const lead of statusBase) {
+    if (lead.status in status) status[lead.status as LeadStatus] += 1;
+  }
+
+  let visible = 0;
+  let hidden = 0;
+  for (const lead of visibilityBase) {
+    if (lead.hidden) hidden += 1;
+    else visible += 1;
+  }
+
+  return {
+    statusAll: statusBase.length,
+    status,
+    visibilityAll: visibilityBase.length,
+    visible,
+    hidden,
+  };
+}
+
 export function filterMessages(
   messages: ContactMessageRow[],
   readFilter: "all" | "unread",
@@ -231,6 +381,7 @@ export function buildOverviewMetrics(input: {
     activeAreas: areas.filter((item) => item.is_active).length,
     totalAreas: areas.length,
     unreadMessages: messages.filter((item) => !item.is_read).length,
+    openLeads: 0,
     recentCraftsmen: craftsmen.slice(0, 5),
     categoryChart,
     maxCount,

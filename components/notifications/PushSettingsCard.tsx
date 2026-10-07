@@ -99,11 +99,10 @@ export function PushSettingsCard() {
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <span
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${
-              push.enabled
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${push.enabled
                 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                 : "bg-accent/10 text-accent"
-            }`}
+              }`}
           >
             <IconBell className="h-5 w-5" />
           </span>

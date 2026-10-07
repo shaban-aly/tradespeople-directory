@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       anonymous_push_outbox: {
@@ -94,7 +119,7 @@ export type Database = {
           interests?: string[]
           last_notified_at?: string | null
           notification_count?: number
-          platform: string
+          platform?: string
           status?: string
           token: string
           updated_at?: string
@@ -154,8 +179,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
-          plural_name?: string
-          singular_name?: string
+          plural_name: string
+          singular_name: string
           slug: string
           sort_order?: number
         }
@@ -242,7 +267,7 @@ export type Database = {
         Insert: {
           calls?: number
           craftsman_id: string
-          day: string
+          day?: string
           views?: number
           whatsapp?: number
         }
@@ -397,7 +422,7 @@ export type Database = {
           id?: never
           metadata?: Json | null
           user_id?: string | null
-          user_status: string
+          user_status?: string
         }
         Update: {
           contact_method?: string
@@ -415,6 +440,112 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "craftsmen"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_responses: {
+        Row: {
+          craftsman_id: string
+          created_at: string
+          id: string
+          lead_id: string
+        }
+        Insert: {
+          craftsman_id: string
+          created_at?: string
+          id?: string
+          lead_id: string
+        }
+        Update: {
+          craftsman_id?: string
+          created_at?: string
+          id?: string
+          lead_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_responses_craftsman_id_fkey"
+            columns: ["craftsman_id"]
+            isOneToOne: false
+            referencedRelation: "craftsmen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_responses_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          area_id: string
+          category_id: string
+          claimed_at: string | null
+          created_at: string
+          customer_id: string
+          customer_phone: string
+          description: string
+          expires_at: string
+          hidden: boolean
+          id: string
+          image_urls: string[]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          area_id: string
+          category_id: string
+          claimed_at?: string | null
+          created_at?: string
+          customer_id: string
+          customer_phone: string
+          description: string
+          expires_at?: string
+          hidden?: boolean
+          id?: string
+          image_urls?: string[]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          area_id?: string
+          category_id?: string
+          claimed_at?: string | null
+          created_at?: string
+          customer_id?: string
+          customer_phone?: string
+          description?: string
+          expires_at?: string
+          hidden?: boolean
+          id?: string
+          image_urls?: string[]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "craftsman_counts_by_category"
+            referencedColumns: ["category_id"]
           },
         ]
       }
@@ -535,7 +666,7 @@ export type Database = {
           body: string
           created_at?: string
           id?: string
-          key?: string
+          key: string
           metadata?: Json
           read_at?: string | null
           recipient_id: string
@@ -649,7 +780,7 @@ export type Database = {
           count?: number
           key: string
           updated_at?: string
-          window_start?: string
+          window_start: string
         }
         Update: {
           count?: number
@@ -818,6 +949,13 @@ export type Database = {
       }
     }
     Functions: {
+      admin_delete_lead: {
+        Args: { p_lead_id: string; p_reason?: string }
+        Returns: boolean
+      }
+      admin_hide_lead:
+        | { Args: { p_lead_id: string }; Returns: boolean }
+        | { Args: { p_hidden?: boolean; p_lead_id: string }; Returns: boolean }
       approve_craftsman_application: {
         Args: { p_craftsman_id: string }
         Returns: string
@@ -858,6 +996,11 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      cancel_lead: { Args: { p_lead_id: string }; Returns: boolean }
+      claim_lead: {
+        Args: { p_craftsman_id: string; p_lead_id: string }
+        Returns: boolean
+      }
       claim_push_outbox: {
         Args: { p_limit?: number }
         Returns: {
@@ -880,6 +1023,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      complete_lead: { Args: { p_lead_id: string }; Returns: boolean }
       create_notification: {
         Args: {
           p_body: string
@@ -892,6 +1036,7 @@ export type Database = {
         Returns: undefined
       }
       drain_stale_push_outbox: { Args: never; Returns: number }
+      expire_stale_leads: { Args: never; Returns: undefined }
       finish_anonymous_push_outbox: {
         Args: {
           p_error_text?: string
@@ -943,20 +1088,6 @@ export type Database = {
           role: string
         }[]
       }
-      get_admin_users_test: {
-        Args: never
-        Returns: {
-          avatar_url: string
-          craftsman_id: string
-          craftsman_name: string
-          craftsman_slug: string
-          created_at: string
-          display_name: string
-          email: string
-          id: string
-          role: string
-        }[]
-      }
       get_craftsman_activity_feed:
         | {
             Args: { p_craftsman_id?: string; p_limit?: number }
@@ -989,31 +1120,83 @@ export type Database = {
           total_reviews: number
         }[]
       }
+      get_admin_leads_page: {
+        Args: {
+          p_search?: string | null
+          p_category_slug?: string | null
+          p_status?: string | null
+          p_hidden?: boolean | null
+          p_sort?: string | null
+          p_limit?: number | null
+          p_offset?: number | null
+        }
+        Returns: Json
+      }
+      get_customer_lead_responses: {
+        Args: never
+        Returns: {
+          lead_id: string
+          response_id: string
+          responded_at: string
+          craftsman_id: string
+          slug: string | null
+          name: string
+          phone: string
+          whatsapp: string | null
+          verified: boolean
+          image_url: string | null
+        }[]
+      }
+      get_my_claimed_leads: {
+        Args: { p_limit?: number | null; p_offset?: number | null }
+        Returns: {
+          area_name: string
+          category_name: string
+          claimed_at: string
+          created_at: string
+          customer_phone: string
+          description: string
+          image_urls: string[]
+          lead_id: string
+          status: string
+        }[]
+      }
+      get_open_leads_for_me: {
+        Args: { p_limit?: number | null; p_offset?: number | null }
+        Returns: {
+          area_name: string | null
+          category_id: string
+          category_name: string | null
+          created_at: string
+          description: string
+          expires_at: string
+          id: string
+          image_urls: string[]
+          response_count: number
+        }[]
+      }
       get_my_role: { Args: never; Returns: string }
       get_public_reviewer_avatars: {
         Args: { p_user_ids: string[] }
         Returns: {
-          avatar_url: string | null
+          avatar_url: string
           user_id: string
         }[]
       }
       get_site_stats: { Args: never; Returns: Json }
-      increment_craftsman_stats:
-        | {
-            Args: { p_column_name: string; p_craftsman_id: string }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              p_action: string
-              p_ip?: string
-              p_slug: string
-              p_user_id?: string
-              p_user_status?: string
-            }
-            Returns: boolean
-          }
+      has_responded_to_lead: { Args: { p_lead_id: string }; Returns: boolean }
+      increment_craftsman_stats: {
+        Args: {
+          p_action: string
+          p_ip?: string
+          p_slug: string
+          p_user_id?: string
+          p_user_status?: string
+        }
+        Returns: boolean
+      }
       is_admin: { Args: never; Returns: boolean }
+      is_lead_customer: { Args: { p_lead_id: string }; Returns: boolean }
       is_safe_internal_link: { Args: { p_link: string }; Returns: boolean }
       link_craftsman_user: {
         Args: { craftsman_id_input: string; user_email_input: string }
@@ -1036,6 +1219,7 @@ export type Database = {
         Args: { p_max_age_days?: number }
         Returns: number
       }
+      purge_old_leads: { Args: never; Returns: undefined }
       purge_old_notifications: {
         Args: { p_max_age_days?: number }
         Returns: number
@@ -1044,6 +1228,7 @@ export type Database = {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: Json
       }
+      renew_lead: { Args: { p_lead_id: string }; Returns: boolean }
       record_push_delivery_result: {
         Args: {
           p_error_text?: string
@@ -1125,6 +1310,7 @@ export type Database = {
         Args: { p_key: string; p_value: string }
         Returns: undefined
       }
+      withdraw_lead_response: { Args: { p_lead_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
@@ -1227,7 +1413,9 @@ export type Enums<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never) = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
@@ -1251,6 +1439,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

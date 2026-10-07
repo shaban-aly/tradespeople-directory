@@ -37,7 +37,7 @@ export function SearchHeaderTrigger({
           onClick={() => router.push("/search")}
           aria-label="مسح كلمة البحث"
           title="مسح كلمة البحث"
-          className="flex min-h-12 min-w-12 items-center justify-center rounded-2xl border border-border bg-background text-muted transition-colors hover:border-destructive hover:text-destructive shadow-xs active:scale-95"
+          className="flex min-h-12 min-w-12 items-center justify-center rounded-2xl border border-border bg-background text-muted transition-colors hover:border-danger hover:text-danger shadow-xs active:scale-95"
         >
           <IconX className="h-4 w-4" />
         </button>

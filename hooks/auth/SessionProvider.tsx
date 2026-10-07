@@ -20,10 +20,26 @@ export interface SessionContextValue {
 
 const SessionContext = createContext<SessionContextValue | null>(null);
 
+const loggedOutFallback: SessionContextValue = {
+  user: null,
+  profile: null,
+  loading: false,
+  isLoggedIn: false,
+  isAdmin: false,
+  isCraftsman: false,
+  isClient: false,
+  signOut: async () => {},
+};
+
 export function useSessionContext(): SessionContextValue {
   const session = useContext(SessionContext);
   if (!session) {
-    throw new Error("useSession must be used within a SessionProvider");
+    // لا نرمي أثناء الـ prerender/SSR: أي مستهلك خارج الـ Provider
+    // (تحقق ثابت، شجرة معزولة، اختبار) يُعامل كزائر مسجّل خروجه بدل كسر
+    // الريندر بخطأ "must be used within a SessionProvider".
+    // داخل التطبيق الطبيعي الـ Provider موجود في app/layout.tsx
+    // فيُرجع الحالة الحقيقية دائماً.
+    return loggedOutFallback;
   }
   return session;
 }

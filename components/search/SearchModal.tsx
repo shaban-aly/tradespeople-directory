@@ -239,7 +239,7 @@ export function SearchModal() {
                   <button
                     type="button"
                     onClick={clearSearches}
-                    className="text-xs font-medium text-muted hover:text-destructive transition-colors"
+                    className="text-xs font-medium text-muted hover:text-danger transition-colors"
                   >
                     مسح السجل
                   </button>

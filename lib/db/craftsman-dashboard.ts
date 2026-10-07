@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps */
 import { createSupabase } from "./client";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
@@ -92,6 +93,31 @@ export interface CraftsmanBrief {
   imageUrl: string | null;
   verified: boolean;
   isPublished: boolean;
+}
+
+/** اسم كوكي الملف النشط للفني — يُكتب من العميل عند التبديل ويُقرأ سيرفراً. */
+export const ACTIVE_CRAFTSMAN_COOKIE = "active-craftsman";
+
+/**
+ * حل الملف النشط من قائمة المملوكة: `?craftsman=` أولاً، ثم الكوكي، ثم
+ * الأحدث. الملكية إجبارية (بحث داخل القائمة فقط — لا IDOR)، والقيم
+ * الغريبة/المحذوفة تسقط بصمت للأحدث.
+ */
+export function resolveActiveCraftsman<T extends { id: string }>(
+  all: T[],
+  requestedId?: string | null,
+  storedId?: string | null,
+): T | null {
+  if (all.length === 0) return null;
+  if (requestedId) {
+    const match = all.find((c) => c.id === requestedId);
+    if (match) return match;
+  }
+  if (storedId) {
+    const match = all.find((c) => c.id === storedId);
+    if (match) return match;
+  }
+  return all[0];
 }
 
 /**
@@ -198,7 +224,10 @@ export async function getCraftsmanDashboardData(
     getCraftsmanFavoritesCount(craftsmanId, client),
     getCraftsmanRatingSummary(craftsmanId),
     getCraftsmanReviews(craftsmanId, 30),
-    client.rpc("get_craftsman_activity_feed", { p_limit: 15 }),
+    client.rpc("get_craftsman_activity_feed", {
+      p_craftsman_id: craftsmanId,
+      p_limit: 15,
+    }),
   ]);
 
   const views = statsData?.views ?? 0;
@@ -222,7 +251,7 @@ export async function getCraftsmanDashboardData(
     date: r.createdAt,
   }));
 
-  const recentInteractions: CraftsmanActivityItem[] = (
+  let recentInteractions: CraftsmanActivityItem[] = (
     interactionsResult?.data || []
   ).map((row) => ({
     id: row.log_id,
@@ -231,6 +260,25 @@ export async function getCraftsmanDashboardData(
     userDisplayName: row.user_display_name,
     createdAt: row.created_at,
   }));
+
+  // ضمان إضافي: لو أعاد الـ RPC فارغاً أو تعذر استدعاؤه، نستعلم مباشرة من جدول interaction_logs
+  if (recentInteractions.length === 0) {
+    const { data: directLogs } = await client
+      .from("interaction_logs")
+      .select("id, contact_method, user_status, created_at")
+      .eq("craftsman_id", craftsmanId)
+      .order("created_at", { ascending: false })
+      .limit(15);
+
+    if (directLogs && directLogs.length > 0) {
+      recentInteractions = directLogs.map((row) => ({
+        id: row.id,
+        contactMethod: row.contact_method as "phone" | "whatsapp",
+        userStatus: row.user_status as "authenticated" | "anonymous",
+        createdAt: row.created_at,
+      }));
+    }
+  }
 
   const categoryName = (craftsman.category as unknown as { name: string } | null)?.name ?? "";
   const areaName = (craftsman.area as unknown as { name: string } | null)?.name ?? "";

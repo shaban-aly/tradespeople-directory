@@ -1,19 +1,14 @@
-import { getCategoriesWithCounts, getStats } from "@/lib/db/queries";
+import { getStats } from "@/lib/db/queries";
+import { ButtonLink } from "@/components/shared/ui/Button";
+import { Zap } from "lucide-react";
 import { AnimatedNumber } from "@/components/shared/ui/AnimatedNumber";
 import { TrustStrip } from "@/components/shared/ui/TrustStrip";
 import { HeroSearchButton } from "@/components/home/HeroSearchButton";
-import { HeroSearchTags } from "@/components/home/HeroSearchTags";
 import { HeroAudienceCarousel } from "@/components/home/HeroAudienceCarousel";
 import { IconGrid, IconMapPin, IconUsers } from "@/components/shared/icons";
-import { getHeroSearchTags } from "@/lib/utils/hero";
 
 export async function Hero() {
-  const [stats, allCategories] = await Promise.all([
-    getStats(),
-    getCategoriesWithCounts(),
-  ]);
-
-  const searchTags = getHeroSearchTags(allCategories);
+  const stats = await getStats();
 
   return (
     <section className="relative overflow-hidden pt-4 pb-8 sm:pt-14 sm:pb-12">
@@ -73,10 +68,23 @@ export async function Hero() {
           ابحث عن التخصص واختار الصنايعي المناسب.
         </p>
 
-        {/* شريط البحث المدمج الأنيق مع تاجات البحث السريعة الأكثر طلباً */}
+        {/* شريط البحث المدمج الأنيق */}
         <div className="mx-auto mt-3 sm:mt-7 max-w-xl sm:max-w-2xl md:max-w-3xl flex flex-col gap-2.5">
           <HeroSearchButton />
-          <HeroSearchTags tags={searchTags} />
+        </div>
+
+        {/* زر الطلب مباشرة أسفل مربع البحث (رابط صفحة الطلب — سلوك موحد) */}
+        <div className="mx-auto mt-3 sm:mt-4 max-w-sm px-4 sm:px-0">
+          <ButtonLink
+            href="/request/new"
+            variant="primary"
+            className="flex w-full items-center justify-center gap-2 font-bold shadow-lg shadow-accent/20 hover:shadow-accent/40"
+          >
+            <Zap className="w-4 h-4 sm:w-5 sm:h-5 fill-current opacity-80 shrink-0" />
+            <span className="text-base whitespace-normal text-center leading-tight">
+             سجل طلبك وانتظر مكالمة من الصنايعي
+            </span>
+          </ButtonLink>
         </div>
 
         {/* كارت الإحصائيات الزجاجي الشفاف */}

@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { createClient } from "@supabase/supabase-js";
 import type { User } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 
@@ -24,6 +25,17 @@ export async function createServerSupabase() {
       },
     },
   });
+}
+
+/**
+ * عميل بصلاحيات Service Role (تجاوز RLS) مخصص للـ Server Components فقط.
+ */
+export function createServerAdminClient() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is missing");
+  }
+  return createClient<Database>(supabaseUrl, serviceRoleKey);
 }
 
 /**

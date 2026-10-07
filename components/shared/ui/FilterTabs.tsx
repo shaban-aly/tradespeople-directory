@@ -9,18 +9,29 @@ export type FilterTab<T extends string> = {
 /**
  * شريط فلاتر موحّد لكل أقسام لوحة التحكم (طلبات/بلاغات/رسائل/...):
  * أزرار pills مع عدّاد عددي، النشط bg-action — بلا ألوان inline.
+ * الافتراضي التفاف طبيعي (wrap) فلا يخرج أي تبويب خارج الشاشة أبداً؛
+ * وللأحجام الضيقة جداً التبويبات تكفي في صفين منظمين.
  */
 export function FilterTabs<T extends string>({
   tabs,
   active,
   onChange,
+  scrollable = false,
 }: {
   tabs: FilterTab<T>[];
   active: T;
   onChange: (value: T) => void;
+  scrollable?: boolean;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2" role="tablist">
+    <div
+      role="tablist"
+      className={
+        scrollable
+          ? "flex items-center gap-1.5 overflow-x-auto pb-1"
+          : "flex flex-wrap items-center gap-1.5"
+      }
+    >
       {tabs.map((tab) => {
         const isActive = tab.value === active;
         return (
@@ -30,7 +41,7 @@ export function FilterTabs<T extends string>({
             role="tab"
             aria-selected={isActive}
             onClick={() => onChange(tab.value)}
-            className={`flex min-h-12 items-center gap-2 rounded-xl px-4 text-base font-bold transition-colors ${
+            className={`flex min-h-12 items-center gap-1.5 rounded-xl px-2.5 sm:px-3 text-base font-bold transition-colors whitespace-nowrap ${
               isActive
                 ? "bg-action text-on-action"
                 : "border border-border text-muted hover:text-foreground"

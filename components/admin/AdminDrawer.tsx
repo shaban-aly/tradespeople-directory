@@ -74,8 +74,9 @@ export function AdminDrawer({
           </button>
         </div>
 
-        {/* Drawer Body — hideBrand={true} prevents any duplicate header! */}
-        <div className="flex-1 overflow-y-auto">
+        {/* Drawer Body — hideBrand={true} prevents any duplicate header!
+            السايدبار نفسه يتعامل مع السكرول كـ fallback فقط */}
+        <div className="min-h-0 flex-1">
           <AdminSidebar
             onSignOut={onSignOut}
             email={email}

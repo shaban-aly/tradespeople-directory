@@ -20,6 +20,8 @@ import type { Database } from "./database.types";
 import type { Json } from "./database.types";
 import type {
   CategoryChartItem,
+  LeadFacetCounts,
+  LeadStatus,
   MostContactedItem,
   OverviewMetrics,
 } from "./admin-selectors";
@@ -443,6 +445,7 @@ export type AdminNavCounts = {
   pendingRequests: number;
   pendingReports: number;
   unreadMessages: number;
+  openLeads: number;
 };
 
 /** عدّادات خفيفة لشريط التنقل الجانبي عبر RPC مجمعة مع fallback للاستعلامات المنفصلة */
@@ -457,24 +460,27 @@ export async function fetchAdminNavCounts(
         pendingRequests: Number(d.pendingRequests) || 0,
         pendingReports: Number(d.pendingReports) || 0,
         unreadMessages: Number(d.unreadMessages) || 0,
+        openLeads: Number(d.openLeads) || 0,
       };
     }
   } catch {
     // التراجع التلقائي للاستعلامات المنفصلة
   }
 
-  const [requests, reports, messages] = await Promise.all([
+  const [requests, reports, messages, leads] = await Promise.all([
     client.from("craftsmen").select("id", { count: "exact", head: true }).eq("status", "pending"),
     client.from("reports").select("id", { count: "exact", head: true }).eq("status", "pending"),
     client.from("contact_messages").select("id", { count: "exact", head: true }).eq("is_read", false),
+    client.from("leads").select("id", { count: "exact", head: true }).eq("status", "open"),
   ]);
-  for (const result of [requests, reports, messages]) {
+  for (const result of [requests, reports, messages, leads]) {
     if (result.error) throw new Error("مقدرناش نحمّل عدّادات القائمة");
   }
   return {
     pendingRequests: requests.count ?? 0,
     pendingReports: reports.count ?? 0,
     unreadMessages: messages.count ?? 0,
+    openLeads: leads.count ?? 0,
   };
 }
 
@@ -1104,6 +1110,7 @@ export async function fetchAdminOverviewMetrics(
     activeAreas: areas.filter((item) => item.is_active).length,
     totalAreas: areas.length,
     unreadMessages: navCounts.unreadMessages,
+    openLeads: navCounts.openLeads,
     recentCraftsmen,
     categoryChart,
     maxCount,
@@ -1173,6 +1180,240 @@ export async function fetchPushDiagnostics(
     .limit(PUSH_DIAGNOSTICS_LIMIT);
   if (error) throw new Error("مقدرناش نحمّل تشخيصات الإشعارات");
   return data ?? [];
+}
+
+
+
+
+export type AdminLeadRow = {
+  id: string;
+  category: { name: string; slug: string } | null;
+  area: { name: string } | null;
+  description: string;
+  customer_phone: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  expires_at: string;
+  hidden: boolean;
+  claimed_at: string | null;
+  customer_id: string;
+  /** عدد الردود — محسوب server-side (attachResponseCounts)، لا من الـ RPC. */
+  responseCount: number;
+  /** تدقيق الإخفاء (migration 000019) — داخلي للمشرفين فقط. */
+  hidden_at: string | null;
+  hidden_reason: string | null;
+  /** صور المشكلة (اختياري — حد 3) بترتيب الرفع. */
+  image_urls: string[];
+};
+
+const ADMIN_LEADS_SELECT = "*, category:categories(name, slug), area:areas(name)";
+
+/** حجم صفحة عروض العملاء في لوحة الأدمن — يطابق سقف RPC (1..50). */
+export const ADMIN_LEADS_PAGE_SIZE = 12;
+
+/** سقف العملية الجماعية على الطلبات — يمنع إغراق القاعدة بآلاف الـ RPCs المتسلسلة. */
+export const BULK_LEADS_LIMIT = 50;
+
+export type AdminLeadsPage = {
+  items: AdminLeadRow[];
+  totalCount: number;
+  facets: LeadFacetCounts;
+};
+
+function toLeadStatus(value: unknown): AdminLeadRow["status"] {
+  return value === "open" ||
+    value === "claimed" ||
+    value === "completed" ||
+    value === "expired" ||
+    value === "cancelled"
+    ? (value as LeadStatus)
+    : "open";
+}
+
+/**
+ * تطبيع خرج `get_admin_leads_page` (jsonb) إلى صفوف مكتوبة — يملأ مفاتيح
+ * الحالة الغائبة بأصفار ويسقط الصفوف المشوهة بدل كسر اللوحة.
+ */
+export function normalizeAdminLeadsPage(data: unknown): AdminLeadsPage {
+  const root = (data ?? {}) as Record<string, unknown>;
+  const rawItems = Array.isArray(root.items) ? root.items : [];
+  const items: AdminLeadRow[] = [];
+  for (const raw of rawItems) {
+    const row = raw as Record<string, unknown>;
+    if (typeof row.id !== "string") continue;
+    items.push({
+      id: row.id,
+      category:
+        typeof row.category_name === "string"
+          ? { name: row.category_name, slug: typeof row.category_slug === "string" ? row.category_slug : "" }
+          : null,
+      area: typeof row.area_name === "string" ? { name: row.area_name } : null,
+      description: typeof row.description === "string" ? row.description : "",
+      customer_phone: typeof row.customer_phone === "string" ? row.customer_phone : "",
+      status: toLeadStatus(row.status),
+      created_at: typeof row.created_at === "string" ? row.created_at : "",
+      updated_at: typeof row.updated_at === "string" ? row.updated_at : "",
+      expires_at: typeof row.expires_at === "string" ? row.expires_at : "",
+      hidden: row.hidden === true,
+      claimed_at: typeof row.claimed_at === "string" ? row.claimed_at : null,
+      customer_id: typeof row.customer_id === "string" ? row.customer_id : "",
+      hidden_at: typeof row.hidden_at === "string" ? row.hidden_at : null,
+      hidden_reason:
+        typeof row.hidden_reason === "string" && row.hidden_reason.trim()
+          ? row.hidden_reason
+          : null,
+      responseCount:
+        typeof row.response_count === "number" && Number.isFinite(row.response_count)
+          ? row.response_count
+          : 0,
+      image_urls: Array.isArray(row.image_urls)
+        ? row.image_urls.filter((u): u is string => typeof u === "string")
+        : [],
+    });
+  }
+
+  const rawFacets = (root.facets ?? {}) as Record<string, unknown>;
+  const rawStatus = (rawFacets.status ?? {}) as Record<string, unknown>;
+  const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
+  return {
+    items,
+    totalCount: num(root.total),
+    facets: {
+      statusAll: num(rawFacets.statusAll),
+      status: {
+        open: num(rawStatus.open),
+        claimed: num(rawStatus.claimed),
+        completed: num(rawStatus.completed),
+        expired: num(rawStatus.expired),
+        cancelled: num(rawStatus.cancelled),
+      },
+      visibilityAll: num(rawFacets.visibilityAll),
+      visible: num(rawFacets.visible),
+      hidden: num(rawFacets.hidden),
+    },
+  };
+}
+
+/**
+ * يُرفق عدد الردود بكل صف في الصفحة (لشارة الكارت) — استعلام واحد
+ * `lead_responses` لكل الصفحة عبر سياسة قراءة المشرف. عند الفشل يُبقي
+ * الأصفار الافتراضية ولا يكسر الصفحة (شارة تكميلية فقط).
+ */
+export async function attachResponseCounts(
+  client: SupabaseClient<Database>,
+  page: AdminLeadsPage,
+): Promise<AdminLeadsPage> {
+  const ids = page.items.map((item) => item.id);
+  if (ids.length === 0) return page;
+  const { data, error } = await client
+    .from("lead_responses")
+    .select("lead_id")
+    .in("lead_id", ids);
+  if (error) {
+    console.error("attachResponseCounts:", error.message);
+    return page;
+  }
+  const counts = new Map<string, number>();
+  for (const row of (data ?? []) as { lead_id?: unknown }[]) {
+    if (typeof row.lead_id === "string") {
+      counts.set(row.lead_id, (counts.get(row.lead_id) ?? 0) + 1);
+    }
+  }
+  if (counts.size === 0) return page;
+  return {
+    ...page,
+    items: page.items.map((item) => ({
+      ...item,
+      responseCount: counts.get(item.id) ?? item.responseCount,
+    })),
+  };
+}
+
+/**
+ * يُرفق تدقيق الإخفاء (hidden_at/hidden_reason) بصفوف الصفحة — استعلام
+ * ثانوي واحد بعميل Service Role (العمودان بلا منح لـ authenticated).
+ * عند الفشل يُبقي nulls ولا يكسر الصفحة.
+ */
+export async function attachHideAudit(
+  client: SupabaseClient<Database>,
+  page: AdminLeadsPage,
+): Promise<AdminLeadsPage> {
+  try {
+    const ids = page.items.map((item) => item.id);
+    if (ids.length === 0) return page;
+  // الأعمدة الجديدة غير موجودة بعد في database.types.ts (تُزامَن عند تطبيق
+  // الـ migration حياً) — string موسّع عمداً لتجاوز استنتاج الأعمدة.
+  const AUDIT_COLUMNS: string = "id, hidden_at, hidden_reason";
+  const { data, error } = await client
+    .from("leads")
+    .select(AUDIT_COLUMNS)
+    .in("id", ids);
+  if (error) {
+    console.error("attachHideAudit:", error.message);
+    return page;
+  }
+  const audit = new Map(
+    (
+      ((data ?? []) as unknown) as {
+        id: string;
+        hidden_at: string | null;
+        hidden_reason: string | null;
+      }[]
+    ).map((row) => [row.id, row] as const),
+  );
+  if (audit.size === 0) return page;
+  return {
+    ...page,
+    items: page.items.map((item) => {
+      const row = audit.get(item.id);
+      if (!row) return item;
+      return {
+        ...item,
+        hidden_at: typeof row.hidden_at === "string" ? row.hidden_at : null,
+        hidden_reason:
+          typeof row.hidden_reason === "string" && row.hidden_reason.trim()
+            ? row.hidden_reason
+            : null,
+      };
+    }),
+  };
+  } catch {
+    console.error("attachHideAudit: unexpected failure — keeping page as is");
+    return page;
+  }
+}
+
+/** جلب كل عروض العملاء للأدمن (يشمل customer_phone المحجوب عن authenticated). */
+export async function fetchAdminLeads(
+  client: SupabaseClient<Database>,
+): Promise<AdminLeadRow[]> {
+  const { data, error } = await client
+    .from("leads")
+    .select(ADMIN_LEADS_SELECT)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error("مقدرناش نحمّل عروض العملاء");
+  return (data as unknown as AdminLeadRow[]) ?? [];
+}
+
+/** ردود طلب محدد مع الصنايعي — للدروور الإداري. */
+export type AdminLeadResponseRow = {
+  id: string;
+  created_at: string;
+  craftsman: { id: string; slug: string | null; name: string; phone: string; whatsapp: string | null; verified: boolean } | null;
+};
+
+export async function fetchLeadResponses(
+  client: SupabaseClient<Database>,
+  leadId: string,
+): Promise<AdminLeadResponseRow[]> {
+  const { data, error } = await client
+    .from("lead_responses")
+    .select("id, created_at, craftsman:craftsmen(id, slug, name, phone, whatsapp, verified)")
+    .eq("lead_id", leadId)
+    .order("created_at", { ascending: true });
+  if (error) throw new Error("مقدرناش نحمّل ردود الطلب");
+  return (data as unknown as AdminLeadResponseRow[]) ?? [];
 }
 
 

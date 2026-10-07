@@ -354,3 +354,30 @@ export function validateCategoryFields(fields: CategoryFormFields): CategoryForm
     slug: validateSlug(fields.slug) ?? undefined,
   };
 }
+
+export type LeadFields = {
+  categoryId: string;
+  areaId: string;
+  description: string;
+  phone: string;
+};
+
+export type LeadErrors = FieldErrors<keyof LeadFields>;
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isUuid(value: string): boolean {
+  return UUID_PATTERN.test(value);
+}
+
+/** تحقق من حقول «اطلب صنايعي» — نفس القواعد على العميل والسيرفر. */
+export function validateLeadFields(fields: LeadFields): LeadErrors {
+  const choice = (value: string, message: string) =>
+    validateRequiredChoice(value, message) ?? (isUuid(cleanText(value)) ? null : message);
+  return {
+    categoryId: choice(fields.categoryId, "اختر التخصص") ?? undefined,
+    areaId: choice(fields.areaId, "اختر المنطقة") ?? undefined,
+    description: validateDescription(fields.description, true) ?? undefined,
+    phone: validatePhone(fields.phone) ?? undefined,
+  };
+}

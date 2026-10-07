@@ -11,13 +11,21 @@ import { toArabicDigits } from "@/lib/utils/format";
  */
 export function ActionCounters({ metrics }: { metrics: OverviewMetrics }) {
   return (
-    <section className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+    <section className="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:gap-4">
       <Link href="/admin/requests">
         <StatCard
           icon={<IconInbox className="h-6 w-6" />}
-          label="طلبات معلقة"
+          label="طلبات الانضمام"
           value={toArabicDigits(metrics.pendingRequests.length)}
           hint="بانتظار المراجعة"
+        />
+      </Link>
+      <Link href="/admin/leads">
+        <StatCard
+          icon={<IconAlert className="h-6 w-6 text-amber-500" />}
+          label="عروض العملاء"
+          value={toArabicDigits(metrics.openLeads)}
+          hint="عروض متاحة"
         />
       </Link>
       <Link href="/admin/reports">

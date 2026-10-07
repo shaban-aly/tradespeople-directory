@@ -1,15 +1,23 @@
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { getServerSession } from "@/lib/db/server";
-import { getCraftsmanDashboardData, getMyCraftsmen } from "@/lib/db/craftsman-dashboard";
+import {
+  ACTIVE_CRAFTSMAN_COOKIE,
+  getCraftsmanDashboardData,
+  getMyCraftsmen,
+  resolveActiveCraftsman,
+} from "@/lib/db/craftsman-dashboard";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { ProfileCompletionCard } from "@/components/dashboard/ProfileCompletionCard";
-import { DashboardNav } from "@/components/dashboard/DashboardNav";
+import { DashboardChips } from "@/components/dashboard/DashboardChips";
 import { CraftsmanStatsGrid } from "@/components/dashboard/CraftsmanStatsGrid";
 import { CraftsmanActivityFeed } from "@/components/dashboard/CraftsmanActivityFeed";
 import { ReviewsSection } from "@/components/dashboard/ReviewsSection";
-import { MyCraftsmenSwitcher } from "@/components/dashboard/MyCraftsmenSwitcher";
+import { ProfileSwitcher } from "@/components/dashboard/ProfileSwitcher";
 import { ButtonLink } from "@/components/shared/ui/Button";
 import { IconUser } from "@/components/shared/icons";
+
+import { countOpenByCraftsman, getCraftsmanLeadsBoard } from "@/lib/db/leads";
 
 export const dynamic = "force-dynamic";
 
@@ -51,12 +59,20 @@ export default async function DashboardPage({
     );
   }
 
-  // تحديد الملف النشط: من الـ query param أو أحدث ملف
+  // تحديد الملف النشط: ?craftsman= ثم الكوكي ثم الأحدث — بملكية إجبارية.
+  const cookieStore = await cookies();
   const requestedId = params.craftsman;
   const activeCraftsman =
-    allCraftsmen.find((c) => c.id === requestedId) ?? allCraftsmen[0];
+    resolveActiveCraftsman(
+      allCraftsmen,
+      requestedId,
+      cookieStore.get(ACTIVE_CRAFTSMAN_COOKIE)?.value,
+    ) ?? allCraftsmen[0];
 
-  const data = await getCraftsmanDashboardData(user.id, activeCraftsman.id, supabase);
+  const [data, board] = await Promise.all([
+    getCraftsmanDashboardData(user.id, activeCraftsman.id, supabase),
+    getCraftsmanLeadsBoard(supabase, user.id),
+  ]);
 
   if (!data) {
     return (
@@ -66,23 +82,43 @@ export default async function DashboardPage({
     );
   }
 
+  // حساب العروض المفتوحة لكل ملف لعرضها في المبدّل
+  const openCountsRecord: Record<string, number> = {};
+  if (board.kind !== "no-profile") {
+    const openCounts = countOpenByCraftsman(board.open);
+    openCounts.forEach((count, id) => {
+      openCountsRecord[id] = count;
+    });
+  }
+
   return (
-    <>
-      <DashboardHeader profile={data.profile} />
-      <ProfileCompletionCard profile={data.profile} />
-      {/* شريط التبديل بين الملفات (يظهر فقط لو عنده أكثر من ملف أو ملف واحد لإظهار زر "إضافة") */}
-      <MyCraftsmenSwitcher
-        craftsmen={allCraftsmen}
-        activeCraftsmanId={activeCraftsman.id}
-      />
-      <DashboardNav />
-      <CraftsmanStatsGrid stats={data.stats} />
-      <CraftsmanActivityFeed items={data.recentInteractions} />
-      <ReviewsSection
-        rating={data.stats.rating}
-        reviews={data.stats.reviews}
-        slug={data.profile.slug}
-      />
-    </>
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+      {/* العمود الجانبي الأيمن: هوية الفني والتنقل وجاهزية الملف (4 أعمدة) */}
+      <div className="lg:col-span-4 space-y-6">
+        <DashboardHeader
+          profile={data.profile}
+          action={
+            <ProfileSwitcher
+              craftsmen={allCraftsmen}
+              activeCraftsmanId={activeCraftsman.id}
+              counts={openCountsRecord}
+            />
+          }
+        />
+        <DashboardChips variant="sidebar" />
+        <ProfileCompletionCard profile={data.profile} />
+      </div>
+
+      {/* العمود الرئيسي الأيسر: الإحصائيات، سجل التفاعلات، والمراجعات (8 أعمدة) */}
+      <div className="lg:col-span-8 space-y-6">
+        <CraftsmanStatsGrid stats={data.stats} />
+        <CraftsmanActivityFeed items={data.recentInteractions} />
+        <ReviewsSection
+          rating={data.stats.rating}
+          reviews={data.stats.reviews}
+          slug={data.profile.slug}
+        />
+      </div>
+    </div>
   );
 }

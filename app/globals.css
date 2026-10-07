@@ -268,3 +268,27 @@ body {
 #nprogress .bar {
   z-index: 9999 !important;
 }
+
+/* سكرولبار نحيف للقوائم الداخلية (سايدبار/قوائم أدمن) — يظهر عند الحاجة فقط */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}

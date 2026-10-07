@@ -10,6 +10,61 @@ export const WEBP_QUALITY = 0.8;
 
 export const WEBP_MAX_DIMENSION = 1200;
 
+/** حد صور المشكلة على الطلب الواحد (اختياري) — يطابق قيد القاعدة. */
+export const LEAD_IMAGES_MAX = 3;
+
+const TEMP_UPLOAD_PREFIX = "requests/";
+const LEAD_IMAGE_PREFIX = "leads/";
+const LEAD_IMAGE_EXTS = ["jpg", "jpeg", "png", "webp"];
+
+function imagePathParts(url: string): { path: string; ext: string } | null {
+  const path = extractImagePathFromUrl(url);
+  if (!path) return null;
+  const ext = (path.split(".").pop() ?? "").toLowerCase();
+  if (!LEAD_IMAGE_EXTS.includes(ext)) return null;
+  return { path, ext };
+}
+
+/** رفع مؤقت صالح للربط بطلب (من `requests/` بامتداد مسموح). */
+export function isTempLeadUploadUrl(url: string): boolean {
+  const parts = imagePathParts(url);
+  return !!parts && parts.path.startsWith(TEMP_UPLOAD_PREFIX);
+}
+
+/** مسار نهائي لصورة طلب داخل مجلده الخاص. */
+export function buildLeadImageTarget(leadId: string, ext: string): string {
+  const safeExt = LEAD_IMAGE_EXTS.includes(ext) ? ext : "webp";
+  return `${LEAD_IMAGE_PREFIX}${leadId}/${crypto.randomUUID()}.${safeExt}`;
+}
+
+/** رفع صور مشكلة مؤقتاً إلى `requests/` (WebP أولاً) لحظة الإرسال.
+ *  يُستدعى من المتصفح فقط — الفشل يرمي رسالة عربية جاهزة للعرض. */
+export async function uploadLeadTempImages(files: File[]): Promise<string[]> {
+  const urls: string[] = [];
+  for (const file of files.slice(0, LEAD_IMAGES_MAX)) {
+    const invalid = validateImage(file);
+    if (invalid) throw new Error(invalid);
+    let payload = file;
+    try {
+      payload = await convertToWebP(file);
+    } catch {
+      // فشل التحويل (متصفح قديم) — نرفع الأصل بعد نجاح التحقق من نوعه.
+    }
+    const { url } = await uploadCraftsmanImage(payload, "requests");
+    urls.push(url);
+  }
+  return urls;
+}
+
+/** URL عام لمسار داخل البكت عبر عميل معطى (إداري غالباً). */
+export function publicImageUrl(
+  supabase: Pick<ReturnType<typeof createSupabase>, "storage">,
+  path: string,
+): string {
+  const { data } = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
 export function validateImage(file: File): string | null {
   if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
     return "نوع الملف مش مدعوم — ارفع صورة JPG أو PNG أو WebP بس";

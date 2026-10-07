@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps */
 import { unstable_cache } from "next/cache";
 import { createServerReadClient } from "./client";
 import { shuffle } from "../utils/format";
@@ -140,6 +141,20 @@ export const getCategories = unstable_cache(getCategoriesImpl, [
   DATA_CACHE_KEYS.categories,
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.categories, SEARCH_TAG] });
 
+async function getCategoriesListImpl(): Promise<{ id: string; name: string }[]> {
+  const { data, error } = await createServerReadClient()
+    .from("categories")
+    .select("id, name")
+    .eq("is_active", true)
+    .order("sort_order");
+  assertSelectOk("التخصصات", error);
+  return data ?? [];
+}
+
+export const getCategoriesList = unstable_cache(getCategoriesListImpl, [
+  "data-categories-list",
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.categories, SEARCH_TAG] });
+
 async function getCategoryBySlugImpl(slug: string): Promise<Category | undefined> {
   const { data, error } = await createServerReadClient()
     .from("categories")
@@ -276,6 +291,20 @@ async function getAreasImpl(): Promise<string[]> {
 
 export const getAreas = unstable_cache(getAreasImpl, [
   DATA_CACHE_KEYS.areas,
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.areas, SEARCH_TAG] });
+
+async function getAreasListImpl(): Promise<{ id: string; name: string }[]> {
+  const { data, error } = await createServerReadClient()
+    .from("areas")
+    .select("id, name")
+    .eq("is_active", true)
+    .order("sort_order");
+  assertSelectOk("المناطق", error);
+  return data ?? [];
+}
+
+export const getAreasList = unstable_cache(getAreasListImpl, [
+  "data-areas-list",
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.areas, SEARCH_TAG] });
 
 async function getPublishedCraftsmenCount(): Promise<number> {

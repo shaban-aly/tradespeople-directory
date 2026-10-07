@@ -6,6 +6,8 @@ import type { LucideProps } from "lucide-react";
 import {
   IconAlert,
   IconBell,
+  IconExternalLink,
+  IconGlobe,
   IconInbox,
   IconLayoutDashboard,
   IconMail,
@@ -25,6 +27,8 @@ export type NavItem = {
   label: string;
   icon: (props: LucideProps) => React.JSX.Element;
   countKey?: keyof AdminNavCounts;
+  /** رابط خارجي (يُفتح في تبويب جديد ولا يُعامل كصفحة نشطة) */
+  external?: boolean;
 };
 
 export type NavGroup = {
@@ -43,6 +47,7 @@ export const ADMIN_NAV_GROUPS: NavGroup[] = [
     label: "المتابعة",
     items: [
       { href: "/admin/requests", label: "الطلبات", icon: IconInbox, countKey: "pendingRequests" },
+      { href: "/admin/leads", label: "عروض العملاء", icon: IconBell, countKey: "openLeads" },
       { href: "/admin/reports", label: "البلاغات", icon: IconAlert, countKey: "pendingReports" },
       { href: "/admin/messages", label: "الرسائل", icon: IconMail, countKey: "unreadMessages" },
     ],
@@ -66,6 +71,14 @@ export const ADMIN_NAV_GROUPS: NavGroup[] = [
     ],
   },
 ];
+
+/** آخر عنصر في القائمة — خارج مجموعات الصفحات فلا يدخل في بحث العنوان النشط. */
+export const ADMIN_NAV_VISIT_ITEM: NavItem = {
+  href: "/",
+  label: "الانتقال للموقع",
+  icon: IconGlobe,
+  external: true,
+};
 
 export const ADMIN_NAV_ITEMS: NavItem[] = ADMIN_NAV_GROUPS.flatMap(
   (group) => group.items,
@@ -93,7 +106,7 @@ function NavItemLink({
   counts?: AdminNavCounts;
   collapsed?: boolean;
 }) {
-  const isActive = isAdminNavActive(item.href, pathname);
+  const isActive = !item.external && isAdminNavActive(item.href, pathname);
   const Icon = item.icon;
   const count = item.countKey && counts ? counts[item.countKey] : 0;
   const showBadge = count > 0;
@@ -101,12 +114,14 @@ function NavItemLink({
   return (
     <Link
       href={item.href}
+      target={item.external ? "_blank" : undefined}
+      rel={item.external ? "noopener noreferrer" : undefined}
       title={collapsed ? item.label : undefined}
       aria-current={isActive ? "page" : undefined}
-      className={`group relative flex min-h-10 items-center rounded-xl text-sm font-semibold transition-all duration-150 ${
+      className={`group relative flex min-h-9 items-center rounded-xl text-sm font-semibold transition-all duration-150 ${
         collapsed
           ? "justify-center p-2.5"
-          : "gap-3 px-3 py-2"
+          : "gap-2.5 px-3 py-1.5"
       } ${
         isActive
           ? "bg-accent text-accent-foreground shadow-xs font-bold"
@@ -125,6 +140,9 @@ function NavItemLink({
       {!collapsed && (
         <>
           <span className="min-w-0 flex-1 truncate">{item.label}</span>
+          {item.external && (
+            <IconExternalLink className="h-3.5 w-3.5 shrink-0 text-muted" />
+          )}
           {showBadge && (
             <Badge variant={isActive ? "neutral" : "accent"}>
               {toArabicDigits(count)}
@@ -146,17 +164,15 @@ export function AdminNav({
   const pathname = usePathname();
 
   return (
-    <nav className="grid gap-3.5" aria-label="التنقل الرئيسي للوحة التحكم">
+    <nav className="grid gap-0.5" aria-label="التنقل الرئيسي للوحة التحكم">
       {ADMIN_NAV_GROUPS.map((group, idx) => (
-        <div key={group.id} className="grid gap-1">
-          {group.label && !collapsed && (
-            <p className="px-3 text-[11px] font-bold text-muted/70 uppercase tracking-wider mb-0.5">
-              {group.label}
-            </p>
-          )}
-          {group.label && collapsed && idx > 0 && (
-            <hr className="my-1.5 border-border/60 mx-2" />
-          )}
+        <div
+          key={group.id}
+          role="group"
+          aria-label={group.label}
+          className="grid gap-0.5"
+        >
+          {idx > 0 && <hr className="my-1 border-border/60 mx-2" />}
           {group.items.map((item) => (
             <NavItemLink
               key={item.href}
@@ -168,6 +184,12 @@ export function AdminNav({
           ))}
         </div>
       ))}
+      <hr className="my-1 border-border/60 mx-2" />
+      <NavItemLink
+        item={ADMIN_NAV_VISIT_ITEM}
+        pathname={pathname}
+        collapsed={collapsed}
+      />
     </nav>
   );
 }

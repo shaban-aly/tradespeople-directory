@@ -12,6 +12,7 @@ export function ConfirmDialog({
   confirmLabel = "تأكيد",
   danger = false,
   busy = false,
+  note,
 }: {
   open: boolean;
   onClose: () => void;
@@ -21,6 +22,14 @@ export function ConfirmDialog({
   confirmLabel?: string;
   danger?: boolean;
   busy?: boolean;
+  /** حقل ملاحظة اختياري (مثل سبب الإخفاء) — يُعرض فوق زرّي التأكيد. */
+  note?: {
+    label: string;
+    placeholder?: string;
+    value: string;
+    onChange: (value: string) => void;
+    maxLength?: number;
+  };
 }) {
   return (
     <Modal
@@ -49,6 +58,22 @@ export function ConfirmDialog({
       }
     >
       <p className="text-base text-muted">{message}</p>
+      {note && (
+        <div className="mt-4">
+          <label className="mb-1 block text-sm font-bold text-foreground">
+            {note.label}
+          </label>
+          <textarea
+            value={note.value}
+            onChange={(event) => note.onChange(event.target.value)}
+            maxLength={note.maxLength ?? 500}
+            placeholder={note.placeholder}
+            rows={2}
+            disabled={busy}
+            className="w-full rounded-xl border border-border-strong bg-card px-3 py-2.5 text-base text-foreground focus:border-accent focus:outline-none"
+          />
+        </div>
+      )}
     </Modal>
   );
 }
