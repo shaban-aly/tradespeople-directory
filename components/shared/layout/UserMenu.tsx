@@ -149,7 +149,7 @@ export function UserMenu() {
 
             {isClient && (
               <Link
-                href="/profile/requests"
+                href="/my-requests"
                 role="menuitem"
                 className="flex w-full items-center gap-2.5 px-4 py-2 text-right text-sm text-foreground transition-colors hover:bg-accent/10 font-bold"
                 onClick={() => setOpen(false)}

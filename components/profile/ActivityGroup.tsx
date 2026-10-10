@@ -28,18 +28,18 @@ export function ActivityGroup({
         href="/favorites"
         className="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-colors hover:bg-muted/40 group"
       >
-        <span className="font-heading text-lg sm:text-xl font-black text-foreground group-hover:text-amber-500 transition-colors">
+        <span className="font-heading text-lg sm:text-xl font-black text-foreground group-hover:text-warning transition-colors">
           {toArabicDigits(favoritesCount)}
         </span>
-        <span className="mt-0.5 text-xs font-bold text-muted flex items-center gap-1 group-hover:text-amber-500/90 transition-colors">
-          <IconStar className="h-3.5 w-3.5 text-amber-500 fill-current" />
+        <span className="mt-0.5 text-xs font-bold text-muted flex items-center gap-1 group-hover:text-warning transition-colors">
+          <IconStar className="h-3.5 w-3.5 text-warning fill-current" />
           <span>المفضلة</span>
         </span>
       </Link>
 
       {/* 2. التقييمات */}
       <Link
-        href="/activity"
+        href="/my-reviews"
         className="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-colors hover:bg-muted/40 group"
       >
         <span className="font-heading text-lg sm:text-xl font-black text-foreground group-hover:text-accent transition-colors">
@@ -54,7 +54,7 @@ export function ActivityGroup({
       {/* 3. المؤشر الثالث حسب الدور */}
       {role === "client" ? (
         <Link
-          href="/profile/requests"
+          href="/my-requests"
           className="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-colors hover:bg-muted/40 group"
         >
           <span className="font-heading text-lg sm:text-xl font-black text-foreground group-hover:text-action transition-colors">
@@ -83,11 +83,11 @@ export function ActivityGroup({
           href="/admin"
           className="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-colors hover:bg-muted/40 group"
         >
-          <span className="font-heading text-lg sm:text-xl font-black text-foreground group-hover:text-amber-500 transition-colors">
+          <span className="font-heading text-lg sm:text-xl font-black text-foreground group-hover:text-warning transition-colors">
             الإدارة
           </span>
-          <span className="mt-0.5 text-xs font-bold text-muted flex items-center gap-1 group-hover:text-amber-500 transition-colors">
-            <IconShieldCheck className="h-3.5 w-3.5 text-amber-500" />
+          <span className="mt-0.5 text-xs font-bold text-muted flex items-center gap-1 group-hover:text-warning transition-colors">
+            <IconShieldCheck className="h-3.5 w-3.5 text-warning" />
             <span>شاملة</span>
           </span>
         </Link>

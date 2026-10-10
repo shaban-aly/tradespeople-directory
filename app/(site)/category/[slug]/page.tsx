@@ -6,9 +6,9 @@ import {
   getCategoryBySlug,
   getCraftsmenByCategory,
 } from "@/lib/db/queries";
-import { toArabicDigits } from "@/lib/utils/format";
+import { getAvailableAreas } from "@/lib/data/craftsmen";
 import { JsonLd } from "@/components/shared/seo/JsonLd";
-import { CategoryIcon } from "@/components/shared/ui/CategoryIcon";
+import { CategoryDetailHeader } from "@/components/category/CategoryDetailHeader";
 import { CategoryTracker } from "@/components/category/CategoryTracker";
 import { CraftsmanList } from "@/components/category/CraftsmanList";
 import { PushActivationLayer } from "@/components/notifications/PushActivationLayer";
@@ -74,12 +74,14 @@ export default async function CategoryPage({
   ]);
 
   const verifiedCount = craftsmen.filter((c) => c.verified).length;
+  const availableAreas = getAvailableAreas(craftsmen, areas);
 
   return (
     <>
       <JsonLd
         data={breadcrumbSchema([
           { name: "الرئيسية", url: `${siteUrl}/` },
+          { name: "كل التصنيفات", url: `${siteUrl}/categories` },
           { name: category.name, url: `${siteUrl}/category/${category.slug}` },
         ])}
       />
@@ -88,48 +90,15 @@ export default async function CategoryPage({
       <PushActivationLayer
         context={{ scope: "category", refId: category.slug, label: category.name }}
       />
-      <section className="relative overflow-hidden border-b border-border bg-card">
-        <div
-          className="absolute inset-0 bg-linear-to-b from-accent/10 to-card"
-          aria-hidden
-        />
-        <div className="relative mx-auto w-full max-w-5xl px-4 py-10">
-          <div className="flex items-start gap-4">
-            <div className="rounded-2xl bg-accent/15 p-3 text-accent">
-              <CategoryIcon name={category.icon} className="h-9 w-9" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-muted">
-                دليل الصنايعية · السويس
-              </p>
-              <h1 className="mt-1 font-heading text-3xl font-extrabold sm:text-4xl">
-                {category.name}
-              </h1>
-              <p className="mt-2 max-w-xl text-base text-muted">
-                اختر الصنايعي المناسب لمنطقتك واتصل به مباشرة — بدون تسجيل أو
-                وسيط.
-              </p>
-            </div>
-          </div>
 
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <div className="rounded-full border border-border bg-background px-4 py-2 text-base font-bold">
-              {toArabicDigits(craftsmen.length)}{" "}
-              {craftsmen.length === 1 ? "صنايعي" : "صنايعية"}
-            </div>
-            {verifiedCount > 0 && (
-              <div className="rounded-full border border-border bg-background px-4 py-2 text-base font-bold text-foreground">
-                {toArabicDigits(verifiedCount)} موثّق
-              </div>
-            )}
-            <div className="rounded-full border border-border bg-background px-4 py-2 text-base font-bold">
-              {toArabicDigits(areas.length)} منطقة
-            </div>
-          </div>
-        </div>
-      </section>
+      <CategoryDetailHeader
+        category={category}
+        craftsmenCount={craftsmen.length}
+        verifiedCount={verifiedCount}
+        coveredAreasCount={availableAreas.length}
+      />
 
-      <section className="mx-auto w-full max-w-5xl px-4 py-8">
+      <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:py-10">
         <CraftsmanList
           craftsmen={craftsmen}
           areas={areas}

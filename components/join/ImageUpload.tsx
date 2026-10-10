@@ -27,17 +27,22 @@ export function ImageUpload({
 
   return (
     <div>
-      <label className="mb-1 block text-base font-bold">
-        <span>صورة الصنايعي</span>
-        {required ? (
-          <span>
-            <span className="text-danger"> *</span>
-            <span className="font-normal text-muted"> (مطلوبة)</span>
-          </span>
-        ) : (
-          <span className="font-normal text-muted"> (اختياري)</span>
-        )}
-      </label>
+      <div className="mb-2">
+        <label className="block text-base font-bold text-foreground">
+          <span>صورة الصنايعي أو صورة العمل</span>
+          {required ? (
+            <span>
+              <span className="text-danger"> *</span>
+              <span className="font-normal text-muted"> (مطلوبة)</span>
+            </span>
+          ) : (
+            <span className="font-normal text-muted"> (اختياري)</span>
+          )}
+        </label>
+        <p className="mt-0.5 text-xs text-muted">
+          صورة واضحة لوجهك أو أثناء تأدية العمل تزيد اتصالات العملاء ومصداقية ملفك
+        </p>
+      </div>
 
       {preview ? (
         <div className="relative overflow-hidden rounded-xl border border-border">

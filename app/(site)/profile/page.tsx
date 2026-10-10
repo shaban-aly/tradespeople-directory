@@ -5,6 +5,7 @@ import { PageTitleRow } from "@/components/shared/ui/PageTitleRow";
 import { SignInCard } from "@/components/profile/SignInCard";
 import { ProfileGroup } from "@/components/profile/ProfileGroup";
 import { ActivityGroup } from "@/components/profile/ActivityGroup";
+import { ActivityLink } from "@/components/profile/ActivityLink";
 import { ThemeSettings } from "@/components/profile/ThemeSettings";
 import { PushSettingsCard } from "@/components/notifications/PushSettingsCard";
 import { SignOutButton } from "@/components/profile/SignOutButton";
@@ -54,6 +55,11 @@ export default async function ProfilePage() {
 
         {/* العمود الرئيسي الأيسر: الإعدادات والأمان (7 أعمدة) */}
         <div className="lg:col-span-7 space-y-6">
+          {/* سجل الأنشطة والتفاعل */}
+          <ProfileGroup title="النشاط والتفاعل">
+            <ActivityLink />
+          </ProfileGroup>
+
           {/* إعدادات التطبيق والمظهر والتثبيت */}
           <ProfileGroup title="إعدادات التطبيق والمظهر">
             <div className="px-4 py-3.5">

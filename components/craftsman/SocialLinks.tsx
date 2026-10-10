@@ -31,8 +31,7 @@ export function SocialLinks({ socialLinks }: { socialLinks?: SocialLink[] }) {
       className="rounded-3xl border border-border bg-card p-6 shadow-card sm:p-8"
     >
       <SectionTitle
-        eyebrow="تابع الصنايعي"
-        icon={<IconLink className="h-4 w-4" />}
+        icon={<IconLink className="h-5 w-5" />}
         title="على السوشيال ميديا"
       />
       <div className="flex flex-wrap gap-3">

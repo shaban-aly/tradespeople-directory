@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getCategoriesWithCounts, getStats } from "@/lib/db/queries";
-import { toArabicDigits } from "@/lib/utils/format";
-import { CategoryGrid } from "@/components/category/CategoryGrid";
+import { CategoryHeader } from "@/components/category/CategoryHeader";
+import { CategoryDirectory } from "@/components/category/CategoryDirectory";
 import { JsonLd } from "@/components/shared/seo/JsonLd";
 import { allCategoriesSchema } from "@/lib/seo/schema";
 import { categoriesSeo } from "@/lib/seo/metadata";
@@ -34,27 +34,20 @@ export default async function CategoriesPage() {
     getCategoriesWithCounts(),
   ]);
 
+  const activeCount = categories.filter((c) => (c.count ?? 0) > 0).length;
+
   return (
     <>
       <JsonLd data={allCategoriesSchema(categories)} />
-      <section className="border-b border-border bg-card">
-        <div className="mx-auto w-full max-w-5xl px-4 py-8">
-          <p className="text-sm font-bold text-muted">
-            دليل الصنايعية · السويس
-          </p>
-          <h1 className="mt-1 font-heading text-3xl font-extrabold sm:text-4xl">
-            كل التصنيفات
-          </h1>
-          <p className="mt-2 max-w-xl text-base text-muted">
-            {toArabicDigits(stats.categories)} تخصص — اختار اللي يناسبك واوصل
-            للصنايعي المناسب.
-          </p>
-        </div>
-      </section>
+      <CategoryHeader
+        categoriesCount={categories.length}
+        totalCraftsmen={stats.craftsmen}
+        activeCount={activeCount}
+      />
 
-      <section className="mx-auto w-full max-w-5xl px-4 py-8">
-        <CategoryGrid categories={categories} />
-      </section>
+      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-10">
+        <CategoryDirectory categories={categories} />
+      </main>
     </>
   );
 }

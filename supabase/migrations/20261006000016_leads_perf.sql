@@ -2,7 +2,7 @@
 -- 20261006000016_leads_perf (P2)
 -- أداء مسارات الليدز الساخنة:
 --   1) `notify_craftsmen_on_new_lead` بإدراج مجمّع (INSERT..SELECT) بدل حلقة
---      PERFORM لكل صانع/مشرف — نفس الدلالات تماماً (المعتمدون المنشورون في
+--      PERFORM لكل صنايعي/مشرف — نفس الدلالات تماماً (المعتمدون المنشورون في
 --      التخصص عدا العميل نفسه + كل المشرفين) بمفاتيح حتمية تمنع التكرار حتى
 --      عند إعادة التشغيل: `lead_new:<lead>:<owner>` و`admin_alert:lead:<lead>:<admin>`.
 --   2) إشعار التجديد في `renew_lead` بنفس الأسلوب (`lead_renewed:<lead>:<owner>`).
@@ -207,7 +207,7 @@ $$;
 REVOKE ALL ON FUNCTION public.get_admin_leads_page(text, text, text, boolean, text, integer, integer) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_admin_leads_page(text, text, text, boolean, text, integer, integer) TO authenticated;
 
--- 4) ترقيم لوحتي الصانع -----------------------------------------------------------------
+-- 4) ترقيم لوحتي الصنايعي -----------------------------------------------------------------
 -- إسقاط التوقيع القديم بلا وسائط صراحةً (CREATE بتوقيع مختلف ينشئ overload
 -- ولا يستبدل — درس 9-fix-2). كل المنادين داخل الريبو يُحدَّثون معها.
 DROP FUNCTION IF EXISTS public.get_open_leads_for_me();

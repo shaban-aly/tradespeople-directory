@@ -33,7 +33,7 @@ export function CraftsmanHeroImage({
 
   if (!image) {
     return (
-      <div className="flex h-44 items-center justify-center bg-linear-to-br from-accent/10 via-card to-accent/10 sm:h-52">
+      <div className="flex h-44 w-full items-center justify-center bg-linear-to-br from-accent/10 via-card to-accent/10 sm:h-52 md:h-64">
         <CraftsmanAvatar
           name={name}
           className="h-24 w-24 rounded-2xl shadow-card sm:h-28 sm:w-28"
@@ -56,7 +56,7 @@ export function CraftsmanHeroImage({
           }
         }}
         aria-label={`معاينة وتكبير صورة ${name}`}
-        className="group relative flex h-64 w-full cursor-pointer items-center justify-center overflow-hidden bg-neutral-900/90 sm:h-80 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
+        className="group relative flex h-64 sm:h-72 md:h-80 w-full cursor-pointer items-center justify-center overflow-hidden bg-neutral-900/90 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent isolate"
       >
         {/* خلفية ضبابية سينمائية — نسخة مصغّرة جداً (32px) عبر Supabase Transformations
             حتى لا ننزّل الصورة الأصلية لمجرد طمسها، مع رابط احتياطي لروابط
@@ -95,7 +95,7 @@ export function CraftsmanHeroImage({
         </div>
 
         {/* شارة التكبير بالحجم الكامل */}
-        <div className="absolute bottom-3 inset-s-3 z-10 flex items-center gap-1.5 rounded-xl bg-black/60 px-3 py-1.5 text-xs font-semibold text-white shadow-md backdrop-blur-md transition-all duration-200 group-hover:bg-black/80 sm:text-sm">
+        <div className="absolute bottom-3 inset-s-3 z-2 flex items-center gap-1.5 rounded-xl bg-black/60 px-3 py-1.5 text-xs font-semibold text-white shadow-md backdrop-blur-md transition-all duration-200 group-hover:bg-black/80 sm:text-sm">
           <IconMaximize className="h-4 w-4" />
           <span>اضغط لتكبير الصورة</span>
         </div>

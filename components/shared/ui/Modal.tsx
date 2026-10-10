@@ -17,7 +17,7 @@ interface ModalProps {
   headerAction?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
-  size?: "md" | "lg";
+  size?: "md" | "lg" | "xl";
 }
 
 export function Modal({
@@ -59,7 +59,7 @@ export function Modal({
         ref={cardRef}
         tabIndex={-1}
         className={`relative z-10 flex max-h-[85vh] w-full flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-card focus:outline-none ${
-          size === "lg" ? "max-w-2xl" : "max-w-lg"
+          size === "xl" ? "max-w-3xl" : size === "lg" ? "max-w-2xl" : "max-w-lg"
         }`}
       >
         <div className="flex shrink-0 items-center justify-between gap-4 border-b border-border p-5 sm:p-6">

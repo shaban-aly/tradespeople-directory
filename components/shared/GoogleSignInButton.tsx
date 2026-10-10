@@ -106,7 +106,7 @@ export function GoogleSignInButton({ redirectTo = "/", onSuccess }: GoogleSignIn
 
   if (!clientId) {
     return (
-      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-center text-sm text-amber-700">
+      <div className="rounded-xl border border-warning/30 bg-warning/10 p-4 text-center text-sm text-warning">
         يرجى إضافة <code className="font-mono font-bold">NEXT_PUBLIC_GOOGLE_CLIENT_ID</code> في ملف{" "}
         <code className="font-mono font-bold">.env.local</code> لتفعيل تسجيل الدخول المباشر.
       </div>
@@ -125,7 +125,7 @@ export function GoogleSignInButton({ redirectTo = "/", onSuccess }: GoogleSignIn
       )}
 
       {error && (
-        <p className="text-center text-sm text-red-500" role="alert">
+        <p className="text-center text-sm text-danger" role="alert">
           {error}
         </p>
       )}

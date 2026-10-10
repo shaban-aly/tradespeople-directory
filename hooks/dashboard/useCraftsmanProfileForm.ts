@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   revokeImagePreview,
@@ -71,8 +71,45 @@ export function useCraftsmanProfileForm(
   const [warning, setWarning] = useState<string | null>(null);
   const router = useRouter();
 
-  // عند تغير البروفايل (بعد الحفظ والريفريش) بيعمل page.tsx إعادة بناء
-  // للكومبوننت عبر `key` (نفس صورة البروفايل) فلا نحتاج مزامنة في useEffect.
+  // تتبع حالة التغيير (Dirty State) بدقة لمقارنة المدخلات بالقيم الأصلية
+  const isDirty = useMemo(() => {
+    if (!initialProfile) return false;
+    if (formData.name.trim() !== (initialProfile.name ?? "").trim()) return true;
+    if (formData.phone.trim() !== (initialProfile.phone ?? "").trim()) return true;
+    if (formData.whatsapp.trim() !== (initialProfile.whatsapp ?? "").trim()) return true;
+    if (formData.description.trim() !== (initialProfile.description ?? "").trim()) return true;
+    if (formData.areaId !== (initialProfile.areaId ?? "")) return true;
+    if (Boolean(newImageFile)) return true;
+
+    // مقارنة روابط التواصل الاجتماعي
+    const initLinks = initialProfile.socialLinks ?? [];
+    const currLinks = formData.socialLinks.filter((l) => l.url.trim() !== "");
+    const initActive = initLinks.filter((l) => l.url.trim() !== "");
+    if (currLinks.length !== initActive.length) return true;
+    for (let i = 0; i < currLinks.length; i++) {
+      if (
+        currLinks[i].platform !== initActive[i]?.platform ||
+        currLinks[i].url.trim() !== initActive[i]?.url.trim()
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }, [formData, initialProfile, newImageFile]);
+
+  // حماية الفني من فقدان البيانات غير المحفوظة عند محاولة إغلاق الصفحة أو التنقل
+  useEffect(() => {
+    if (!isDirty) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isDirty]);
+
   // إلغاء الروابط المؤقتة عند إغلاق الفورم أو إعادة البناء
   useEffect(() => {
     return () => {
@@ -81,7 +118,6 @@ export function useCraftsmanProfileForm(
   }, []);
 
   // جلب قائمة المناطق المتاحة فقط عندما لا تُمرَّر من خارج الـ hook
-  // (الوضع الجديد: تُمرَّر من صفحة السيرفر بدل جلبها من المتصفح)
   useEffect(() => {
     if (initialAreas) return;
     let mounted = true;
@@ -117,13 +153,33 @@ export function useCraftsmanProfileForm(
     setPreviewUrl(url);
   }
 
-  function handleRevertImage() {
+  const handleRevertImage = useCallback(() => {
     setError(null);
     if (objUrlRef.current) revokeImagePreview(objUrlRef.current);
     objUrlRef.current = null;
     setNewImageFile(null);
     setPreviewUrl(initialProfile?.imageUrl ?? null);
-  }
+  }, [initialProfile?.imageUrl]);
+
+  // استعادة البيانات الأصلية وإلغاء كافة التعديلات غير المحفوظة (Reset Form)
+  const handleResetForm = useCallback(() => {
+    if (!initialProfile) return;
+    setFormData({
+      name: initialProfile.name ?? "",
+      phone: initialProfile.phone ?? "",
+      whatsapp: initialProfile.whatsapp ?? "",
+      description: initialProfile.description ?? "",
+      areaId: initialProfile.areaId ?? "",
+      socialLinks: initialProfile.socialLinks ? [...initialProfile.socialLinks] : [],
+    });
+    setTouched({});
+    setFieldErrors({});
+    setSocialError("");
+    setError(null);
+    setWarning(null);
+    setSuccess(false);
+    handleRevertImage();
+  }, [initialProfile, handleRevertImage]);
 
   function validateField(field: ProfileFormFieldName, value: string): string | undefined {
     switch (field) {
@@ -163,9 +219,13 @@ export function useCraftsmanProfileForm(
     setSocialError("");
   }
 
+  function handleSyncPhoneToWhatsapp() {
+    handleFieldChange("whatsapp", formData.phone);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!initialProfile) return;
+    if (!initialProfile || saving) return;
 
     // التحقق من صحة الحقول أولاً
     const nextErrors: ProfileFormErrors = {
@@ -179,6 +239,17 @@ export function useCraftsmanProfileForm(
 
     if (anyError(nextErrors)) {
       setError("يرجى مراجعة وتصحيح الحقول المحددة");
+      // توجيه التركيز التلقائي إلى أول حقل يحتوي على خطأ (Focus on First Error)
+      const firstErrorKey = (
+        ["name", "phone", "whatsapp", "areaId", "description"] as ProfileFormFieldName[]
+      ).find((k) => nextErrors[k]);
+      if (firstErrorKey) {
+        const el =
+          document.getElementById(`${firstErrorKey}-input`) ||
+          document.getElementById(`${firstErrorKey}-select`) ||
+          document.getElementById(`${firstErrorKey}-textarea`);
+        el?.focus();
+      }
       return;
     }
 
@@ -240,6 +311,8 @@ export function useCraftsmanProfileForm(
     handleFieldChange,
     handleFieldBlur,
     handleSocialLinksChange,
+    handleSyncPhoneToWhatsapp,
+    handleResetForm,
     fieldErrors,
     touched,
     getFieldError: (field: ProfileFormFieldName) => (touched[field] ? fieldErrors[field] : undefined),
@@ -247,6 +320,7 @@ export function useCraftsmanProfileForm(
     areas,
     previewUrl,
     hasNewImage: Boolean(newImageFile),
+    isDirty,
     saving,
     error,
     warning,

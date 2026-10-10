@@ -1,5 +1,5 @@
-import { SegmentLoading } from "@/components/shared/ui/SegmentLoading";
+import { ActivitySkeleton } from "@/components/activity/ActivitySkeleton";
 
 export default function Loading() {
-  return <SegmentLoading />;
+  return <ActivitySkeleton />;
 }

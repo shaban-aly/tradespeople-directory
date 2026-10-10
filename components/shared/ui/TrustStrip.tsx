@@ -13,18 +13,16 @@ export function TrustStrip({ tone = "surface", className = "" }: TrustStripProps
   const onImage = tone === "image";
 
   const container = onImage
-    ? "text-[11px] sm:text-sm text-slate-800 dark:text-zinc-300 whitespace-nowrap drop-shadow-sm"
-    : "text-sm sm:text-base text-foreground";
+    ? "text-xs sm:text-sm text-foreground/90 whitespace-nowrap drop-shadow-xs font-semibold"
+    : "text-sm sm:text-base text-foreground font-semibold";
 
-  const dot = onImage
-    ? "text-[10px] sm:text-xs text-slate-400/60 dark:text-zinc-600"
-    : "text-xs text-muted/60";
+  const dot = "text-xs text-muted/60";
 
   const iconSize = onImage ? "h-3.5 w-3.5 sm:h-4 sm:w-4" : "h-4 w-4 sm:h-5 sm:w-5";
 
-  const freeIcon = onImage ? "text-emerald-600 dark:text-emerald-400" : "text-action";
-  const directIcon = onImage ? "text-blue-700 dark:text-sky-400" : "text-accent";
-  const trustedIcon = onImage ? "text-emerald-600 dark:text-emerald-400" : "text-action";
+  const freeIcon = "text-action";
+  const directIcon = "text-accent";
+  const trustedIcon = "text-action";
 
   return (
     <div

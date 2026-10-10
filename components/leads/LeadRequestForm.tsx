@@ -1,133 +1,61 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { submitLead } from "@/app/actions/leads";
 import { Button, ButtonLink } from "@/components/shared/ui/Button";
-import { CheckCircle } from "lucide-react";
+import { IconRefresh } from "@/components/shared/icons";
+import { AlertCircle, CheckCircle } from "lucide-react";
 import { LeadFields } from "./LeadFields";
-import { LeadImagePicker, type LeadImageSelection } from "./LeadImagePicker";
+import { LeadImagePicker } from "./LeadImagePicker";
 import { MAX_LEAD_RESPONSES } from "@/lib/db/leads";
 import { toArabicDigits } from "@/lib/utils/format";
-import { uploadLeadTempImages } from "@/lib/storage/images";
-import type { LeadErrors } from "@/lib/utils/validation";
+import { useLeadRequestForm } from "@/hooks/leads/useLeadRequestForm";
 
-type Category = { id: string; name: string };
+type Category = { id: string; name: string; slug?: string; icon?: string };
 type Area = { id: string; name: string };
 
-/** مسودة نصية فقط (الملفات لا تُحفَظ) — مفتاح ثابت واحد لكل المتصفح. */
-const DRAFT_KEY = "lead-request-draft";
-
-type LeadDraft = {
-  categoryId: string;
-  areaId: string;
-  description: string;
-  phone: string;
-};
-
-function readDraft(): LeadDraft {
-  if (typeof window === "undefined") {
-    return { categoryId: "", areaId: "", description: "", phone: "" };
-  }
-  try {
-    const raw = window.localStorage.getItem(DRAFT_KEY);
-    if (!raw) throw new Error("empty");
-    const parsed = JSON.parse(raw) as Partial<LeadDraft>;
-    return {
-      categoryId: typeof parsed.categoryId === "string" ? parsed.categoryId : "",
-      areaId: typeof parsed.areaId === "string" ? parsed.areaId : "",
-      description: typeof parsed.description === "string" ? parsed.description : "",
-      phone: typeof parsed.phone === "string" ? parsed.phone : "",
-    };
-  } catch {
-    return { categoryId: "", areaId: "", description: "", phone: "" };
-  }
-}
-
 /**
- * فورم طلب صنايعي الكامل — المصدر الوحيد للإنشاء (صفحة `/request/new`).
- * يتضمن: الحقول + منتقي الصور + الرفع لحظة الإرسال + مسودة تلقائية
- * للنصوص + حماية single-flight ضد الضغطات المتكررة.
+ * فورم طلب صنايعي الكامل — مكوّن عرض خالص يركز على الـ UI.
+ * المنطق وحفظ المسودات وحالة الإرسال مفصولة في `useLeadRequestForm`.
  */
 export function LeadRequestForm({
   categories,
   areas,
   quotaText,
+  initialValues,
 }: {
   categories: Category[];
   areas: Area[];
   quotaText?: string;
+  initialValues?: {
+    categoryId?: string;
+    areaId?: string;
+  };
 }) {
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState<LeadErrors>({});
-  const [selection, setSelection] = useState<LeadImageSelection>({ kept: [], files: [] });
-  const [draft] = useState<LeadDraft>(readDraft);
-  // Single-flight متزامن: state وحده لا يمنع ضغطتين قبل إعادة الريندر.
-  const submittingRef = useRef(false);
-  const router = useRouter();
-
-  function persistDraft(form: HTMLFormElement) {
-    try {
-      const data = new FormData(form);
-      const draftValue: LeadDraft = {
-        categoryId: String(data.get("category_id") ?? ""),
-        areaId: String(data.get("area_id") ?? ""),
-        description: String(data.get("description") ?? ""),
-        phone: String(data.get("customer_phone") ?? ""),
-      };
-      window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draftValue));
-    } catch {
-      // التخزين المحلي غير متاح — تجاهل بصمت.
-    }
-  }
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (submittingRef.current) return;
-    // التقاط الفورم synchronously — بعد أي await يصبح e.currentTarget null.
-    const formData = new FormData(e.currentTarget);
-    submittingRef.current = true;
-    setLoading(true);
-    setError("");
-    setFieldErrors({});
-
-    try {
-      // الرفع لحظة الإرسال فقط — التراجع قبلها لا يترك ملفات يتيمة.
-      const tempUrls = await uploadLeadTempImages(selection.files);
-      for (const url of tempUrls) formData.append("image_url", url);
-      const result = await submitLead(formData);
-
-      if (!result.success) {
-        setError(result.error);
-        if (result.fieldErrors) setFieldErrors(result.fieldErrors);
-      } else {
-        try {
-          window.localStorage.removeItem(DRAFT_KEY);
-        } catch {
-          // تجاهل بصمت.
-        }
-        setSuccess(true);
-        router.refresh();
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "تعذر رفع الصور — حاول مرة أخرى");
-    } finally {
-      submittingRef.current = false;
-      setLoading(false);
-    }
-  }
+  const {
+    loading,
+    success,
+    error,
+    fieldErrors,
+    selection,
+    setSelection,
+    draft,
+    persistDraft,
+    handleSubmit,
+  } = useLeadRequestForm({ initialValues });
 
   if (success) {
     return (
       <div className="text-center py-8">
         <CheckCircle className="w-16 h-16 text-accent mx-auto mb-4" />
         <h3 className="font-bold text-lg">تم إرسال طلبك بنجاح!</h3>
-        <p className="text-muted text-sm mt-2">ستتلقى إشعاراً فور موافقة أي فني على طلبك.</p>
-        <div className="mt-6 space-y-2">
-          <ButtonLink href="/profile/requests" variant="primary" className="w-full">
-            تابع طلبك
+        <p className="text-muted text-sm mt-2 max-w-sm mx-auto leading-relaxed">
+          نبهنا الفنيين المتخصصين في منطقتك، وستصلك إشعارات فور موافقة الفنيين المتاحين للتواصل المباشر معك.
+        </p>
+        <div className="mt-6 flex flex-col sm:flex-row gap-2.5 justify-center max-w-xs mx-auto">
+          <ButtonLink href="/my-requests" variant="primary" className="w-full">
+            تابع طلبك الآن
+          </ButtonLink>
+          <ButtonLink href="/" variant="outline" className="w-full">
+            الرئيسية
           </ButtonLink>
         </div>
       </div>
@@ -138,7 +66,7 @@ export function LeadRequestForm({
     <form
       onSubmit={handleSubmit}
       onChange={(e) => persistDraft(e.currentTarget)}
-      className="space-y-4"
+      className="space-y-5"
     >
       <LeadFields
         categories={categories}
@@ -154,15 +82,36 @@ export function LeadRequestForm({
       />
       <LeadImagePicker disabled={loading} onChange={setSelection} />
 
-      {error && <p className="text-danger text-sm font-bold">{error}</p>}
+      {error && (
+        <div className="flex items-center gap-2.5 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm font-bold text-danger animate-in fade-in duration-200">
+          <AlertCircle className="h-5 w-5 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
-      {quotaText && <p className="text-xs text-muted">{quotaText}</p>}
+      {quotaText && (
+        <div className="flex items-center gap-2 rounded-xl border border-accent/25 bg-accent/10 px-3.5 py-2.5 text-xs font-bold text-accent">
+          <span className="flex h-2 w-2 shrink-0 rounded-full bg-accent" />
+          <span>{quotaText}</span>
+        </div>
+      )}
 
-      <Button type="submit" variant="primary" className="w-full" disabled={loading}>
-        {loading ? "جاري الإرسال..." : "إرسال الطلب للصنايعية"}
+      <Button type="submit" variant="primary" className="w-full text-base font-bold min-h-12" disabled={loading}>
+        {loading ? (
+          <>
+            <IconRefresh className="h-5 w-5 animate-spin" />
+            <span>
+              {selection.files.length > 0
+                ? "جاري رفع الصور وإرسال الطلب..."
+                : "جاري إرسال الطلب..."}
+            </span>
+          </>
+        ) : (
+          "إرسال الطلب للفنيين المعتمدين"
+        )}
       </Button>
-      <p className="text-xs text-muted text-center">
-        أول {toArabicDigits(MAX_LEAD_RESPONSES)} يوافقون تظهر بياناتهم لك للتواصل.
+      <p className="text-xs text-muted text-center leading-relaxed">
+        خدمة مجانية تماماً — أول {toArabicDigits(MAX_LEAD_RESPONSES)} فنيين يوافقون على طلبك ستظهر بياناتهم لك للتواصل والتسعير.
       </p>
     </form>
   );

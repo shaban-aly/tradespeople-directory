@@ -19,6 +19,7 @@ interface RelatedCraftsmenProps {
   icon?: ReactNode;
   craftsmen: Craftsman[];
   categories: Category[];
+  className?: string;
 }
 
 export function RelatedCraftsmen({
@@ -29,6 +30,7 @@ export function RelatedCraftsmen({
   icon,
   craftsmen,
   categories,
+  className = "",
 }: RelatedCraftsmenProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -37,7 +39,7 @@ export function RelatedCraftsmen({
   const categoryBySlug = new Map(categories.map((cat) => [cat.slug, cat]));
 
   return (
-    <section id={id} className="scroll-mt-24 border-t border-border bg-card/40 py-16">
+    <section id={id} className={`scroll-mt-24 border-t border-border bg-card/40 py-16 ${className}`}>
       <div className="mx-auto w-full max-w-5xl px-4">
         <Reveal>
           <SectionHeader

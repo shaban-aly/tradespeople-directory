@@ -81,7 +81,7 @@ export function ProfileSwitcher({
         <span className="max-w-28 sm:max-w-36 truncate text-foreground">
           {active.categoryName || active.name}
         </span>
-        <span className="rounded-full bg-muted/15 px-1.5 py-0.2 text-[10px] font-semibold text-muted">
+        <span className="rounded-full bg-muted/15 px-2 py-0.5 text-xs font-semibold text-muted">
           {craftsmen.length} ملفات
         </span>
         <IconChevronDown
@@ -97,7 +97,7 @@ export function ProfileSwitcher({
           className="absolute end-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-2xl border border-border/80 bg-card p-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-150"
         >
           <div className="px-3 py-2 border-b border-border/60">
-            <p className="text-[11px] font-bold text-muted uppercase tracking-wider">
+            <p className="text-xs font-bold text-muted uppercase tracking-wider">
               ملفاتك المهنية المعتمدة
             </p>
           </div>
@@ -144,11 +144,11 @@ export function ProfileSwitcher({
                       )}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="block truncate text-[11px] text-muted font-medium">
+                      <span className="block truncate text-xs text-muted font-medium">
                         {c.categoryName}
                       </span>
                       {leadCount > 0 && (
-                        <span className="inline-flex items-center rounded-full bg-action/15 px-1.5 py-0.2 text-[10px] font-bold text-action">
+                        <span className="inline-flex items-center rounded-full bg-action/15 px-2 py-0.5 text-xs font-bold text-action">
                           {leadCount} عرض جديد
                         </span>
                       )}

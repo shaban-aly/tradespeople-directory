@@ -7,7 +7,7 @@ import { toArabicDigits } from "@/lib/utils/format";
 import { ButtonLink } from "@/components/shared/ui/Button";
 import { CategoryIcon } from "@/components/shared/ui/CategoryIcon";
 import { IconSearch, IconUserPlus } from "@/components/shared/icons";
-import { categoryHref } from "@/lib/utils/url";
+import { categoryHref, searchHref } from "@/lib/utils/url";
 import { categoryColor } from "@/lib/utils/categoryColor";
 
 export function SearchResults({
@@ -16,12 +16,18 @@ export function SearchResults({
   query,
   category,
   area,
+  sort,
+  hasMore = false,
+  nextLimit,
 }: {
   craftsmen: Craftsman[];
   categories: Category[];
   query: string;
   category?: string;
   area?: string;
+  sort?: string;
+  hasMore?: boolean;
+  nextLimit?: number;
 }) {
   const hasFilters = Boolean(query.trim() || category || area);
   const popularCategories = categories.slice(0, 8);
@@ -111,16 +117,60 @@ export function SearchResults({
           </div>
         </div>
       ) : (
-        <CraftsmanGrid
-          craftsmen={craftsmen}
-          categories={categories}
-          toolbar={
-            <p className="text-base text-muted">
-              {toArabicDigits(craftsmen.length)}{" "}
-              {craftsmen.length === 1 ? "صنايعي" : "صنايعية"}
-            </p>
-          }
-        />
+        <div>
+          <CraftsmanGrid
+            craftsmen={craftsmen}
+            categories={categories}
+            gridClassName="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4"
+            toolbar={
+              <div className="flex items-center justify-between py-1">
+                <p className="text-sm sm:text-base font-semibold text-muted">
+                  {hasFilters ? (
+                    <>
+                      عُثر على{" "}
+                      <span className="font-bold text-foreground">
+                        {toArabicDigits(craftsmen.length)}
+                      </span>{" "}
+                      {craftsmen.length === 1 ? "صنايعي" : "صنايعية"}
+                    </>
+                  ) : (
+                    <>
+                      أبرز الصنايعية الموثقين بالسويس (
+                      <span className="font-bold text-foreground">
+                        {toArabicDigits(craftsmen.length)}
+                      </span>
+                      )
+                    </>
+                  )}
+                </p>
+              </div>
+            }
+          />
+
+          {hasMore && nextLimit && (
+            <div className="mt-8 flex flex-col items-center justify-center gap-2.5 pt-2">
+              <Link
+                href={searchHref({
+                  q: query,
+                  category,
+                  area,
+                  sort,
+                  limit: nextLimit,
+                })}
+                scroll={false}
+                className="group inline-flex min-h-12 items-center justify-center gap-2.5 rounded-2xl border border-border bg-card px-6 py-3 text-sm font-bold text-foreground shadow-xs transition-all hover:border-accent hover:bg-accent/5 hover:text-accent active:scale-98"
+              >
+                <span>عرض المزيد من الصنايعية</span>
+                <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-bold text-accent transition-colors group-hover:bg-accent group-hover:text-on-accent">
+                  +{toArabicDigits(nextLimit - craftsmen.length)}
+                </span>
+              </Link>
+              <p className="text-xs text-muted">
+                تم عرض {toArabicDigits(craftsmen.length)} صنايعي حتى الآن
+              </p>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

@@ -31,8 +31,10 @@ export function ProfileCompletionCard({
   // 2. الوصف
   if (profile.description && profile.description.trim().length >= 40) {
     score += 25;
+  } else if (profile.description && profile.description.trim().length > 0) {
+    missingTips.push("أكمل نبذتك لتصل إلى ٤٠ حرفاً على الأقل لتوضيح خدماتك");
   } else {
-    missingTips.push("اكتب نبذة مفصلة عن خبراتك وخدماتك");
+    missingTips.push("اكتب نبذة وافية عن خبراتك وخدماتك (٤٠ حرفاً على الأقل)");
   }
 
   // 3. أرقام الاتصال

@@ -11,6 +11,7 @@ export type SearchHrefParams = {
   category?: string;
   area?: string;
   sort?: string;
+  limit?: number | string;
 };
 
 export function searchHref(filters: SearchHrefParams = {}): string {
@@ -19,6 +20,7 @@ export function searchHref(filters: SearchHrefParams = {}): string {
   if (filters.category) params.set("category", filters.category);
   if (filters.area) params.set("area", filters.area);
   if (filters.sort) params.set("sort", filters.sort);
+  if (filters.limit) params.set("limit", String(filters.limit));
   const query = params.toString();
   return query ? `/search?${query}` : "/search";
 }

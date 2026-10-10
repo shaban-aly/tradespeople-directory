@@ -15,7 +15,7 @@ export async function CategoriesSection() {
   return (
     <section
       id="categories"
-      className="mx-auto w-full max-w-5xl px-4 pt-4 sm:pt-8 pb-14 sm:pb-20"
+      className="mx-auto w-full max-w-5xl px-4 pt-4 sm:pt-8 pb-14 sm:pb-20 lg:hidden"
     >
       <Reveal>
         <SectionHeader

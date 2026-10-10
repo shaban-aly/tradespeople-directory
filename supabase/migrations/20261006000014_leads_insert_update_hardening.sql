@@ -2,7 +2,7 @@
 -- 20261006000014_leads_insert_update_hardening (P0)
 -- تقوية مساري الإدراج والتحديث المباشرين لجدول الطلبات:
 --   1) إخراج `leads` من منشور supabase_realtime — الـ payload الكامل كان يحمل
---      `customer_phone` لأي صانع مخوّل بقراءة الصف، متجاوزاً منح الأعمدة
+--      `customer_phone` لأي صنايعي مخوّل بقراءة الصف، متجاوزاً منح الأعمدة
 --      (0002/0011). التحديث اللحظي يبقى عبر `lead_responses` (بلا PII) +
 --      جدول `notifications` (صفوف المالك فقط) — انظر useLeadsRealtime.
 --   2) حذف سياستي 0006 الفضفاضتين (`leads public insert` بلا قيد status،

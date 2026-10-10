@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { Button } from "@/components/shared/ui/Button";
 import { EmptyState } from "@/components/shared/ui/EmptyState";
 import { ConfirmDialog } from "@/components/shared/ui/ConfirmDialog";
-import { IconStar } from "@/components/shared/icons";
+import { IconArrow, IconStar } from "@/components/shared/icons";
 import { ReviewCard } from "@/components/craftsman/ReviewCard";
 import { toArabicDigits } from "@/lib/utils/format";
 import { useAuthGuard } from "@/hooks/auth/useAuthGuard";
@@ -105,19 +105,19 @@ export function CraftsmanReviewsSection({
       className="rounded-3xl border border-border bg-card p-6 shadow-card sm:p-8"
     >
       {/* هيدر القسم */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-5">
+      <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <h2 className="font-heading text-xl font-bold text-foreground sm:text-2xl">
               آراء وتقييمات العملاء
             </h2>
             {summary.totalReviews > 0 && (
-              <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-bold text-accent">
+              <span className="rounded-full bg-accent/10 px-2.5 py-0.5 font-heading text-xs font-bold text-accent">
                 {toArabicDigits(summary.totalReviews)}
               </span>
             )}
           </div>
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-1 text-sm sm:text-base text-muted leading-relaxed">
             تجارب حقيقية من أهالي السويس الذين تعاملوا مع {craftsmanName}
           </p>
         </div>
@@ -125,18 +125,20 @@ export function CraftsmanReviewsSection({
         {/* ملخص النجوم والزرار */}
         <div className="flex flex-wrap items-center gap-3">
           {summary.totalReviews > 0 ? (
-            <div className="flex items-center gap-2 rounded-2xl bg-background px-4 py-2 border border-border">
+            <div className="flex items-center gap-2 rounded-2xl border border-border bg-background px-4 py-2">
               <IconStar className="h-5 w-5 fill-amber-500 text-amber-500" />
-              <span className="font-bold text-base text-foreground">
+              <span className="font-heading text-base font-extrabold text-foreground sm:text-lg">
                 {toArabicDigits(summary.average.toFixed(1))}
               </span>
-              <span className="text-xs text-muted">
+              <span className="text-xs font-semibold text-muted">
                 ({toArabicDigits(summary.totalReviews)})
               </span>
             </div>
           ) : (
-            <div className="flex items-center rounded-2xl bg-background px-4 py-2 border border-border">
-              <span className="font-bold text-base text-accent">جديد</span>
+            <div className="flex items-center rounded-2xl border border-border bg-background px-4 py-2">
+              <span className="font-heading text-sm font-bold text-accent sm:text-base">
+                جديد
+              </span>
             </div>
           )}
 
@@ -199,8 +201,10 @@ export function CraftsmanReviewsSection({
                 <Button
                   variant="ghost"
                   onClick={() => setIsAllReviewsOpen(true)}
+                  className="group inline-flex items-center gap-2"
                 >
-                  عرض جميع التقييمات ({toArabicDigits(reviews.length)}) ←
+                  <span>عرض جميع التقييمات ({toArabicDigits(reviews.length)})</span>
+                  <IconArrow className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
                 </Button>
               </div>
             )}

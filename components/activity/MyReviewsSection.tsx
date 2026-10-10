@@ -84,7 +84,7 @@ export function MyReviewsSection({
           </div>
         ) : reviews.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-background/40 p-8 text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-warning/10 text-warning">
               <IconStar className="h-6 w-6 fill-current" />
             </div>
             <h3 className="text-base font-bold text-foreground">
@@ -95,7 +95,7 @@ export function MyReviewsSection({
             </p>
             <Link
               href="/"
-              className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-bold text-foreground shadow-xs transition-colors hover:border-accent hover:text-accent"
+              className="mt-4 inline-flex min-h-12 items-center gap-1.5 rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-bold text-foreground shadow-xs transition-colors hover:border-accent hover:text-accent"
             >
               <span>تصفح الصنايعية</span>
               <IconArrow className="h-4 w-4" />

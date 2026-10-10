@@ -41,18 +41,50 @@ export function useJoinRequest(
   const [registerImageError, setRegisterImageError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [sameAsPhone, setSameAsPhone] = useState(false);
 
   function changeRegisterImage(file: File | null) {
     setRegisterImage(file);
     if (file) setRegisterImageError("");
   }
 
+  function toggleSameAsPhone(checked: boolean) {
+    setSameAsPhone(checked);
+    if (checked) {
+      setRegister((prev) => ({ ...prev, whatsapp: prev.phone }));
+      if (registerTouched.whatsapp) {
+        setRegisterErrors((prev) => ({
+          ...prev,
+          whatsapp: validateRegisterField("whatsapp", register.phone) ?? undefined,
+        }));
+      }
+    }
+  }
+
   function setRegisterField(field: RegisterFieldName, value: string) {
-    setRegister((prev) => ({ ...prev, [field]: value }));
+    setRegister((prev) => {
+      const next = { ...prev, [field]: value };
+      if (field === "phone" && sameAsPhone) {
+        next.whatsapp = value;
+      }
+      return next;
+    });
+
+    if (field === "whatsapp" && sameAsPhone && value !== register.phone) {
+      setSameAsPhone(false);
+    }
+
     if (registerTouched[field]) {
       setRegisterErrors((prev) => ({
         ...prev,
         [field]: validateRegisterField(field, value) ?? undefined,
+      }));
+    }
+
+    if (field === "phone" && sameAsPhone && registerTouched.whatsapp) {
+      setRegisterErrors((prev) => ({
+        ...prev,
+        whatsapp: validateRegisterField("whatsapp", value) ?? undefined,
       }));
     }
   }
@@ -140,6 +172,7 @@ export function useJoinRequest(
     setRegisterSocialError("");
     setRegisterImageError("");
     setSubmitError("");
+    setSameAsPhone(false);
     setSubmitted(false);
   }
 
@@ -156,6 +189,8 @@ export function useJoinRequest(
     registerSocialLinks,
     registerSocialError,
     changeRegisterSocialLinks,
+    sameAsPhone,
+    toggleSameAsPhone,
     submitting,
     submitError,
     submitted,

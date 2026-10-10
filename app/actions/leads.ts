@@ -168,7 +168,7 @@ export async function submitLead(formData: FormData): Promise<SubmitLeadResult> 
     }
   }
 
-  revalidatePath("/profile/requests");
+  revalidatePath("/my-requests");
   return { success: true };
 }
 
@@ -202,7 +202,7 @@ export async function claimLeadAction(leadId: string, craftsmanId: string): Prom
   }
 
   revalidatePath("/dashboard/leads");
-  revalidatePath("/profile/requests");
+  revalidatePath("/my-requests");
   return { success: true };
 }
 
@@ -335,7 +335,7 @@ export async function updateLeadAction(
     await deleteLeadImages(removed);
   }
 
-  revalidatePath("/profile/requests");
+  revalidatePath("/my-requests");
   return { success: true };
 }
 
@@ -356,7 +356,7 @@ export async function cancelLeadAction(leadId: string): Promise<ClaimLeadResult>
     return { success: false, error: "لا يمكن إلغاء الطلب — قد يكون مُغلقاً بالفعل." };
   }
 
-  revalidatePath("/profile/requests");
+  revalidatePath("/my-requests");
   revalidatePath("/dashboard/leads");
   return { success: true };
 }
@@ -379,7 +379,7 @@ export async function completeLeadAction(leadId: string): Promise<ClaimLeadResul
     return { success: false, error: "حدث خطأ أثناء إنجاز الطلب، حاول مرة أخرى." };
   }
 
-  revalidatePath("/profile/requests");
+  revalidatePath("/my-requests");
   revalidatePath("/dashboard/leads");
   return { success: true };
 }
@@ -401,12 +401,12 @@ export async function renewLeadAction(leadId: string): Promise<ClaimLeadResult> 
     return { success: false, error: "لا يمكن تجديد الطلب — يجب أن يكون منتهياً." };
   }
 
-  revalidatePath("/profile/requests");
+  revalidatePath("/my-requests");
   revalidatePath("/dashboard/leads");
   return { success: true };
 }
 
-/** سحب استلام الصانع: يفتح المقعد مجدداً ويُشعِر العميل. */
+/** سحب استلام الصنايعي: يفتح المقعد مجدداً ويُشعِر العميل. */
 export async function withdrawLeadResponseAction(
   leadId: string,
 ): Promise<ClaimLeadResult> {
@@ -429,6 +429,6 @@ export async function withdrawLeadResponseAction(
   }
 
   revalidatePath("/dashboard/leads");
-  revalidatePath("/profile/requests");
+  revalidatePath("/my-requests");
   return { success: true };
 }

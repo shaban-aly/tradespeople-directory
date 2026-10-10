@@ -47,14 +47,14 @@ export function AllReviewsModal({
             <>
               <div className="flex items-center gap-1 text-amber-500">
                 <IconStar className="h-4 w-4 fill-current" />
-                <span className="font-bold text-foreground">
+                <span className="font-heading font-extrabold text-foreground">
                   {toArabicDigits(summary.average.toFixed(1))}
                 </span>
               </div>
               <span>·</span>
             </>
           ) : null}
-          <span>{toArabicDigits(summary.totalReviews)} تقييم</span>
+          <span className="font-medium">{toArabicDigits(summary.totalReviews)} تقييم</span>
         </div>
       }
       headerAction={
@@ -65,7 +65,7 @@ export function AllReviewsModal({
               onClose();
               onAddReviewClick();
             }}
-            className="rounded-xl bg-accent/10 px-3.5 py-2 text-xs sm:text-sm font-bold text-accent transition-colors hover:bg-accent/20"
+            className="rounded-xl bg-accent/10 px-3.5 py-2 font-heading text-xs sm:text-sm font-bold text-accent transition-colors hover:bg-accent/20"
           >
             + أضف تقييمك
           </button>

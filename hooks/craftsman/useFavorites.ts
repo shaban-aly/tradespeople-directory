@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   readFavoritesCached,
   setFavorite,
@@ -22,12 +22,17 @@ const EMPTY_FAVORITES: string[] = [];
 export function useFavorites() {
   const { user, isLoggedIn } = useSession();
   const authGuard = useAuthGuard();
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const favorites = useSyncExternalStore(
     subscribeFavorites,
     readFavoritesCached,
     () => EMPTY_FAVORITES,
   );
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
 
   // جلب مفضلات المستخدم المسجل من Supabase واستغلال الكاش
   useEffect(() => {
@@ -112,11 +117,27 @@ export function useFavorites() {
     [isLoggedIn, performToggle, authGuard],
   );
 
+  const restoreFavorite = useCallback(
+    (slug: string) => {
+      setFavorite(slug, true);
+      if (user?.id) {
+        void addFavorite(user.id, slug).then((ok) => {
+          if (!ok) {
+            setFavorite(slug, false);
+          }
+        });
+      }
+    },
+    [user],
+  );
+
   return {
     favorites,
     count: favorites.length,
+    isLoaded,
     isFavorite: (slug: string) => favoriteSet.has(slug),
     toggleFavorite,
+    restoreFavorite,
     authOpen: authGuard.isOpen,
     authOptions: authGuard.guardOptions,
     onAuthClose: authGuard.handleClose,

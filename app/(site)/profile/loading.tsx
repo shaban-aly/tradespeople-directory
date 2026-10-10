@@ -1,5 +1,5 @@
-import { SegmentLoading } from "@/components/shared/ui/SegmentLoading";
+import { ProfileSkeleton } from "@/components/profile/ProfileSkeleton";
 
 export default function Loading() {
-  return <SegmentLoading />;
+  return <ProfileSkeleton />;
 }

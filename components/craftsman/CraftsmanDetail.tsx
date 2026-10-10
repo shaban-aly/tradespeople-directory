@@ -5,8 +5,6 @@ import type { Category, Craftsman } from "@/lib/data/craftsmen";
 import type { RatingSummary } from "@/lib/db/reviews";
 import { CategoryBadge } from "@/components/shared/ui/CategoryBadge";
 import { VerifiedBadge } from "@/components/shared/ui/VerifiedBadge";
-import { ActionButtons } from "@/components/shared/ui/ActionButtons";
-import { CopyPhoneButton } from "@/components/shared/ui/CopyPhoneButton";
 import { RatingBadge } from "@/components/shared/ui/RatingBadge";
 import { ButtonLink } from "@/components/shared/ui/Button";
 import { CraftsmanAvatar } from "@/components/shared/ui/CraftsmanAvatar";
@@ -41,34 +39,39 @@ export function CraftsmanDetail({
       <ViewTracker slug={craftsman.slug} categorySlug={category?.slug} area={craftsman.area} />
       <nav
         aria-label="مسار التنقل"
-        className="flex flex-wrap items-center gap-1 text-sm text-muted"
+        className="flex flex-wrap items-center gap-1.5 text-xs sm:text-sm text-muted"
       >
         <Link
           href="/"
-          className="font-bold transition-colors hover:text-accent"
+          className="font-medium transition-colors hover:text-accent"
         >
           الرئيسية
         </Link>
-        <span aria-hidden>·</span>
+        <span aria-hidden className="text-muted/40">·</span>
         <Link
           href={categoryHref(craftsman.category)}
-          className="font-bold transition-colors hover:text-accent"
+          className="font-medium transition-colors hover:text-accent"
         >
           {category?.name ?? "التصنيف"}
         </Link>
-        <span aria-hidden>·</span>
-        <span aria-current="page" className="truncate font-bold text-foreground">
+        <span aria-hidden className="text-muted/40">·</span>
+        <span
+          aria-current="page"
+          className="max-w-[200px] truncate font-bold text-foreground sm:max-w-xs md:max-w-md"
+        >
           {craftsman.name}
         </span>
       </nav>
 
       <section
-        className="overflow-hidden rounded-3xl border border-border bg-card shadow-card"
+        aria-label={`الملف الشخصي لـ ${craftsman.name}`}
+        className="overflow-hidden rounded-3xl border border-border bg-card shadow-card flex flex-col"
       >
+        {/* [1] صورة الصنايعي في المنتصف */}
         <Suspense
           fallback={
             craftsman.image ? (
-              <div className="relative flex h-64 w-full items-center justify-center overflow-hidden bg-neutral-900/90 sm:h-80">
+              <div className="relative flex h-64 sm:h-72 md:h-80 w-full items-center justify-center overflow-hidden bg-neutral-900/90">
                 <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -86,19 +89,11 @@ export function CraftsmanDetail({
                     priority
                     sizes={IMAGE_SIZES.HERO}
                     className="object-cover"
-                    style={{
-                      objectPosition: `${craftsman.avatarPosition?.x ?? 50}% ${craftsman.avatarPosition?.y ?? 50}%`,
-                      transform:
-                        (craftsman.avatarPosition?.zoom ?? 1) > 1
-                          ? `scale(${craftsman.avatarPosition?.zoom})`
-                          : undefined,
-                      transformOrigin: `${craftsman.avatarPosition?.x ?? 50}% ${craftsman.avatarPosition?.y ?? 50}%`,
-                    }}
                   />
                 </div>
               </div>
             ) : (
-              <div className="flex h-44 items-center justify-center bg-linear-to-br from-accent/10 via-card to-accent/10 sm:h-52">
+              <div className="flex h-44 w-full items-center justify-center bg-linear-to-br from-accent/10 via-card to-accent/10 sm:h-52 md:h-64">
                 <CraftsmanAvatar
                   name={craftsman.name}
                   className="h-24 w-24 rounded-2xl shadow-card sm:h-28 sm:w-28"
@@ -114,63 +109,51 @@ export function CraftsmanDetail({
             avatarPosition={craftsman.avatarPosition}
           />
         </Suspense>
-        <div className="p-6 sm:p-8">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="min-w-0 flex-1 font-heading text-3xl font-extrabold text-foreground sm:text-4xl">
+
+        {/* [2] اسم الصنايعي وشارة التوثيق في المنتصف أسفل الصورة */}
+        <div className="flex flex-col items-center justify-center px-6 pt-5 pb-4 text-center">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <h1 className="font-heading text-2xl font-extrabold text-foreground sm:text-3xl">
               {craftsman.name}
             </h1>
             {craftsman.verified && <VerifiedBadge />}
           </div>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {category && <CategoryBadge category={category} />}
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-background px-3 py-1 text-sm font-bold text-muted">
-              <IconPin className="h-4 w-4 shrink-0" />
-              {craftsman.area}
-            </span>
-            <ViewsCounter craftsmanId={craftsman.id} />
-          </div>
+        </div>
 
-          <div
-            className="mt-5 hidden flex-col gap-4 border-t border-border pt-5 sm:flex"
-          >
-            <p className="flex flex-wrap items-center justify-center gap-1.5 text-base text-muted">
-              <span>اتصل مباشرة على</span>
-              <bdi className="font-bold text-foreground" dir="ltr">
-                {craftsman.phone}
-              </bdi>
-              <CopyPhoneButton phone={craftsman.phone} iconOnly />
-            </p>
-            <div className="flex justify-center">
+        {/* [3] فوتر كارت الهيرو: شريط معلومات التخصص، المنطقة، المشاهدات، وعداد التقييمات */}
+        <div className="border-t border-border bg-background/50 px-5 py-3 sm:px-6">
+          <div className="flex flex-wrap items-center justify-center sm:justify-between gap-2.5">
+            {/* التخصص والمنطقة */}
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {category && <CategoryBadge category={category} />}
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-card border border-border px-3 py-1 text-xs font-bold text-muted">
+                <IconPin className="h-3.5 w-3.5 shrink-0" />
+                {craftsman.area}
+              </span>
+            </div>
+
+            {/* المشاهدات وعداد التقييمات */}
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <ViewsCounter craftsmanId={craftsman.id} />
               <RatingBadge
                 average={ratingSummary?.average ?? 0}
                 count={ratingSummary?.totalReviews ?? 0}
               />
             </div>
-            <ActionButtons
-              phone={craftsman.phone}
-              whatsapp={craftsman.whatsapp}
-              size="lg"
-              craftsmanId={craftsman.id}
-              craftsmanSlug={craftsman.slug}
-              craftsmanName={craftsman.name}
-              categoryName={category?.name}
-              categorySlug={category?.slug}
-            />
-            <div className="flex justify-center">
-              <ShareButtons slug={craftsman.slug} name={craftsman.name} />
-            </div>
           </div>
         </div>
       </section>
 
-      <section className="rounded-3xl border border-border bg-card p-6 shadow-card sm:p-8">
+      <section
+        aria-label="عن الصنايعي وشغله"
+        className="rounded-3xl border border-border bg-card p-6 shadow-card sm:p-8"
+      >
         <SectionTitle
-          eyebrow="نبذة سريعة"
-          icon={<IconUser className="h-4 w-4" />}
+          icon={<IconUser className="h-5 w-5" />}
           title="عن الصنايعي وشغله"
         />
-        <p className="text-base leading-relaxed text-muted">
-          {craftsman.description}
+        <p className="text-base leading-relaxed text-muted whitespace-pre-line">
+          {craftsman.description || "لا توجد تفاصيل إضافية مضافة حالياً."}
         </p>
       </section>
 
@@ -196,24 +179,37 @@ export function CraftsmanDetail({
         />
       </Suspense>
 
-      <section className="rounded-3xl border border-border bg-background/60 p-4 sm:p-5">
-        <p className="flex items-start gap-2 text-sm text-muted">
-          <IconAlert className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
-          <span className="text-sm">
-            الأرقام بنراجعها بنفسنا للتأكد إنها شغالة.
-          </span>
-        </p>
-        <div className="mt-3 flex justify-start ps-7">
-          <ButtonLink
-            href={`/report?craftsman=${encodeURIComponent(craftsman.name)}`}
-            variant="ghost"
-          >
-            إبلاغ عن بيانات غلط
-          </ButtonLink>
+      <section
+        aria-label="الإبلاغ عن بيانات غير صحيحة"
+        className="rounded-3xl border border-border/80 bg-card/60 p-5 shadow-xs sm:p-6"
+      >
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+              <IconAlert className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-heading text-base font-bold text-foreground">
+                بيانات اتصال موثوقة ومراجعة
+              </h3>
+              <p className="mt-0.5 text-sm text-muted leading-relaxed">
+                نقوم بمراجعة الأرقام للتأكد إنها شغالة. لو لاحظت أي خطأ ساعدنا بتحديثه.
+              </p>
+            </div>
+          </div>
+          <div className="shrink-0 sm:self-center">
+            <ButtonLink
+              href={`/report?craftsman=${encodeURIComponent(craftsman.name)}`}
+              variant="ghost"
+              size="sm"
+            >
+              إبلاغ عن بيانات غير صحيحة
+            </ButtonLink>
+          </div>
         </div>
       </section>
 
-      <section aria-label="مشاركة" className="flex justify-center sm:hidden">
+      <section aria-label="مشاركة الصفحة" className="flex justify-center lg:hidden">
         <ShareButtons slug={craftsman.slug} name={craftsman.name} />
       </section>
 
@@ -225,6 +221,7 @@ export function CraftsmanDetail({
         craftsmanName={craftsman.name}
         categoryName={category?.name}
         categorySlug={category?.slug}
+        area={craftsman.area}
       />
     </div>
   );

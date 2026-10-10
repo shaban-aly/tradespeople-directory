@@ -39,6 +39,7 @@ import {
   Phone,
   Plus,
   RefreshCw,
+  RotateCcw,
   Save,
   Search,
   Settings,
@@ -382,6 +383,10 @@ export function IconChevronRight({ className, ...props }: LucideProps) {
       <path d="m9 18 6-6-6-6" />
     </svg>
   );
+}
+
+export function IconRotateCcw(props: LucideProps) {
+  return <RotateCcw {...props} />;
 }
 
 

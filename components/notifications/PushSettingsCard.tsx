@@ -8,28 +8,28 @@ import type { PushFailureReason } from "@/lib/push/client";
 function StatusIndicator({ status }: { status: PushStatus }) {
   if (status === "enabled") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-action/10 px-2 py-0.5 text-xs font-bold text-action">
+        <span className="h-1.5 w-1.5 rounded-full bg-action animate-pulse" />
         مفعّلة
       </span>
     );
   }
   if (status === "disabled") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/20 px-2 py-0.5 text-[11px] font-bold text-muted">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/20 px-2 py-0.5 text-xs font-bold text-muted">
         متوقفة
       </span>
     );
   }
   if (status === "blocked") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-bold text-amber-600 dark:text-amber-400">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/15 px-2 py-0.5 text-xs font-bold text-warning">
         محظورة
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/20 px-2 py-0.5 text-[11px] font-bold text-muted">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/20 px-2 py-0.5 text-xs font-bold text-muted">
       غير مفعّلة
     </span>
   );
@@ -99,10 +99,11 @@ export function PushSettingsCard() {
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <span
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${push.enabled
-                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${
+              push.enabled
+                ? "bg-action/10 text-action"
                 : "bg-accent/10 text-accent"
-              }`}
+            }`}
           >
             <IconBell className="h-5 w-5" />
           </span>
@@ -131,8 +132,8 @@ export function PushSettingsCard() {
       </div>
 
       {push.status === "blocked" && (
-        <div className="mt-1 flex items-start gap-2 rounded-xl bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-700 dark:text-amber-300 border border-amber-500/20">
-          <IconX className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+        <div className="mt-1 flex items-start gap-2 rounded-xl bg-warning/10 p-3 text-xs leading-relaxed text-warning border border-warning/20">
+          <IconX className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
           <p>
             لتشغيل الإشعارات مجدداً: افتح إعدادات المتصفح على جهازك (أو إعدادات الموقع)، واسمح بإرسال الإشعارات لدليل الصنايعية.
           </p>
@@ -142,9 +143,9 @@ export function PushSettingsCard() {
       {errorHint && push.status !== "blocked" && (
         <div
           role="status"
-          className="flex items-start gap-2 rounded-xl bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-700 dark:text-amber-300 border border-amber-500/20"
+          className="flex items-start gap-2 rounded-xl bg-warning/10 p-3 text-xs leading-relaxed text-warning border border-warning/20"
         >
-          <IconX className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+          <IconX className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
           <p>{errorHint}</p>
         </div>
       )}

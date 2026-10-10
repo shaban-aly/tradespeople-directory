@@ -13,9 +13,9 @@ export function ThemeSettings() {
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
           {isDark ? (
-            <IconMoon className="h-5 w-5 text-indigo-400" />
+            <IconMoon className="h-5 w-5 text-accent" />
           ) : (
-            <IconSun className="h-5 w-5 text-amber-500" />
+            <IconSun className="h-5 w-5 text-warning" />
           )}
         </div>
         <div>

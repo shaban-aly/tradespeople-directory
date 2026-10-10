@@ -1,14 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { IconCamera, IconGrid, IconTrash, IconX } from "@/components/shared/icons";
 import { Modal } from "@/components/shared/ui/Modal";
-import {
-  createImagePreview,
-  LEAD_IMAGES_MAX,
-  revokeImagePreview,
-  validateImage,
-} from "@/lib/storage/images";
+import { AlertCircle } from "lucide-react";
+import { LEAD_IMAGES_MAX } from "@/lib/storage/images";
+import { useLeadImagePicker } from "@/hooks/leads/useLeadImagePicker";
 
 export type LeadImageSelection = {
   /** روابط عامة محفوظة (تبقى ما لم تُحذف). */
@@ -17,12 +13,9 @@ export type LeadImageSelection = {
   files: File[];
 };
 
-type PreviewItem = { file: File; preview: string };
-
 /**
- * منتقي صور المشكلة (اختياري — حد 3 إجمالاً مع المحفوظ).
- * يحتفظ بالملفات محلياً فقط؛ الرفع يتم لحظة الإرسال عبر
- * `uploadLeadTempImages` فلا ملفات يتيمة عند التراجع.
+ * منتقي صور المشكلة — مكوّن عرض يركز على الـ UI.
+ * منطق الرفع والمعاينة والتحقق مفصول في `useLeadImagePicker`.
  */
 export function LeadImagePicker({
   initialUrls = [],
@@ -35,77 +28,25 @@ export function LeadImagePicker({
   onChange?: (selection: LeadImageSelection) => void;
   error?: string;
 }) {
-  const [kept, setKept] = useState<string[]>(initialUrls);
-  const [items, setItems] = useState<PreviewItem[]>([]);
-  const [localError, setLocalError] = useState("");
-  const [choiceOpen, setChoiceOpen] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const cameraRef = useRef<HTMLInputElement>(null);
-  const previewsRef = useRef<string[]>([]);
-
-  const total = kept.length + items.length;
-  const full = total >= LEAD_IMAGES_MAX;
-
-  // تنظيف object URLs عند إزالة العنصر أو unmount.
-  useEffect(() => {
-    previewsRef.current = items.map((i) => i.preview);
-  }, [items]);
-  useEffect(() => {
-    const stash = previewsRef;
-    return () => {
-      for (const url of stash.current) revokeImagePreview(url);
-    };
-  }, []);
-
-  function emit(nextKept: string[], nextItems: PreviewItem[]) {
-    onChange?.({ kept: nextKept, files: nextItems.map((i) => i.file) });
-  }
-
-  function addFiles(fileList: FileList | null) {
-    if (!fileList || disabled) return;
-    setLocalError("");
-    const next = [...items];
-    for (const file of Array.from(fileList)) {
-      if (kept.length + next.length >= LEAD_IMAGES_MAX) {
-        setLocalError(`الحد الأقصى ${LEAD_IMAGES_MAX} صور فقط`);
-        break;
-      }
-      const invalid = validateImage(file);
-      if (invalid) {
-        setLocalError(invalid);
-        continue;
-      }
-      next.push({ file, preview: createImagePreview(file) });
-    }
-    setItems(next);
-    emit(kept, next);
-    if (inputRef.current) inputRef.current.value = "";
-    if (cameraRef.current) cameraRef.current.value = "";
-  }
-
-  /** اختيار من المودال: إغلاقه أولاً ثم فتح المصدر المناسب. */
-  function choose(source: "camera" | "device") {
-    setChoiceOpen(false);
-    if (disabled || full) return;
-    // مهلة قصيرة حتى يُغلَق المودال قبل فتح منتقي النظام (سلوك أنظف على الموبايل).
-    window.setTimeout(() => {
-      if (source === "camera") cameraRef.current?.click();
-      else inputRef.current?.click();
-    }, 60);
-  }
-
-  function removeKept(url: string) {
-    const next = kept.filter((u) => u !== url);
-    setKept(next);
-    emit(next, items);
-  }
-
-  function removeItem(preview: string) {
-    revokeImagePreview(preview);
-    const next = items.filter((i) => i.preview !== preview);
-    setItems(next);
-    emit(kept, next);
-  }
+  const {
+    kept,
+    items,
+    localError,
+    choiceOpen,
+    setChoiceOpen,
+    inputRef,
+    cameraRef,
+    total,
+    full,
+    addFiles,
+    choose,
+    removeKept,
+    removeItem,
+  } = useLeadImagePicker({
+    initialUrls,
+    disabled,
+    onChange,
+  });
 
   return (
     <div>
@@ -128,7 +69,7 @@ export function LeadImagePicker({
                 disabled={disabled}
                 onClick={() => removeKept(url)}
                 aria-label="حذف الصورة المحفوظة"
-                className="absolute -top-1.5 -start-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-danger text-white shadow disabled:opacity-50"
+                className="absolute -top-1.5 -start-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-danger text-on-danger shadow-sm hover:scale-105 transition-transform disabled:opacity-50"
               >
                 <IconX className="h-3.5 w-3.5" />
               </button>
@@ -147,7 +88,7 @@ export function LeadImagePicker({
                 disabled={disabled}
                 onClick={() => removeItem(item.preview)}
                 aria-label="إزالة الصورة المختارة"
-                className="absolute -top-1.5 -start-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-danger text-white shadow disabled:opacity-50"
+                className="absolute -top-1.5 -start-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-danger text-on-danger shadow-sm hover:scale-105 transition-transform disabled:opacity-50"
               >
                 <IconTrash className="h-3.5 w-3.5" />
               </button>
@@ -183,10 +124,10 @@ export function LeadImagePicker({
         disabled={disabled || full}
         onClick={() => setChoiceOpen(true)}
         aria-haspopup="dialog"
-        className={`flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-3 text-base font-bold transition-colors ${
+        className={`flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-3 text-base font-bold transition-all ${
           disabled || full
             ? "cursor-not-allowed border-border bg-muted/10 text-muted opacity-60"
-            : "border-accent/50 bg-accent/5 text-accent hover:border-accent hover:bg-accent/10 active:scale-[0.99]"
+            : "border-accent/40 bg-accent/5 text-accent hover:border-accent hover:bg-accent/10 active:bg-accent/15"
         }`}
       >
         <IconCamera className="h-5 w-5 shrink-0" />
@@ -200,7 +141,10 @@ export function LeadImagePicker({
         JPG أو PNG أو WebP — حتى 5 ميجابايت للصورة.
       </p>
       {(localError || error) && (
-        <p className="mt-1 text-xs font-bold text-danger">{localError || error}</p>
+        <p className="mt-1.5 flex items-center gap-1.5 text-xs font-bold text-danger animate-in fade-in duration-200">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          <span>{localError || error}</span>
+        </p>
       )}
 
       <Modal

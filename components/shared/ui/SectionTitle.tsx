@@ -24,10 +24,13 @@ export function SectionTitle({
           <span>{eyebrow}</span>
         </div>
       )}
-      <h2 className="font-heading text-xl font-bold text-foreground sm:text-2xl">
-        {title}
+      <h2 className="flex items-center gap-2 font-heading text-xl font-bold text-foreground sm:text-2xl">
+        {!eyebrow && icon && (
+          <span className="flex items-center justify-center text-accent">{icon}</span>
+        )}
+        <span>{title}</span>
       </h2>
-      {description && <p className="mt-1 text-sm text-muted">{description}</p>}
+      {description && <p className="mt-1 text-sm text-muted leading-relaxed">{description}</p>}
     </div>
   );
 }

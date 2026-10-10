@@ -27,8 +27,8 @@ export default async function FavoritesPage() {
             محفوظاتي
           </h1>
           <p className="mt-2 max-w-xl text-base text-muted">
-            الصنايعية اللي حافظت عليهم بضغطة النجمة — لو مفيش، اضغط النجمة
-            على أي كارت عشان تلاقيه هنا.
+            الصنايعية اللي حفظتهم بضغطة النجمة — تواصل معهم مباشرة أو عبر
+            واتساب في أي وقت.
           </p>
         </div>
       </section>

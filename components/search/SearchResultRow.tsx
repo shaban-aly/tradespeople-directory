@@ -24,7 +24,7 @@ export function SearchResultRow({
       href={suggestion.href}
       onClick={onSelect}
       className={`flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors ${
-        active ? "bg-card text-foreground" : "text-foreground hover:bg-card"
+        active ? "bg-accent/10 text-foreground ring-1 ring-accent/30" : "text-foreground hover:bg-card"
       }`}
     >
       <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-accent/10 text-accent">

@@ -29,11 +29,15 @@ interface OpenLeadCardProps {
 
 export function OpenLeadCard({ lead, highlight = false }: OpenLeadCardProps) {
   return (
-    <div className={`bg-card border-border border p-5 rounded-xl space-y-4 shadow-sm relative overflow-hidden${highlight ? " ring-2 ring-action shadow-lg" : ""}`}>
+    <div
+      className={`rounded-2xl border border-border/80 bg-card p-4 sm:p-5 space-y-4 shadow-xs relative overflow-hidden transition-all hover:border-accent/40${
+        highlight ? " ring-2 ring-accent shadow-md" : ""
+      }`}
+    >
       <div className="flex justify-between items-start gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="bg-action/10 text-action px-2 py-1 rounded text-xs font-semibold">
+            <span className="bg-accent/10 text-accent border border-accent/20 px-2.5 py-0.5 rounded-full text-xs font-bold">
               {lead.categoryName}
             </span>
             <NewLeadBadge
@@ -41,29 +45,31 @@ export function OpenLeadCard({ lead, highlight = false }: OpenLeadCardProps) {
               initial={isNewWithinMinutes(lead.createdAt)}
             />
             <span
-              className={`px-2 py-1 rounded text-xs font-bold flex items-center gap-1 ${
+              className={`px-2.5 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 border ${
                 lead.responseCount >= MAX_LEAD_RESPONSES
-                  ? "bg-muted/10 text-muted"
-                  : "bg-emerald-500/10 text-emerald-600"
+                  ? "bg-muted/10 text-muted border-border/60"
+                  : "bg-accent/10 text-accent border-accent/20"
               }`}
             >
-              <Users className="w-3 h-3" />
+              <Users className="w-3.5 h-3.5" />
               {lead.responseCount}/{MAX_LEAD_RESPONSES} صنايعي
             </span>
           </div>
-          <h3 className="font-bold text-lg mt-2 break-words line-clamp-3">{lead.description}</h3>
+          <h3 className="font-heading font-bold text-base sm:text-lg mt-2.5 break-words line-clamp-3 text-foreground leading-snug">
+            {lead.description}
+          </h3>
         </div>
-        <div className="text-muted text-xs flex flex-col items-end gap-1 shrink-0">
-          <span className="flex items-center gap-1 bg-background px-2 py-1 rounded">
-            <Clock className="w-3 h-3" />
+        <div className="text-muted text-xs flex flex-col items-end gap-1.5 shrink-0">
+          <span className="flex items-center gap-1 bg-muted/15 px-2 py-1 rounded-lg font-medium">
+            <Clock className="w-3.5 h-3.5" />
             <RelativeTime
               value={lead.createdAt}
               mode="past"
               initial={formatRelativePast(lead.createdAt)}
             />
           </span>
-          <span className="flex items-center gap-1 bg-background px-2 py-1 rounded">
-            <Hourglass className="w-3 h-3" />
+          <span className="flex items-center gap-1 bg-muted/15 px-2 py-1 rounded-lg font-medium">
+            <Hourglass className="w-3.5 h-3.5" />
             <RelativeTime
               value={lead.expiresAt}
               mode="remaining"

@@ -6,15 +6,15 @@ import { JoinForm } from "@/components/join/JoinForm";
 export const revalidate = false;
 
 export const metadata: Metadata = {
-  title: "أضف صنايعي",
+  title: "انضم كصنايعي | دليل السويس",
   description:
-    "سجّل دخولك وأضف صنايعي للدليل — الصنايعي هيترتبط بحسابك لما يوافق عليه المشرف.",
+    "سجّل بياناتك وتخصصك لينضم ملفك لدليل صنايعية السويس — تواصل مباشر مع العملاء واتفاقك بالكامل معك.",
   robots: { index: false, follow: false },
   alternates: { canonical: "/join" },
   openGraph: {
-    title: "أضف صنايعي — دليل الصنايعية في السويس",
+    title: "انضم كصنايعي — دليل الصنايعية في السويس",
     description:
-      "سجّل اسمك وتخصصك ومنطقتك لينضم دليلك إلى دليل الصنايعية في السويس.",
+      "سجّل اسمك وتخصصك ومنطقتك لينضم ملفك إلى دليل الصنايعية في السويس.",
     type: "website",
     images: [{ url: "/og.jpg", width: 1200, height: 630 }],
   },
@@ -24,7 +24,7 @@ export default async function JoinPage() {
   const [categories, areas] = await Promise.all([getCategories(), getAreas()]);
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-12">
       <JoinForm categories={categories} areas={areas} />
     </div>
   );

@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import type { SessionProfile } from "@/hooks/auth/useSession";
 import {
+  IconBell,
   IconCheck,
   IconChevronLeft,
   IconShieldCheck,
@@ -44,7 +45,7 @@ export function ProfileCard({ user, profile }: ProfileCardProps) {
     admin: {
       label: "مشرف النظام",
       icon: IconShieldCheck,
-      badgeClass: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+      badgeClass: "bg-warning/15 text-warning border-warning/30",
     },
   };
 
@@ -57,7 +58,7 @@ export function ProfileCard({ user, profile }: ProfileCardProps) {
           href: "/admin",
           label: "الانتقال إلى لوحة الإدارة الشاملة",
           icon: <IconShieldCheck className="h-4 w-4" />,
-          variant: "amber" as const,
+          variant: "warning" as const,
         }
       : role === "craftsman"
       ? {
@@ -67,9 +68,9 @@ export function ProfileCard({ user, profile }: ProfileCardProps) {
           variant: "action" as const,
         }
       : {
-          href: "/join",
-          label: "انضم كفني أو صنايعي في السويس",
-          icon: <IconWrench className="h-4 w-4" />,
+          href: "/my-requests",
+          label: "متابعة طلباتي الحالية",
+          icon: <IconBell className="h-4 w-4" />,
           variant: "action" as const,
         };
 
@@ -127,20 +128,33 @@ export function ProfileCard({ user, profile }: ProfileCardProps) {
           </p>
         )}
 
-        {/* زر الإجراء الرئيسي العريض (نمط Facebook Professional Mode / Instagram Edit Profile) */}
+        {/* زر الإجراء الرئيسي العريض */}
         <div className="mt-5 w-full">
           <Link
             href={primaryCta.href}
-            className={`w-full h-11 flex items-center justify-center gap-2 rounded-xl text-sm font-bold shadow-xs transition-all active:scale-[0.99] ${
-              primaryCta.variant === "amber"
-                ? "bg-amber-500 text-white hover:bg-amber-600"
-                : "bg-action text-on-action hover:bg-action-hover"
+            className={`w-full min-h-12 py-3 px-4 flex items-center justify-center gap-2 rounded-xl text-sm font-bold shadow-xs transition-all active:scale-[0.99] ${
+              primaryCta.variant === "warning"
+                ? "bg-warning text-on-warning hover:bg-warning/90"
+                : "bg-action text-on-action hover:bg-action/90"
             }`}
           >
             {primaryCta.icon}
             <span>{primaryCta.label}</span>
             <IconChevronLeft className="h-4 w-4" />
           </Link>
+
+          {/* مدخل ثانوي للانضمام كفني للعملاء */}
+          {role === "client" && (
+            <div className="mt-3 text-center">
+              <Link
+                href="/join"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted transition-colors hover:text-accent"
+              >
+                <IconWrench className="h-3.5 w-3.5" />
+                <span>هل أنت فني أو صنايعي؟ انضم إلى الدليل</span>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </section>

@@ -1,15 +1,13 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import {
   useCraftsmanProfileForm,
   type AreaOption,
 } from "@/hooks/dashboard/useCraftsmanProfileForm";
-import { useProfileAvatarEditor } from "@/hooks/dashboard/useProfileAvatarEditor";
-import { ProfileAvatarSection } from "@/components/dashboard/profile/ProfileAvatarSection";
 import { ProfileContactSection } from "@/components/dashboard/profile/ProfileContactSection";
 import { ProfileBioSection } from "@/components/dashboard/profile/ProfileBioSection";
 import { ProfileSocialSection } from "@/components/dashboard/profile/ProfileSocialSection";
-import { ImageViewer } from "@/components/shared/ImageViewer";
 import { Button } from "@/components/shared/ui/Button";
 import { IconCheck, IconSave } from "@/components/shared/icons";
 import type { CraftsmanSelfProfile } from "@/lib/db/craftsman-dashboard";
@@ -25,31 +23,19 @@ export function ProfileEditForm({
   onSaved,
   initialAreas,
 }: ProfileEditFormProps) {
-  const {
-    fileInputRef,
-    currentAvatarUrl,
-    currentAvatarPos,
-    selectedNewFile,
-    avatarError,
-    isPositionEditorOpen,
-    showViewer,
-    handleFilePicked,
-    handleOpenViewer,
-    handleCloseViewer,
-    openPositionEditor,
-    handlePositionSaved,
-    handlePositionClosed,
-  } = useProfileAvatarEditor(profile);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const {
     formData,
     handleFieldChange,
     handleFieldBlur,
     handleSocialLinksChange,
+    handleSyncPhoneToWhatsapp,
+    handleResetForm,
     getFieldError,
     socialError,
     areas,
-    previewUrl,
+    isDirty,
     saving,
     error,
     warning,
@@ -57,10 +43,22 @@ export function ProfileEditForm({
     handleSubmit,
   } = useCraftsmanProfileForm(profile, onSaved, initialAreas);
 
-  const activeViewerSrc = previewUrl || currentAvatarUrl;
+  // اختصار لوحة المفاتيح Ctrl+S أو Cmd+S للحفظ السريع (Alex Persona Accelerator)
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        if (!saving && isDirty) {
+          formRef.current?.requestSubmit();
+        }
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [saving, isDirty]);
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+    <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-6">
       {/* رسائل التنبيه والنجاح */}
       {error && (
         <div
@@ -90,23 +88,6 @@ export function ProfileEditForm({
         </div>
       )}
 
-      {/* قسم الصورة الشخصية وإعدادات الموضع */}
-      <ProfileAvatarSection
-        profile={profile}
-        name={formData.name}
-        fileInputRef={fileInputRef}
-        currentAvatarUrl={currentAvatarUrl}
-        currentAvatarPos={currentAvatarPos}
-        selectedNewFile={selectedNewFile}
-        avatarError={avatarError}
-        isPositionEditorOpen={isPositionEditorOpen}
-        onFilePicked={handleFilePicked}
-        onOpenViewer={handleOpenViewer}
-        onTogglePositionEditor={openPositionEditor}
-        onPositionSaved={handlePositionSaved}
-        onPositionClosed={handlePositionClosed}
-      />
-
       {/* قسم البيانات الأساسية وأرقام التواصل والمنطقة */}
       <ProfileContactSection
         name={formData.name}
@@ -117,6 +98,7 @@ export function ProfileEditForm({
         getFieldError={getFieldError}
         onFieldChange={handleFieldChange}
         onFieldBlur={handleFieldBlur}
+        onSyncPhoneToWhatsapp={handleSyncPhoneToWhatsapp}
       />
 
       {/* قسم النبذة المهنية والخدمات */}
@@ -134,37 +116,62 @@ export function ProfileEditForm({
         onChange={handleSocialLinksChange}
       />
 
-      {/* شريط الإجراءات وحفظ التعديلات */}
+      {/* شريط الإجراءات وحفظ التعديلات مع مؤشر التعديلات الحية وزر التراجع */}
       <div className="sticky bottom-4 z-20 rounded-2xl border border-border/80 bg-card/95 p-3 sm:p-4 shadow-card backdrop-blur-md">
-        <Button
-          type="submit"
-          variant="action"
-          disabled={saving}
-          className="min-h-12 w-full text-base font-bold justify-center shadow-sm"
-        >
-          {saving ? (
-            <span className="flex items-center gap-2">
-              <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-              <span>جاري حفظ التعديلات...</span>
-            </span>
-          ) : (
-            <span className="flex items-center justify-center gap-2">
-              <IconSave className="h-5 w-5" />
-              <span>حفظ جميع التعديلات</span>
-            </span>
-          )}
-        </Button>
-      </div>
+        {isDirty ? (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-600 dark:text-amber-400">
+              <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+              <span>توجد تعديلات غير محفوظة</span>
+            </div>
 
-      {/* عارض الصور للشاشة الكاملة */}
-      {activeViewerSrc && (
-        <ImageViewer
-          open={showViewer}
-          onClose={handleCloseViewer}
-          src={activeViewerSrc}
-          title={formData.name || profile.name}
-        />
-      )}
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={handleResetForm}
+                disabled={saving}
+                className="min-h-12 px-4 rounded-xl border border-border/80 bg-background text-xs sm:text-sm font-bold text-muted hover:text-foreground hover:bg-muted/10 transition-colors active:scale-98 disabled:opacity-50"
+              >
+                تراجع عن التعديلات
+              </button>
+
+              <Button
+                type="submit"
+                variant="action"
+                disabled={saving}
+                className="flex-1 sm:flex-initial min-h-12 px-6 text-base font-bold justify-center shadow-sm"
+              >
+                {saving ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    <span>جاري الحفظ...</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    <IconSave className="h-5 w-5" />
+                    <span>حفظ جميع التعديلات</span>
+                    <span className="hidden sm:inline text-xs opacity-75 font-normal">(Ctrl+S)</span>
+                  </span>
+                )}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-medium text-muted">
+              كافة البيانات متطابقة مع المحفوظات
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={true}
+              className="min-h-12 px-6 text-sm font-bold opacity-60 cursor-not-allowed justify-center"
+            >
+              البيانات محفوظة ومحدثة
+            </Button>
+          </div>
+        )}
+      </div>
     </form>
   );
 }

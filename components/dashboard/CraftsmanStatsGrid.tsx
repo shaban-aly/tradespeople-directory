@@ -31,15 +31,21 @@ export function CraftsmanStatsGrid({ stats }: CraftsmanStatsGridProps) {
       icon: <IconPhone className="h-4 w-4" />,
       badgeColor: "bg-action/10 text-action",
       subline: (
-        <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold text-muted">
-          <span className="inline-flex items-center gap-1 text-accent">
+        <div className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-muted">
+          <span
+            className="inline-flex items-center gap-1 text-accent"
+            title="مكالمات هاتفية مباشرة"
+          >
             <IconPhone className="h-3 w-3" />
-            {toArabicDigits(stats.calls ?? 0)}
+            <span>{toArabicDigits(stats.calls ?? 0)} اتصال</span>
           </span>
           <span>•</span>
-          <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+          <span
+            className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400"
+            title="محادثات عبر واتساب"
+          >
             <IconWhatsApp className="h-3 w-3" />
-            {toArabicDigits(stats.whatsapp ?? 0)}
+            <span>{toArabicDigits(stats.whatsapp ?? 0)} واتساب</span>
           </span>
         </div>
       ),
@@ -51,9 +57,12 @@ export function CraftsmanStatsGrid({ stats }: CraftsmanStatsGridProps) {
       icon: <IconEye className="h-4 w-4" />,
       badgeColor: "bg-accent/10 text-accent",
       subline: (
-        <div className="flex items-center gap-1 text-[11px] font-semibold text-accent">
-          <IconTrendingUp className="h-3.5 w-3.5" />
-          <span>تحويل {toArabicDigits(conversionRate)}%</span>
+        <div
+          className="flex items-center gap-1 text-xs font-semibold text-accent cursor-help"
+          title="نسبة الزوار الذين ضغطوا على رقم هاتفك أو واتساب للتواصل معك من إجمالي المشاهدات"
+        >
+          <IconTrendingUp className="h-3.5 w-3.5 shrink-0" />
+          <span>تواصل {toArabicDigits(conversionRate)}% من الزوار</span>
         </div>
       ),
     },
@@ -64,8 +73,13 @@ export function CraftsmanStatsGrid({ stats }: CraftsmanStatsGridProps) {
       icon: <IconHeart className="h-4 w-4" />,
       badgeColor: "bg-rose-500/10 text-rose-500",
       subline: (
-        <span className="text-[11px] font-medium text-muted">
-          عملاء محتفظون برقمك
+        <span
+          className="text-xs font-medium text-muted block truncate"
+          title="عملاء قاموا بحفظ رقمك في قائمة المفضلة للاتصال بك لاحقاً"
+        >
+          {stats.favoritesCount > 0
+            ? "عملاء محتفظون برقمك"
+            : "لم يضفك أحد للمفضلة بعد"}
         </span>
       ),
     },
@@ -79,9 +93,16 @@ export function CraftsmanStatsGrid({ stats }: CraftsmanStatsGridProps) {
       icon: <IconStar className="h-4 w-4" />,
       badgeColor: "bg-amber-500/10 text-amber-500",
       subline: (
-        <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+        <span
+          className="text-xs font-semibold text-amber-600 dark:text-amber-400 block truncate"
+          title={
+            stats.rating.totalReviews > 0
+              ? `متوسط تقييمات العملاء في السويس بناءً على ${toArabicDigits(stats.rating.totalReviews)} تقييم`
+              : "شارك رابط صفحتك مع زبائنك الحاليين للحصول على أول تقييم"
+          }
+        >
           {stats.rating.totalReviews > 0
-            ? `${toArabicDigits(stats.rating.totalReviews)} تقييم مسجل`
+            ? `${toArabicDigits(stats.rating.totalReviews)} تقييم معتمد`
             : "بانتظار أول تقييم"}
         </span>
       ),

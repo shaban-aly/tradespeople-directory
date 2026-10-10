@@ -3,12 +3,15 @@ import { SiteNavLinks } from "@/components/shared/layout/SiteNavLinks";
 import { ThemeToggle } from "@/components/shared/ui/ThemeToggle";
 import { UserMenu } from "@/components/shared/layout/UserMenu";
 import { NotificationsBell } from "@/components/shared/layout/NotificationsBell";
+import { HeaderSearchButton } from "@/components/shared/layout/HeaderSearchButton";
+import { ButtonLink } from "@/components/shared/ui/Button";
+import { IconPlus } from "@/components/shared/icons";
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
       <div className="relative">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3">
           <Link href="/" className="flex shrink-0 items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -33,9 +36,24 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <div className="hidden lg:flex">
+              <HeaderSearchButton />
+            </div>
             <ThemeToggle />
             <NotificationsBell />
             <UserMenu />
+
+            <div className="hidden lg:inline-flex">
+              <ButtonLink
+                href="/request/new"
+                variant="primary"
+                size="sm"
+                className="shrink-0 min-h-11 h-11 px-4 text-sm font-bold shadow-xs hover:shadow-accent/20 active:scale-95"
+              >
+                <IconPlus className="h-4 w-4" />
+                <span>اطلب صنايعي</span>
+              </ButtonLink>
+            </div>
           </div>
         </div>
       </div>

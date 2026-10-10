@@ -1,11 +1,14 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useSession } from "@/hooks/auth/useSession";
 import { useNotifications } from "@/hooks/notifications/useNotifications";
 import { EmptyState } from "@/components/shared/ui/EmptyState";
+import { NotificationsSkeleton } from "@/components/notifications/NotificationsSkeleton";
 import { formatRelativeTime } from "@/lib/utils/formatTime";
 import { resolveNotificationHref } from "@/lib/utils/notificationLink";
+import { toArabicDigits } from "@/lib/utils/format";
 import type { NotificationRow } from "@/lib/db/notifications";
 import {
   IconAlert,
@@ -49,13 +52,13 @@ function iconForType(type: string) {
     case "welcome":
       return { Icon: IconSparkles, tone: "bg-accent/10 text-accent" };
     case "admin_broadcast":
-      return { Icon: IconBell, tone: "bg-blue-500/10 text-blue-500" };
+      return { Icon: IconBell, tone: "bg-accent/15 text-accent" };
     default:
       return { Icon: IconBell, tone: "bg-accent/10 text-accent" };
   }
 }
 
-function NotificationRow({
+function NotificationRowItem({
   n,
   onMarkRead,
   isAdmin,
@@ -69,6 +72,7 @@ function NotificationRow({
   const { Icon, tone } = iconForType(n.type);
   // رابط داخلي مُتحقَّق منه فقط — لا خروج عن الموقع ولا javascript:
   const href = resolveNotificationHref(n, { isAdmin, currentUserId });
+  const isUnread = !n.read_at;
 
   const row = (
     <>
@@ -79,63 +83,76 @@ function NotificationRow({
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-start justify-between gap-2">
-          <span className="flex items-center gap-2 text-base font-semibold text-foreground">
+          <span className="flex flex-wrap items-center gap-1.5 text-base font-bold text-foreground">
             {n.title}
             {n.type === "admin_broadcast" && (
-              <span className="shrink-0 rounded-full bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-bold text-blue-500">
+              <span className="shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-xs font-bold text-accent">
                 من الإدارة
               </span>
             )}
           </span>
-          <span className="shrink-0 text-[11px] text-muted">
+          <span className="shrink-0 text-xs text-muted">
             {formatRelativeTime(n.created_at)}
           </span>
         </span>
-        <span className="mt-0.5 block line-clamp-2 text-sm leading-relaxed text-muted">
+        <span
+          className={`mt-1 block text-sm leading-relaxed ${
+            isUnread ? "text-foreground/90 font-medium" : "text-muted"
+          }`}
+        >
           {n.body}
         </span>
       </span>
-      {!n.read_at && (
+      {isUnread && (
         <span
-          className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent"
-          aria-label="إشعار جديد"
+          className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-accent ring-4 ring-accent/15"
+          aria-label="إشعار غير مقروء"
         />
       )}
     </>
   );
 
-  const classes = `flex items-start gap-3 px-4 py-4 transition-colors hover:bg-accent/10 ${
-    n.read_at ? "opacity-70" : ""
+  const classes = `flex min-h-12 w-full items-start gap-3.5 px-4 py-4 text-start transition-colors hover:bg-muted/10 ${
+    isUnread ? "bg-accent/4 dark:bg-accent/8" : "bg-card"
   }`;
 
   return (
-    <li key={n.id}>
+    <li>
       {href ? (
         <Link
           href={href}
           className={classes}
           onClick={() => {
-            if (!n.read_at) onMarkRead?.(n.id);
+            if (isUnread) onMarkRead?.(n.id);
           }}
         >
           {row}
         </Link>
       ) : (
-        <div
+        <button
+          type="button"
           className={classes}
           onClick={() => {
-            if (!n.read_at) onMarkRead?.(n.id);
+            if (isUnread) onMarkRead?.(n.id);
           }}
         >
           {row}
-        </div>
+        </button>
       )}
     </li>
   );
 }
 
+function formatUnreadText(count: number): string {
+  if (count === 0) return "كل الإشعارات مقروءة";
+  if (count === 1) return "إشعار واحد غير مقروء";
+  if (count === 2) return "إشعاران غير مقروءين";
+  if (count <= 10) return `${toArabicDigits(count)} إشعارات غير مقروءة`;
+  return `${toArabicDigits(count)} إشعاراً غير مقروء`;
+}
+
 export function NotificationsFullPage() {
-  const { isLoggedIn, isAdmin, user } = useSession();
+  const { isLoggedIn, isAdmin, user, loading: sessionLoading } = useSession();
   const {
     items,
     unreadCount,
@@ -148,6 +165,20 @@ export function NotificationsFullPage() {
     markAsRead,
   } = useNotifications();
 
+  const [filter, setFilter] = useState<"all" | "unread">("all");
+
+  const unreadItems = useMemo(() => items.filter((n) => !n.read_at), [items]);
+  const displayedItems = filter === "unread" ? unreadItems : items;
+
+  // إظهار الهيكل أثناء تحميل الجلسة أو التحميل الأولي للإشعارات لمنع الشاشة البيضاء
+  if (sessionLoading || (loading && items.length === 0)) {
+    return (
+      <div className="mx-auto w-full max-w-2xl">
+        <NotificationsSkeleton count={5} />
+      </div>
+    );
+  }
+
   if (!isLoggedIn) {
     return null;
   }
@@ -157,70 +188,88 @@ export function NotificationsFullPage() {
   const showEmptyState = error === null && !loading && items.length === 0;
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
-      <div className="mb-4 space-y-4">
-      <div className="flex min-h-12 flex-wrap items-center justify-between gap-3">
-        <p className="text-base font-bold text-foreground">
-          {unreadCount > 0
-            ? `${unreadCount} إشعارات غير مقروءة`
-            : "كل الإشعارات مقروءة"}
-        </p>
-        {unreadCount > 0 && (
+    <div className="mx-auto w-full max-w-2xl space-y-4">
+      {/* شريط الأدوات والفلاتر */}
+      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between shadow-xs">
+        {/* تبويبات الفلترة: الكل مقابل غير المقروءة */}
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
-            onClick={() => void markAllRead()}
-            disabled={markingAll}
-            aria-busy={markingAll}
-            className="flex min-h-12 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-accent transition-colors hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={() => setFilter("all")}
+            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all ${
+              filter === "all"
+                ? "bg-accent text-on-accent shadow-2xs"
+                : "border border-border bg-background text-muted hover:text-foreground"
+            }`}
           >
-            <IconCheck className="h-4 w-4" />
-            {markingAll ? "جارٍ التعليم…" : "تعليم الكل كمقروء"}
+            الكل ({toArabicDigits(items.length)})
           </button>
-        )}
+          <button
+            type="button"
+            onClick={() => setFilter("unread")}
+            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all ${
+              filter === "unread"
+                ? "bg-accent text-on-accent shadow-2xs"
+                : "border border-border bg-background text-muted hover:text-foreground"
+            }`}
+          >
+            غير المقروءة ({toArabicDigits(unreadCount)})
+          </button>
         </div>
 
-        {markError && (
-          <div
-            role="alert"
-            className="flex items-start gap-2 rounded-xl border border-danger/20 bg-danger/10 p-3 text-sm leading-relaxed text-danger"
-          >
-            <IconAlert className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>لم يتم حفظ التعديل: {markError}</span>
-          </div>
-        )}
+        {/* عدّاد وحالة المقروء */}
+        <div className="flex items-center justify-between gap-3 sm:justify-end">
+          <span className="text-xs font-semibold text-muted">
+            {formatUnreadText(unreadCount)}
+          </span>
 
-        {/* فشل العدّاد وحده: القائمة سليمة لكن العدد غير موثوق */}
-        {error !== null && items.length > 0 && (
-          <div
-            role="status"
-            className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-danger/20 bg-danger/10 p-3 text-sm leading-relaxed text-danger"
-          >
-            <span className="flex items-start gap-2">
-              <IconAlert className="mt-0.5 h-4 w-4 shrink-0" />
-              تعذّر تحديث عدّاد الإشعارات: {error}
-            </span>
+          {unreadCount > 0 && (
             <button
               type="button"
-              onClick={() => void refresh()}
-              className="flex min-h-12 items-center gap-2 rounded-xl px-3 font-semibold text-danger underline-offset-4 hover:underline"
+              onClick={() => void markAllRead()}
+              disabled={markingAll}
+              aria-busy={markingAll}
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-accent/10 px-3 py-1.5 text-xs font-bold text-accent transition-colors hover:bg-accent/20 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <IconRefresh className="h-4 w-4" />
-              إعادة المحاولة
+              <IconCheck className="h-4 w-4" />
+              <span>{markingAll ? "جارٍ التعليم…" : "تعليم الكل كمقروء"}</span>
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {loading && items.length === 0 ? (
-        <div className="space-y-3" aria-busy="true" aria-label="جارٍ تحميل الإشعارات">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-24 animate-pulse rounded-2xl border border-border bg-card"
-            />
-          ))}
+      {markError && (
+        <div
+          role="alert"
+          className="flex items-start gap-2 rounded-xl border border-danger/20 bg-danger/10 p-3 text-sm leading-relaxed text-danger"
+        >
+          <IconAlert className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>لم يتم حفظ التعديل: {markError}</span>
         </div>
-      ) : showErrorState ? (
+      )}
+
+      {/* فشل العدّاد وحده: القائمة سليمة لكن العدد غير موثوق */}
+      {error !== null && items.length > 0 && (
+        <div
+          role="status"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-danger/20 bg-danger/10 p-3 text-sm leading-relaxed text-danger"
+        >
+          <span className="flex items-start gap-2">
+            <IconAlert className="mt-0.5 h-4 w-4 shrink-0" />
+            تعذّر تحديث عدّاد الإشعارات: {error}
+          </span>
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            className="flex min-h-10 items-center gap-2 rounded-xl px-3 text-xs font-bold text-danger underline-offset-4 hover:underline"
+          >
+            <IconRefresh className="h-4 w-4" />
+            إعادة المحاولة
+          </button>
+        </div>
+      )}
+
+      {showErrorState ? (
         <EmptyState
           icon={<IconAlert className="h-6 w-6" />}
           title="تعذّر تحميل إشعاراتك"
@@ -229,7 +278,7 @@ export function NotificationsFullPage() {
             <button
               type="button"
               onClick={() => void refresh()}
-              className="flex min-h-12 items-center gap-2 rounded-xl px-4 text-base font-semibold text-accent transition-colors hover:bg-accent/10"
+              className="flex min-h-12 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-bold text-on-accent transition-colors hover:bg-accent/90"
             >
               <IconRefresh className="h-4 w-4" />
               إعادة المحاولة
@@ -239,13 +288,28 @@ export function NotificationsFullPage() {
       ) : showEmptyState ? (
         <EmptyState
           icon={<IconInbox className="h-6 w-6" />}
-          title="لا توجد إشعارات"
-          description="لما يحصل أي حدث جديد على حسابك (تقييمات، تحديثات، أو رسائل) هيظهر هنا."
+          title="لا توجد إشعارات حتى الآن"
+          description="ستصلك تنبيهات بأي تحديثات على طلباتك أو ردود الفنيين أو تقييماتك في السويس فور حدوثها."
+        />
+      ) : filter === "unread" && displayedItems.length === 0 ? (
+        <EmptyState
+          icon={<IconCheck className="h-6 w-6 text-accent" />}
+          title="كل الإشعارات مقروءة!"
+          description="لقد اطلعت على كافة التنبيهات السابقة، ولا توجد أي إشعارات جديدة حالياً."
+          action={
+            <button
+              type="button"
+              onClick={() => setFilter("all")}
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-bold text-foreground transition-colors hover:border-accent hover:text-accent shadow-2xs"
+            >
+              عرض كل الإشعارات ({toArabicDigits(items.length)})
+            </button>
+          }
         />
       ) : (
         <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-          {items.map((n) => (
-            <NotificationRow
+          {displayedItems.map((n) => (
+            <NotificationRowItem
               key={n.id}
               n={n}
               onMarkRead={markAsRead}

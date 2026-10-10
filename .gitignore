@@ -48,6 +48,10 @@ TASK*
 # Agents
 AGENTS.md
 .agents
+.agent
+
+# Impeccable
+.impeccable
 
 # Supabase: version-control config, migrations, and Edge Functions.
 # Local CLI state and environment secrets are ignored by supabase/.gitignore.

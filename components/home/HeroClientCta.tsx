@@ -22,7 +22,7 @@ export function HeroClientCta() {
               <button
                 type="button"
                 onClick={() => openSearchModal()}
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#0f172a] px-4 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-[#1e293b] hover:scale-105 hover:shadow-lg active:scale-95 sm:px-6 sm:py-2.5 sm:text-sm"
+                className="inline-flex items-center gap-1.5 rounded-full bg-accent text-on-accent px-4 py-2 text-xs font-bold shadow-md transition-all hover:bg-accent/90 hover:scale-105 hover:shadow-lg active:scale-95 sm:px-6 sm:py-2.5 sm:text-sm"
               >
                 <span>ابدأ البحث الآن</span>
                 <IconChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />

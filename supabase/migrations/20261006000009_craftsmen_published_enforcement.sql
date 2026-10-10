@@ -69,7 +69,7 @@ BEGIN
     RAISE EXCEPTION 'Unauthorized: cannot claim own lead.';
   END IF;
 
-  -- رد سابق من نفس الصانع = نجاح بلا تكرار إشعار
+  -- رد سابق من نفس الصنايعي = نجاح بلا تكرار إشعار
   IF EXISTS (
     SELECT 1 FROM public.lead_responses
     WHERE lead_id = p_lead_id AND craftsman_id = p_craftsman_id

@@ -9,11 +9,12 @@ import {
 } from "@/lib/db/craftsman-dashboard";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { ProfileCompletionCard } from "@/components/dashboard/ProfileCompletionCard";
-import { DashboardChips } from "@/components/dashboard/DashboardChips";
+import { DashboardSubnav } from "@/components/dashboard/DashboardSubnav";
 import { CraftsmanStatsGrid } from "@/components/dashboard/CraftsmanStatsGrid";
 import { CraftsmanActivityFeed } from "@/components/dashboard/CraftsmanActivityFeed";
 import { ReviewsSection } from "@/components/dashboard/ReviewsSection";
 import { ProfileSwitcher } from "@/components/dashboard/ProfileSwitcher";
+import { DashboardErrorState } from "@/components/dashboard/DashboardErrorState";
 import { ButtonLink } from "@/components/shared/ui/Button";
 import { IconUser } from "@/components/shared/icons";
 
@@ -54,6 +55,13 @@ export default async function DashboardPage({
           >
             تقديم طلب انضمام كصنايعي
           </ButtonLink>
+          <ButtonLink
+            href="/"
+            variant="ghost"
+            className="w-full sm:w-auto min-h-12 text-base justify-center"
+          >
+            تصفح دليل الصنايعية
+          </ButtonLink>
         </div>
       </div>
     );
@@ -76,15 +84,17 @@ export default async function DashboardPage({
 
   if (!data) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-card sm:p-10">
-        <p className="text-sm text-muted">تعذّر تحميل بيانات الملف المحدد.</p>
-      </div>
+      <DashboardErrorState
+        hasCustomCraftsmanParam={Boolean(params.craftsman)}
+      />
     );
   }
 
-  // حساب العروض المفتوحة لكل ملف لعرضها في المبدّل
+  // حساب العروض المفتوحة لكل ملف لعرضها في المبدّل وتبويب العروض
   const openCountsRecord: Record<string, number> = {};
+  let totalOpenLeads = 0;
   if (board.kind !== "no-profile") {
+    totalOpenLeads = board.open.length;
     const openCounts = countOpenByCraftsman(board.open);
     openCounts.forEach((count, id) => {
       openCountsRecord[id] = count;
@@ -92,32 +102,55 @@ export default async function DashboardPage({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-      {/* العمود الجانبي الأيمن: هوية الفني والتنقل وجاهزية الملف (4 أعمدة) */}
-      <div className="lg:col-span-4 space-y-6">
-        <DashboardHeader
-          profile={data.profile}
-          action={
-            <ProfileSwitcher
-              craftsmen={allCraftsmen}
-              activeCraftsmanId={activeCraftsman.id}
-              counts={openCountsRecord}
-            />
-          }
-        />
-        <DashboardChips variant="sidebar" />
-        <ProfileCompletionCard profile={data.profile} />
-      </div>
+    <div className="space-y-6">
+      {/* 1. شريط التبويبات الموحد المتصل بعرض الناف بار max-w-7xl */}
+      <DashboardSubnav openLeadsCount={totalOpenLeads} />
 
-      {/* العمود الرئيسي الأيسر: الإحصائيات، سجل التفاعلات، والمراجعات (8 أعمدة) */}
-      <div className="lg:col-span-8 space-y-6">
-        <CraftsmanStatsGrid stats={data.stats} />
-        <CraftsmanActivityFeed items={data.recentInteractions} />
-        <ReviewsSection
-          rating={data.stats.rating}
-          reviews={data.stats.reviews}
-          slug={data.profile.slug}
-        />
+      {/* 2. الهيكل التفاعلي المتجاوب بعرض max-w-7xl المريح (12 عمود على الديسكتوب) */}
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-12 lg:gap-8 items-start">
+        {/* العمود الجانبي (4 أعمدة على الديسكتوب): كارت الصورة والمعاينة وجاهزية الملف */}
+        <div className="contents lg:flex lg:flex-col lg:gap-6 lg:col-span-4">
+          {/* كارت الصورة الكبير وهوية الفني: على الموبايل order-3 بعد سجل التفاعلات، وعلى الديسكتوب في قمة السايدبار lg:order-1 */}
+          <div className="order-3 lg:order-1 w-full">
+            <DashboardHeader
+              profile={data.profile}
+              action={
+                <ProfileSwitcher
+                  craftsmen={allCraftsmen}
+                  activeCraftsmanId={activeCraftsman.id}
+                  counts={openCountsRecord}
+                />
+              }
+            />
+          </div>
+
+          {/* كارت جاهزية واكتمال الملف المهني: على الموبايل order-4، وعلى الديسكتوب أسفل السايدبار lg:order-2 */}
+          <div className="order-4 lg:order-2 w-full">
+            <ProfileCompletionCard profile={data.profile} />
+          </div>
+        </div>
+
+        {/* العمود الرئيسي (8 أعمدة على الديسكتوب): الإحصائيات وسجل التفاعلات والمراجعات */}
+        <div className="contents lg:flex lg:flex-col lg:gap-6 lg:col-span-8">
+          {/* مصفوفة الإحصائيات: على الموبايل تأتي أولاً تحت التبويبات order-1 */}
+          <div className="order-1 lg:order-1 w-full">
+            <CraftsmanStatsGrid stats={data.stats} />
+          </div>
+
+          {/* سجل تفاعلات وتواصل العملاء: على الموبايل order-2 تحت الإحصائيات */}
+          <div className="order-2 lg:order-2 w-full">
+            <CraftsmanActivityFeed items={data.recentInteractions} />
+          </div>
+
+          {/* آراء وتقييمات العملاء: على الموبايل order-5 بعد كروت السايدبار، وعلى الديسكتوب lg:order-3 */}
+          <div className="order-5 lg:order-3 w-full">
+            <ReviewsSection
+              rating={data.stats.rating}
+              reviews={data.stats.reviews}
+              slug={data.profile.slug}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

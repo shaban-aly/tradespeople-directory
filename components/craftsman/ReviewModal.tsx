@@ -171,7 +171,7 @@ export function ReviewModal({
                   <IconStar
                     className={`h-8 w-8 transition-colors ${
                       star <= activeRating
-                        ? "fill-amber-500 text-amber-500"
+                        ? "fill-warning text-warning"
                         : "text-muted/30"
                     }`}
                   />
@@ -186,7 +186,7 @@ export function ReviewModal({
           {/* مربع التعليق */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label htmlFor="review-comment" className="text-sm font-bold text-foreground">
+              <label htmlFor="review-comment" className="font-heading text-sm font-bold text-foreground">
                 اكتب تفاصيل تجربتك
                 <span className="text-danger ms-1">*</span>
               </label>
@@ -224,7 +224,7 @@ export function ReviewModal({
                 type="button"
                 onClick={handleDelete}
                 disabled={loading || deleting}
-                className="flex items-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-2 text-xs sm:text-sm font-bold text-red-600 transition-colors hover:bg-red-500/20 disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-xl border border-danger/30 bg-danger/10 px-3.5 py-2 font-heading text-xs sm:text-sm font-bold text-danger transition-colors hover:bg-danger/20 disabled:opacity-50"
               >
                 <IconTrash className="h-4 w-4" />
                 <span>{deleting ? "جاري الحذف..." : "حذف التقييم"}</span>

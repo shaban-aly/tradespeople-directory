@@ -14,7 +14,7 @@ export async function Footer() {
         className="h-1 w-full bg-linear-to-l from-accent via-action to-accent"
         aria-hidden
       />
-      <div className="mx-auto w-full max-w-5xl px-4 py-10">
+      <div className="mx-auto w-full max-w-7xl px-4 py-10">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <Link href="/" className="flex w-fit items-center gap-2">

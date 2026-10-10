@@ -180,7 +180,7 @@ export function ImagePositionEditor({
           <div className="text-center font-mono text-xs text-muted" dir="ltr">
             X: {focalPoint.x}% | Y: {focalPoint.y}% | {zoom.toFixed(1)}x
           </div>
-          <p className="text-[11px] text-center text-muted leading-tight">
+          <p className="text-xs text-center text-muted leading-tight">
             هكذا ستظهر صورتك للعملاء بعد تطبيق أبعاد وقص سوبابيز التلقائي
           </p>
         </div>

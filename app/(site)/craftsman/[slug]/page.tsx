@@ -14,6 +14,7 @@ import { breadcrumbSchema, craftsmanSchema } from "@/lib/seo/schema";
 import { getCraftsmanSeo } from "@/lib/seo/metadata";
 import { rankRelatedCraftsmen } from "@/lib/recommendations";
 import { getCraftsmanRatingSummary } from "@/lib/db/reviews";
+import { CraftsmanSidebar } from "@/components/craftsman/CraftsmanSidebar";
 import { PushActivationLayer } from "@/components/notifications/PushActivationLayer";
 import { siteUrl } from "@/lib/data/site";
 import { supabaseTransformUrl } from "@/lib/utils/image-transform";
@@ -46,10 +47,10 @@ export async function generateMetadata({
   // بدل إرسال الصورة الأصلية — الروابط تُبنى وقت الطلب والأصل لا يُمس.
   const ogImage = craftsman.image
     ? supabaseTransformUrl(craftsman.image, {
-        width: 1200,
-        height: 630,
-        resize: "cover",
-      }) ?? craftsman.image
+      width: 1200,
+      height: 630,
+      resize: "cover",
+    }) ?? craftsman.image
     : "/og.jpg";
 
   return {
@@ -103,17 +104,17 @@ export default async function CraftsmanPage({
 
   return (
     <>
-      <div className="mx-auto w-full max-w-4xl px-4 pb-8 pt-4">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-12 pt-4">
         <JsonLd
           data={breadcrumbSchema([
             { name: "الرئيسية", url: `${siteUrl}/` },
             ...(category
               ? [
-                  {
-                    name: category.name,
-                    url: `${siteUrl}/category/${category.slug}`,
-                  },
-                ]
+                {
+                  name: category.name,
+                  url: `${siteUrl}/category/${category.slug}`,
+                },
+              ]
               : []),
             {
               name: craftsman.name,
@@ -122,11 +123,28 @@ export default async function CraftsmanPage({
           ])}
         />
         <JsonLd data={craftsmanSchema(craftsman, category?.name ?? "صنايعي", ratingSummary)} />
-        <CraftsmanDetail
-          craftsman={craftsman}
-          category={category}
-          ratingSummary={ratingSummary}
-        />
+
+        {/* تخطيط عمودين للديسكتوب: المحتوى الرئيسي يميناً والسايدبار الملتصق يساراً */}
+        <div className="flex flex-col lg:flex-row lg:items-start lg:gap-8">
+          {/* العمود الرئيسي: البروفايل، النبذة، السوشيال، التقييمات */}
+          <div className="flex-1 min-w-0 w-full">
+            <CraftsmanDetail
+              craftsman={craftsman}
+              category={category}
+              ratingSummary={ratingSummary}
+            />
+          </div>
+
+          {/* السايد بار الأيسر الملتصق: كارت الاتصال الثابت + الصناع البدلاء بنفس التخصص */}
+          <CraftsmanSidebar
+            craftsman={craftsman}
+            category={category}
+            ratingSummary={ratingSummary}
+            relatedCraftsmen={relatedCraftsmen}
+            className="hidden lg:flex"
+          />
+        </div>
+
         <PushActivationLayer
           context={{
             scope: "category",
@@ -136,6 +154,7 @@ export default async function CraftsmanPage({
         />
       </div>
 
+      {/* قسم «شاهد أيضاً» الأفقي — يظهر على الموبايل والتابلت فقط */}
       <RelatedCraftsmen
         id="related"
         eyebrow="صنايعية مقترحة"
@@ -144,6 +163,7 @@ export default async function CraftsmanPage({
         icon={<IconTrendingUp className="h-4 w-4" />}
         craftsmen={relatedCraftsmen}
         categories={category ? [category] : []}
+        className="lg:hidden"
       />
     </>
   );

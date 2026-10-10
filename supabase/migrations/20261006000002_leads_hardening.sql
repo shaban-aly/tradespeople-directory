@@ -5,7 +5,7 @@
 --   2) خصوصية رقم العميل: سحب SELECT على customer_phone من authenticated؛
 --      الصنايعي لا يرى الرقم إلا بعد الاستلام عبر get_my_claimed_leads().
 --   3) حد إنشاء (5 طلبات / 24 ساعة لكل عميل) لمنع إغراق الصنايعية بالإشعارات.
---   4) claim_lead: يتحقق من أن الصانع approved ومن نفس تخصص الطلب، ويمنع
+--   4) claim_lead: يتحقق من أن الصنايعي approved ومن نفس تخصص الطلب، ويمنع
 --      العميل من استلام طلبه، ويسحب EXECUTE من anon.
 --   5) فهارس للاستعلامات الفعلية.
 -- =============================================================================
@@ -27,7 +27,7 @@ REVOKE SELECT ON public.leads FROM anon, authenticated;
 GRANT SELECT (id, customer_id, category_id, area_id, description, status, created_at, claimed_at)
   ON public.leads TO authenticated;
 
--- الطلبات التي استلمها الصانع الحالي مع رقم العميل (لأصحاب الطلب المستلَم فقط)
+-- الطلبات التي استلمها الصنايعي الحالي مع رقم العميل (لأصحاب الطلب المستلَم فقط)
 CREATE OR REPLACE FUNCTION public.get_my_claimed_leads()
 RETURNS TABLE (
   lead_id        uuid,
@@ -150,7 +150,7 @@ BEGIN
     RAISE EXCEPTION 'Unauthorized: cannot claim own lead.';
   END IF;
 
-  -- رد سابق من نفس الصانع = نجاح بلا تكرار إشعار
+  -- رد سابق من نفس الصنايعي = نجاح بلا تكرار إشعار
   IF EXISTS (
     SELECT 1 FROM public.lead_responses
     WHERE lead_id = p_lead_id AND craftsman_id = p_craftsman_id

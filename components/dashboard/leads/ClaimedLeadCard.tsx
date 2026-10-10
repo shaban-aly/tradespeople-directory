@@ -19,11 +19,26 @@ interface ClaimedLeadCardProps {
 }
 
 const CLAIM_STATUS: Partial<Record<LeadStatus, { label: string; className: string }>> = {
-  open: { label: "استلمته — بانتظار اكتمال العروض", className: "bg-amber-500/10 text-amber-600" },
-  claimed: { label: "في انتظار العميل", className: "bg-emerald-500/10 text-emerald-500" },
-  completed: { label: "تم الإنجاز", className: "bg-blue-500/10 text-blue-500" },
-  cancelled: { label: "أُلغي من العميل", className: "bg-danger/10 text-danger" },
-  expired: { label: "انتهت الصلاحية", className: "bg-muted/10 text-muted" },
+  open: {
+    label: "استلمته — بانتظار اكتمال العروض",
+    className: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20",
+  },
+  claimed: {
+    label: "في انتظار العميل",
+    className: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
+  },
+  completed: {
+    label: "تم الإنجاز",
+    className: "bg-accent/15 text-accent border border-accent/20",
+  },
+  cancelled: {
+    label: "أُلغي من العميل",
+    className: "bg-danger/10 text-danger border border-danger/20",
+  },
+  expired: {
+    label: "انتهت الصلاحية",
+    className: "bg-muted/15 text-muted border border-border/60",
+  },
 };
 
 export function ClaimedLeadCard({ lead }: ClaimedLeadCardProps) {
@@ -32,7 +47,7 @@ export function ClaimedLeadCard({ lead }: ClaimedLeadCardProps) {
 
   return (
     <div
-      className={`border-border border bg-background p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4${
+      className={`rounded-2xl border border-border/80 bg-card p-4 sm:p-5 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all hover:border-accent/40${
         closed ? " opacity-70" : ""
       }`}
     >

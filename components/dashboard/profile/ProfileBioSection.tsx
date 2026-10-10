@@ -27,9 +27,20 @@ export function ProfileBioSection({
             نبذة عن خدماتك وخبرتك المهنية
           </h2>
         </div>
-        <span className="text-xs font-bold text-muted">
-          {description.length}/1000 حرف
-        </span>
+        <div className="flex items-center gap-2">
+          {description.trim().length >= 40 ? (
+            <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              جاهز ومكتمل (≥40 حرف)
+            </span>
+          ) : (
+            <span className="hidden sm:inline text-xs text-muted">
+              ({description.trim().length}/40 حرف للحد الأدنى)
+            </span>
+          )}
+          <span className="text-xs font-bold text-muted">
+            {description.length}/1000 حرف
+          </span>
+        </div>
       </div>
 
       <div>

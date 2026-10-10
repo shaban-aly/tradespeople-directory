@@ -7,7 +7,13 @@ import { useToast } from "@/hooks/ui/useToast";
 import { ConfirmDialog } from "@/components/shared/ui/ConfirmDialog";
 import { completeLeadAction } from "@/app/actions/leads";
 
-export function LeadCompleteButton({ leadId }: { leadId: string }) {
+export function LeadCompleteButton({
+  leadId,
+  className,
+}: {
+  leadId: string;
+  className?: string;
+}) {
   const [isPending, startTransition] = useTransition();
   const [confirming, setConfirming] = useState(false);
   const { toast } = useToast();
@@ -30,7 +36,7 @@ export function LeadCompleteButton({ leadId }: { leadId: string }) {
       <Button
         variant="primary"
         size="sm"
-        className="gap-2 font-bold w-full sm:w-auto mt-4"
+        className={`gap-2 font-bold w-full sm:w-auto shrink-0 ${className ?? "mt-4"}`}
         onClick={() => setConfirming(true)}
         disabled={isPending}
       >

@@ -70,11 +70,11 @@ export function ReviewCard({
           />
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <div className="min-w-0 truncate text-base font-bold text-foreground">
+              <div className="min-w-0 truncate font-heading text-base font-bold text-foreground">
                 {name}
               </div>
               {showBadge && (
-                <span className="shrink-0 rounded-md bg-accent/15 px-2 py-0.5 text-[11px] font-bold text-accent">
+                <span className="shrink-0 rounded-md bg-accent/15 px-2 py-0.5 text-xs font-bold text-accent">
                   تقييمك
                 </span>
               )}
@@ -87,7 +87,7 @@ export function ReviewCard({
 
         <div className="flex items-center justify-between gap-4 sm:justify-end">
           <div
-            className="flex items-center gap-0.5 text-amber-500"
+            className="flex items-center gap-0.5 text-warning"
             role="img"
             aria-label={`${rating} من 5 نجوم`}
           >
@@ -107,7 +107,7 @@ export function ReviewCard({
                   onClick={onEdit}
                   title="تعديل تقييمك"
                   aria-label="تعديل تقييمك"
-                  className="rounded-lg border border-border p-2 text-muted transition-colors hover:border-accent hover:text-accent"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted transition-colors hover:border-accent hover:text-accent cursor-pointer"
                 >
                   <IconEdit className="h-4 w-4" />
                 </button>
@@ -119,7 +119,7 @@ export function ReviewCard({
                   disabled={deleting}
                   title="حذف تقييمك"
                   aria-label="حذف تقييمك"
-                  className="rounded-lg border border-border p-2 text-muted transition-colors hover:border-danger hover:text-danger disabled:opacity-50"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted transition-colors hover:border-danger hover:text-danger disabled:opacity-50 cursor-pointer"
                 >
                   <IconTrash className="h-4 w-4" />
                 </button>
@@ -130,17 +130,17 @@ export function ReviewCard({
       </div>
 
       {/* الصف السفلي: التعليق في جهة، والتاريخ في جهة مقابله */}
-      <div className="mt-3 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        {/* min-w-0 + break-words: يمنع أي تعليق طويل (رابط أو رقم متصل)
+      <div className="mt-3.5 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        {/* min-w-0 + break-words: يمنع أي تعليق طويل
             من توسيع الكارت والخروج منه أفقياً. */}
-        <p className="min-w-0 text-sm break-words leading-relaxed text-foreground/90">
+        <p className="min-w-0 text-base break-words leading-relaxed text-foreground/95">
           {comment ? (
             `«${comment}»`
           ) : (
-            <span className="text-xs text-muted">بدون تعليق مكتوب</span>
+            <span className="text-sm italic text-muted">بدون تعليق مكتوب</span>
           )}
         </p>
-        <span className="shrink-0 text-xs text-muted">
+        <span className="shrink-0 text-xs font-medium text-muted/80 pt-0.5">
           {new Date(createdAt).toLocaleDateString("ar-EG", {
             year: "numeric",
             month: "short",

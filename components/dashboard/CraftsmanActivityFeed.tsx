@@ -11,27 +11,46 @@ interface CraftsmanActivityFeedProps {
 }
 
 type FeedFilter = "all" | "whatsapp" | "phone" | "registered";
+type TimeframeFilter = "7d" | "30d" | "all";
+
+const TIMEFRAMES: { id: TimeframeFilter; label: string }[] = [
+  { id: "7d", label: "آخر ٧ أيام" },
+  { id: "30d", label: "آخر ٣٠ يوماً" },
+  { id: "all", label: "الكل" },
+];
 
 export function CraftsmanActivityFeed({
   items = [],
 }: CraftsmanActivityFeedProps) {
   const [activeFilter, setActiveFilter] = useState<FeedFilter>("all");
+  const [timeframe, setTimeframe] = useState<TimeframeFilter>("30d");
 
-  const whatsappCount = items.filter((i) => i.contactMethod === "whatsapp").length;
-  const phoneCount = items.filter((i) => i.contactMethod === "phone").length;
-  const registeredCount = items.filter((i) => i.userStatus === "authenticated").length;
+  // 1. تصفية العناصر بحسب الفترة الزمنية المختارة
+  const timeframeItems = useMemo(() => {
+    if (timeframe === "all") return items;
+    const now = Date.now();
+    const daysLimit = timeframe === "7d" ? 7 : 30;
+    const cutoff = now - daysLimit * 24 * 60 * 60 * 1000;
+    return items.filter((item) => new Date(item.createdAt).getTime() >= cutoff);
+  }, [items, timeframe]);
 
+  // 2. حساب الأعداد للفترة الزمنية الحالية
+  const whatsappCount = timeframeItems.filter((i) => i.contactMethod === "whatsapp").length;
+  const phoneCount = timeframeItems.filter((i) => i.contactMethod === "phone").length;
+  const registeredCount = timeframeItems.filter((i) => i.userStatus === "authenticated").length;
+
+  // 3. تطبيق فلتر طريقة التواصل أو نوع العميل
   const filteredItems = useMemo(() => {
-    if (activeFilter === "whatsapp") return items.filter((i) => i.contactMethod === "whatsapp");
-    if (activeFilter === "phone") return items.filter((i) => i.contactMethod === "phone");
-    if (activeFilter === "registered") return items.filter((i) => i.userStatus === "authenticated");
-    return items;
-  }, [items, activeFilter]);
+    if (activeFilter === "whatsapp") return timeframeItems.filter((i) => i.contactMethod === "whatsapp");
+    if (activeFilter === "phone") return timeframeItems.filter((i) => i.contactMethod === "phone");
+    if (activeFilter === "registered") return timeframeItems.filter((i) => i.userStatus === "authenticated");
+    return timeframeItems;
+  }, [timeframeItems, activeFilter]);
 
   const hasItems = items.length > 0;
 
   const filterTabs: { id: FeedFilter; label: string; count: number }[] = [
-    { id: "all", label: "الكل", count: items.length },
+    { id: "all", label: "الكل", count: timeframeItems.length },
     { id: "whatsapp", label: "واتساب", count: whatsappCount },
     { id: "phone", label: "مكالمات", count: phoneCount },
     { id: "registered", label: "عملاء مسجلون", count: registeredCount },
@@ -39,7 +58,7 @@ export function CraftsmanActivityFeed({
 
   return (
     <section className="rounded-2xl sm:rounded-3xl border border-border/80 bg-card p-4 sm:p-6 shadow-card">
-      {/* Header */}
+      {/* Header مع التصفية الزمنية المدمجة */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border/70 pb-4">
         <div>
           <div className="flex items-center gap-2">
@@ -48,32 +67,45 @@ export function CraftsmanActivityFeed({
             </h3>
             {hasItems && (
               <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-bold text-accent">
-                {toArabicDigits(items.length)} حركة
+                {toArabicDigits(timeframeItems.length)} حركة
               </span>
             )}
           </div>
           <p className="mt-0.5 text-xs text-muted">
-            العملاء الذين طلبوا رقم هاتفك أو راسلوك عبر واتساب (آخر 30 يوماً)
+            العملاء الذين طلبوا رقم هاتفك أو راسلوك عبر واتساب للتنسيق والعمل
           </p>
         </div>
 
-        {/* Breakdown counter badges on desktop */}
+        {/* مبدل الفترة الزمنية المدمج */}
         {hasItems && (
-          <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted">
-            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
-              <IconWhatsApp className="h-3.5 w-3.5" />
-              {toArabicDigits(whatsappCount)} واتساب
-            </span>
-            <span>•</span>
-            <span className="inline-flex items-center gap-1 text-accent font-semibold">
-              <IconPhone className="h-3.5 w-3.5" />
-              {toArabicDigits(phoneCount)} اتصال
-            </span>
+          <div
+            role="group"
+            aria-label="تحديد الفترة الزمنية"
+            className="flex items-center self-start sm:self-auto rounded-xl bg-background/80 p-1 border border-border/70 text-xs font-semibold shadow-2xs"
+          >
+            {TIMEFRAMES.map((tf) => {
+              const isActive = timeframe === tf.id;
+              return (
+                <button
+                  key={tf.id}
+                  type="button"
+                  onClick={() => setTimeframe(tf.id)}
+                  aria-pressed={isActive}
+                  className={`rounded-lg px-2.5 py-1 text-xs transition-all ${
+                    isActive
+                      ? "bg-card text-foreground shadow-xs font-bold border border-border/60"
+                      : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  {tf.label}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* Filter Chips */}
+      {/* شريط فلاتر طريقة التواصل والعملاء */}
       {hasItems && (
         <div className="flex items-center gap-1.5 overflow-x-auto pt-3 pb-1 no-scrollbar">
           {filterTabs.map((tab) => {
@@ -91,7 +123,7 @@ export function CraftsmanActivityFeed({
               >
                 <span>{tab.label}</span>
                 <span
-                  className={`rounded-full px-1.5 py-0.2 text-[10px] ${
+                  className={`rounded-full px-1.5 py-0.2 text-xs ${
                     isActive ? "bg-accent-foreground/20 text-accent-foreground" : "bg-muted/20 text-muted"
                   }`}
                 >
@@ -109,11 +141,29 @@ export function CraftsmanActivityFeed({
           <EmptyState
             icon={<IconPhone className="h-6 w-6 text-muted" />}
             title={
-              activeFilter === "all"
-                ? "لا توجد تفاعلات مسجلة مؤخراً"
-                : "لا توجد تفاعلات بهذا الفلتر"
+              !hasItems
+                ? "لا توجد تفاعلات مسجلة بعد"
+                : "لا توجد تفاعلات مطابقة لهذا الفلتر"
             }
-            description="ستظهر هنا العمليات فور قيام العملاء بالضغط على الاتصال أو مراسلتك على واتساب."
+            description={
+              !hasItems
+                ? "ستظهر هنا العمليات فور قيام العملاء بالضغط على الاتصال أو مراسلتك على واتساب."
+                : "جرّب تغيير الفترة الزمنية أو اختيار فلتر آخر لعرض باقي التفاعلات."
+            }
+            action={
+              hasItems && (activeFilter !== "all" || timeframe !== "all") ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveFilter("all");
+                    setTimeframe("all");
+                  }}
+                  className="text-xs font-bold text-accent hover:underline"
+                >
+                  عرض جميع التفاعلات
+                </button>
+              ) : undefined
+            }
           />
         </div>
       ) : (
@@ -152,7 +202,7 @@ export function CraftsmanActivityFeed({
                       </span>
 
                       <span
-                        className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${
+                        className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-semibold ${
                           isAuthenticated
                             ? "bg-accent/15 text-accent"
                             : "bg-muted/15 text-muted"
@@ -173,7 +223,7 @@ export function CraftsmanActivityFeed({
                       </span>
                     </div>
 
-                    <div className="mt-0.5 text-[11px] text-muted flex items-center gap-2">
+                    <div className="mt-0.5 text-xs text-muted flex items-center gap-2">
                       <span>
                         {new Date(item.createdAt).toLocaleTimeString("ar-EG", {
                           hour: "2-digit",

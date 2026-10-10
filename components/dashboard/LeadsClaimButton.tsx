@@ -44,7 +44,7 @@ export function LeadsClaimButton({ leadId, craftsmanId }: LeadsClaimButtonProps)
     <div className="space-y-2">
       <Button
         type="button"
-        variant="action"
+        variant="primary"
         className="w-full"
         disabled={isPending}
         onClick={() => setConfirming(true)}

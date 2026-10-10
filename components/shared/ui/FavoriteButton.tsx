@@ -23,10 +23,10 @@ export function FavoriteButton({ slug }: { slug: string }) {
         aria-pressed={active}
         aria-label={active ? "إزالة من المحفوظات" : "حفظ في المحفوظات"}
         title={active ? "إزالة من المحفوظات" : "حفظ في المحفوظات"}
-        className={`flex h-11 w-11 items-center justify-center rounded-full border border-border shadow-sm backdrop-blur transition-colors ${
+        className={`flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full border shadow-2xs backdrop-blur-md transition-all duration-200 active:scale-90 hover:scale-105 ${
           active
-            ? "bg-accent text-on-accent"
-            : "bg-card/90 text-muted hover:text-accent"
+            ? "border-accent bg-accent text-on-accent shadow-accent/20"
+            : "border-border/80 bg-card/90 text-muted hover:border-accent hover:text-accent hover:shadow-xs"
         }`}
       >
         <IconStar className={`h-4.5 w-4.5 ${active ? "fill-current" : ""}`} />

@@ -166,7 +166,7 @@ export function ReviewsSection({
                     />
                   </div>
 
-                  <span className="w-10 text-left font-mono text-[11px] text-muted">
+                  <span className="w-10 text-left font-mono text-xs text-muted">
                     {toArabicDigits(row.count)}
                   </span>
                 </button>
@@ -203,7 +203,7 @@ export function ReviewsSection({
                   }`}
                 >
                   <span>{toArabicDigits(s)} نجوم</span>
-                  <span className="text-[10px]">({toArabicDigits(count)})</span>
+                  <span className="text-xs">({toArabicDigits(count)})</span>
                 </button>
               );
             })}
@@ -231,7 +231,7 @@ export function ReviewsSection({
                           <p className="truncate text-sm font-bold text-foreground">
                             {rev.author}
                           </p>
-                          <p className="text-[11px] text-muted">
+                          <p className="text-xs text-muted">
                             {new Date(rev.date).toLocaleDateString("ar-EG", {
                               year: "numeric",
                               month: "short",

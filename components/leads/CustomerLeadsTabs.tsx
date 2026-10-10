@@ -36,12 +36,17 @@ export function CustomerLeadsTabs({
         onChange={setTab}
       />
       {visible.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-card p-8 text-center">
-          <p className="text-base font-bold text-foreground">
-            {tab === "active" ? "لا توجد طلبات نشطة حالياً" : "لا توجد طلبات سابقة بعد"}
+        <div className="rounded-2xl border border-border bg-card p-8 sm:p-12 text-center shadow-card space-y-3">
+          <p className="text-lg font-heading font-bold text-foreground">
+            {tab === "active" ? "لا توجد طلبات صيانة نشطة حالياً" : "لا توجد طلبات سابقة بعد"}
+          </p>
+          <p className="text-sm text-muted max-w-md mx-auto leading-relaxed">
+            {tab === "active"
+              ? "جميع طلباتك السابقة تم إنجازها بنجاح أو انتهت مهلتها. إذا كنت بحاجة لفني جديد في السويس، سجل طلبك الآن."
+              : "ستظهر هنا كافة طلبات الصيانة بعد إتمام العمل مع الفني أو انتهاء مدة النشر لأرشفتها والرجوع إليها."}
           </p>
           {tab === "active" && emptyActiveAction && (
-            <div className="mx-auto mt-4 w-fit">{emptyActiveAction}</div>
+            <div className="mx-auto pt-2 w-fit">{emptyActiveAction}</div>
           )}
         </div>
       ) : (

@@ -54,7 +54,7 @@ export function BottomNav() {
       id: "role-slot",
       // الخانة الرابعة حسب الدور: فني/مشرف → لوحة التحكم، عميل → طلباتي، زائر → المفضلة
       label: isCraftsman || isAdmin ? "لوحة التحكم" : isClient ? "طلباتي" : "المفضلة",
-      href: isCraftsman ? "/dashboard" : isAdmin ? "/admin" : isClient ? "/profile/requests" : "/favorites",
+      href: isCraftsman ? "/dashboard" : isAdmin ? "/admin" : isClient ? "/my-requests" : "/favorites",
       icon: isCraftsman || isAdmin ? IconLayoutDashboard : isClient ? IconInbox : IconStar,
       isActive:
         isCraftsman
@@ -62,7 +62,7 @@ export function BottomNav() {
           : isAdmin
             ? false
             : isClient
-              ? pathname === "/profile/requests"
+              ? pathname === "/my-requests"
               : pathname === "/favorites",
       badge:
         !isCraftsman && !isAdmin && !isClient && favoritesCount > 0 ? favoritesCount : null,

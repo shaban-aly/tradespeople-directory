@@ -22,7 +22,7 @@ export default function DashboardLayout({
       <div className="flex min-h-screen flex-col bg-background">
         <Header />
         <main className="flex-1 w-full">
-          <div className="mx-auto max-w-5xl px-4 py-6 sm:py-8 flex flex-col gap-6">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col gap-6">
             {children}
           </div>
         </main>

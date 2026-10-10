@@ -10,7 +10,7 @@ import {
 } from "@/lib/db/craftsman-dashboard";
 import { getAreasList } from "@/lib/db/craftsman-mutations";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { DashboardChips } from "@/components/dashboard/DashboardChips";
+import { DashboardSubnav } from "@/components/dashboard/DashboardSubnav";
 import { ProfileSwitcher } from "@/components/dashboard/ProfileSwitcher";
 import { ProfileCompletionCard } from "@/components/dashboard/ProfileCompletionCard";
 import { ProfileEditForm } from "@/components/dashboard/ProfileEditForm";
@@ -58,9 +58,11 @@ export default async function CraftsmanProfileEditPage({
     );
   }
 
-  // حساب العروض المفتوحة لكل ملف لعرضها في المبدّل
+  // حساب العروض المفتوحة لكل ملف لعرضها في المبدّل وتبويب العروض
   const openCountsRecord: Record<string, number> = {};
+  let totalOpenLeads = 0;
   if (board.kind !== "no-profile") {
+    totalOpenLeads = board.open.length;
     const openCounts = countOpenByCraftsman(board.open);
     openCounts.forEach((count, id) => {
       openCountsRecord[id] = count;
@@ -68,45 +70,62 @@ export default async function CraftsmanProfileEditPage({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-      {/* العمود الجانبي الأيمن: الهيدر (المعاينة الحية) والتنقل ونسبة الاكتمال (4 أعمدة) */}
-      <div className="lg:col-span-4 space-y-6">
-        <DashboardHeader
-          profile={data.profile}
-          action={
-            <ProfileSwitcher
-              craftsmen={briefs}
-              activeCraftsmanId={activeId}
-              counts={openCountsRecord}
-            />
-          }
-        />
-        <DashboardChips variant="sidebar" />
-        <ProfileCompletionCard profile={data.profile} hideActionLink={true} />
-      </div>
+    <div className="space-y-6">
+      {/* 1. شريط التبويبات الموحد لكافة صفحات لوحة تحكم الفني (DashboardSubnav) */}
+      <DashboardSubnav openLeadsCount={totalOpenLeads} />
 
-      {/* العمود الرئيسي الأيسر: محرر بيانات البروفايل المتكامل (8 أعمدة) */}
-      <div className="lg:col-span-8 space-y-6">
-        <div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5 shadow-xs">
-          <h1 className="font-heading text-lg sm:text-xl font-bold text-foreground">
-            تعديل وتحديث بيانات الملف المهني
-          </h1>
-          <p className="mt-1 text-xs sm:text-sm text-muted">
-            هذه البيانات هي التي تظهر لعملاء السويس عند زيارة صفحتك في الدليل. احرص على دقة البيانات والصور لجذب المزيد من الزبائن.
-          </p>
+      {/* 2. الهيكل التفاعلي المتجاوب بعرض max-w-7xl المريح (12 عمود على الديسكتوب) */}
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-12 lg:gap-8 items-start">
+        {/* العمود الجانبي (4 أعمدة على الديسكتوب): كارت الصورة والمعاينة الحية وجاهزية الملف */}
+        <div className="contents lg:flex lg:flex-col lg:gap-6 lg:col-span-4">
+          {/* كارت الصورة الشخصية والمعاينة الحية المدمج: على الموبايل order-1 في أعلى البيانات، وعلى الديسكتوب في قمة السايدبار lg:order-1 */}
+          <div className="order-1 lg:order-1 w-full">
+            <DashboardHeader
+              profile={data.profile}
+              editable={true}
+              action={
+                <ProfileSwitcher
+                  craftsmen={briefs}
+                  activeCraftsmanId={activeId}
+                  counts={openCountsRecord}
+                />
+              }
+            />
+          </div>
+
+          {/* كارت اكتمال الملف وجاهزيته: على الموبايل order-3 بعد البيانات، وعلى الديسكتوب أسفل السايدبار lg:order-2 */}
+          <div className="order-3 lg:order-2 w-full">
+            <ProfileCompletionCard profile={data.profile} hideActionLink={true} />
+          </div>
         </div>
 
-        <Suspense
-          fallback={
-            <div className="h-96 w-full animate-pulse rounded-2xl border border-border bg-card" />
-          }
-        >
-          <ProfileEditForm
-            key={data.profile.imageUrl ?? "no-image"}
-            profile={data.profile}
-            initialAreas={areas}
-          />
-        </Suspense>
+        {/* العمود الرئيسي (8 أعمدة على الديسكتوب): نموذج تحرير وتحديث البيانات المهنية */}
+        <div className="contents lg:flex lg:flex-col lg:gap-6 lg:col-span-8">
+          <div className="order-2 lg:order-1 w-full space-y-6">
+            {/* عنوان الصفحة ووصفها التوضيحي */}
+            <div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5 shadow-xs">
+              <h1 className="font-heading text-lg sm:text-xl font-bold text-foreground">
+                تعديل وتحديث بيانات الملف المهني
+              </h1>
+              <p className="mt-1 text-xs sm:text-sm text-muted">
+                هذه البيانات هي التي تظهر لعملاء السويس عند زيارة صفحتك في الدليل. احرص على دقة البيانات والصور لجذب المزيد من الزبائن.
+              </p>
+            </div>
+
+            {/* نموذج إدخال وتعديل البيانات المهنية مع استغلال العرض المريح */}
+            <Suspense
+              fallback={
+                <div className="h-96 w-full animate-pulse rounded-2xl border border-border bg-card" />
+              }
+            >
+              <ProfileEditForm
+                key={data.profile.imageUrl ?? "no-image"}
+                profile={data.profile}
+                initialAreas={areas}
+              />
+            </Suspense>
+          </div>
+        </div>
       </div>
     </div>
   );

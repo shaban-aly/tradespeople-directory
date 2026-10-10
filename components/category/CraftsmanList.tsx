@@ -1,249 +1,209 @@
 "use client";
 
-import { useState } from "react";
 import type { Category, Craftsman } from "@/lib/data/craftsmen";
-import {
-  getAvailableAreas,
-  sortCraftsmen,
-  type CraftsmanSort,
-} from "@/lib/data/craftsmen";
+import { useCategoryCraftsmen } from "@/hooks/category/useCategoryCraftsmen";
+import { CategorySidebar } from "@/components/category/CategorySidebar";
+import { CraftsmanFilters } from "@/components/category/CraftsmanFilters";
 import { CraftsmanGrid } from "@/components/shared/ui/CraftsmanGrid";
 import { BottomSheet } from "@/components/shared/ui/BottomSheet";
 import { Button, ButtonLink } from "@/components/shared/ui/Button";
 import { EmptyState } from "@/components/shared/ui/EmptyState";
-import { IconChevronDown, IconSliders, IconUserPlus } from "@/components/shared/icons";
+import { IconUserPlus, IconCheck } from "@/components/shared/icons";
 import { toArabicDigits } from "@/lib/utils/format";
 
-const sortOptions: { value: CraftsmanSort; label: string }[] = [
-  { value: "verified", label: "الموثّقون أولاً" },
-  { value: "recent", label: "الأحدث أولاً" },
-];
-
-function chipClass(active: boolean, chipBg: string) {
-  return `inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-base font-bold transition-colors ${
-    active
-      ? "border-accent bg-accent text-on-accent"
-      : `border-border ${chipBg} text-foreground hover:border-accent hover:text-accent`
-  }`;
-}
-
-function AreaChips({
-  areas,
-  selected,
-  onChange,
-  chipBg,
-}: {
+interface CraftsmanListProps {
+  craftsmen: Craftsman[];
   areas: string[];
-  selected: string;
-  onChange: (area: string) => void;
-  chipBg: string;
-}) {
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => onChange("all")}
-        aria-pressed={selected === "all"}
-        className={chipClass(selected === "all", chipBg)}
-      >
-        كل المناطق
-      </button>
-      {areas.map((area) => (
-        <button
-          key={area}
-          type="button"
-          onClick={() => onChange(area)}
-          aria-pressed={selected === area}
-          className={chipClass(selected === area, chipBg)}
-        >
-          {area}
-        </button>
-      ))}
-    </>
-  );
-}
-
-function SortSelect({
-  sort,
-  onChange,
-}: {
-  sort: CraftsmanSort;
-  onChange: (sort: CraftsmanSort) => void;
-}) {
-  return (
-    <select
-      id="sort"
-      value={sort}
-      onChange={(event) => onChange(event.target.value as CraftsmanSort)}
-      className="rounded-lg border border-border bg-card px-3 py-2 text-base text-foreground focus:border-accent focus:outline-none"
-    >
-      {sortOptions.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-  );
-}
-
-function SheetFilters({
-  areas,
-  area,
-  sort,
-  onArea,
-  onSort,
-}: {
-  areas: string[];
-  area: string;
-  sort: CraftsmanSort;
-  onArea: (area: string) => void;
-  onSort: (sort: CraftsmanSort) => void;
-}) {
-  return (
-    <div className="flex flex-col gap-4">
-      <section className="rounded-xl border border-border bg-card p-4">
-        <h2 className="mb-3 flex items-center gap-2 text-base font-extrabold text-foreground">
-          <span aria-hidden className="h-4 w-1 rounded-full bg-accent" />
-          المنطقة
-        </h2>
-        <div className="flex flex-wrap items-center gap-2">
-          <AreaChips
-            areas={areas}
-            selected={area}
-            onChange={onArea}
-            chipBg="bg-background"
-          />
-        </div>
-      </section>
-      <section className="rounded-xl border border-border bg-card p-4">
-        <h2 className="mb-3 flex items-center gap-2 text-base font-extrabold text-foreground">
-          <span aria-hidden className="h-4 w-1 rounded-full bg-accent" />
-          ترتيب
-        </h2>
-        <SortSelect sort={sort} onChange={onSort} />
-      </section>
-    </div>
-  );
+  category?: Category;
 }
 
 export function CraftsmanList({
   craftsmen,
   areas,
   category,
-}: {
-  craftsmen: Craftsman[];
-  areas: string[];
-  category?: Category;
-}) {
-  const [area, setArea] = useState("all");
-  const [sort, setSort] = useState<CraftsmanSort>("verified");
-  const [sheetOpen, setSheetOpen] = useState(false);
-
-  const availableAreas = getAvailableAreas(craftsmen, areas);
-  const hasFilters = area !== "all";
-  const activeCount = (area !== "all" ? 1 : 0) + (sort !== "verified" ? 1 : 0);
-
-  const filtered = sortCraftsmen(
-    hasFilters ? craftsmen.filter((c) => c.area === area) : craftsmen,
+}: CraftsmanListProps) {
+  const {
+    selectedArea,
+    setSelectedArea,
     sort,
-  );
+    setSort,
+    isSheetOpen,
+    setIsSheetOpen,
+    availableAreas,
+    hasFilters,
+    activeFilterCount,
+    filteredCraftsmen,
+    resetFilters,
+  } = useCategoryCraftsmen({ craftsmen, areas });
 
   return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setSheetOpen(true)}
-        className="mb-4 flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 text-base font-bold text-foreground shadow-card transition-colors hover:border-accent sm:hidden"
-      >
-        <span className="flex items-center gap-2">
-          <IconSliders className="h-5 w-5 text-muted" />
-          تعديل الفلاتر
-        </span>
-        <span className="flex items-center gap-2">
-          {activeCount > 0 && (
-            <span className="flex min-w-6 h-6 items-center justify-center rounded-full bg-accent px-2 text-sm font-bold text-on-accent">
-              {toArabicDigits(activeCount)}
-            </span>
-          )}
-          <IconChevronDown className="h-5 w-5 text-muted" />
-        </span>
-      </button>
+    <div className="flex flex-col lg:flex-row lg:items-start lg:gap-8">
+      {/* 1. السايدبار الثابت على شاشات الديسكتوب (مثل صفحة البحث) */}
+      <aside className="hidden lg:block lg:w-64 xl:w-72 shrink-0 sticky top-24">
+        <CategorySidebar
+          availableAreas={availableAreas}
+          selectedArea={selectedArea}
+          onAreaChange={setSelectedArea}
+          sort={sort}
+          onSortChange={setSort}
+          craftsmen={craftsmen}
+          onReset={resetFilters}
+          hasFilters={hasFilters}
+          activeCount={activeFilterCount}
+        />
+      </aside>
 
-      <div className="mb-6 hidden flex-col gap-4 sm:flex">
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-base font-bold">ترتيب:</span>
-          <SortSelect sort={sort} onChange={setSort} />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-base font-bold">المنطقة:</span>
-          <AreaChips
-            areas={availableAreas}
-            selected={area}
-            onChange={setArea}
-            chipBg="bg-card"
+      {/* 2. منطقة النتائج الرئيسية وفلاتر الموبايل */}
+      <div className="flex-1 min-w-0 flex flex-col gap-6">
+        {/* شريط الفلاتر السريعة يظهر فقط على الموبايل والتابلت */}
+        <div className="lg:hidden">
+          <CraftsmanFilters
+            availableAreas={availableAreas}
+            selectedArea={selectedArea}
+            onAreaChange={setSelectedArea}
+            sort={sort}
+            onSortChange={setSort}
+            onOpenSheet={() => setIsSheetOpen(true)}
+            activeFilterCount={activeFilterCount}
           />
         </div>
+
+        {/* نافذة التصفية السفلية للموبايل (Bottom Sheet) */}
+        <BottomSheet
+          open={isSheetOpen}
+          onClose={() => setIsSheetOpen(false)}
+          title="تعديل خيارات العرض"
+          footer={
+            <Button
+              type="button"
+              onClick={() => setIsSheetOpen(false)}
+              className="w-full"
+            >
+              عرض النتائج ({toArabicDigits(filteredCraftsmen.length)})
+            </Button>
+          }
+        >
+          <div className="flex flex-col gap-5 py-2">
+            {/* قسم الترتيب */}
+            <section className="flex flex-col gap-3 rounded-2xl border border-border/80 bg-card p-4">
+              <h3 className="font-heading text-sm font-bold text-foreground">
+                ترتيب النتائج
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSort("verified")}
+                  className={`flex min-h-11 items-center justify-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition-all ${
+                    sort === "verified"
+                      ? "border-accent bg-accent/10 text-accent"
+                      : "border-border/80 bg-background text-muted hover:border-accent hover:text-foreground"
+                  }`}
+                >
+                  {sort === "verified" && <IconCheck className="h-3.5 w-3.5" />}
+                  <span>الموثّقون أولاً</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSort("recent")}
+                  className={`flex min-h-11 items-center justify-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition-all ${
+                    sort === "recent"
+                      ? "border-accent bg-accent/10 text-accent"
+                      : "border-border/80 bg-background text-muted hover:border-accent hover:text-foreground"
+                  }`}
+                >
+                  {sort === "recent" && <IconCheck className="h-3.5 w-3.5" />}
+                  <span>الأحدث تسجيلاً</span>
+                </button>
+              </div>
+            </section>
+
+            {/* قسم المناطق */}
+            <section className="flex flex-col gap-3 rounded-2xl border border-border/80 bg-card p-4">
+              <h3 className="font-heading text-sm font-bold text-foreground">
+                اختر المنطقة
+              </h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedArea("all")}
+                  className={`inline-flex min-h-10 items-center justify-center rounded-full border px-4 text-xs font-bold transition-all ${
+                    selectedArea === "all"
+                      ? "border-accent bg-accent text-on-accent"
+                      : "border-border/80 bg-background text-foreground hover:border-accent"
+                  }`}
+                >
+                  كل المناطق
+                </button>
+                {availableAreas.map((area) => (
+                  <button
+                    key={area}
+                    type="button"
+                    onClick={() => setSelectedArea(area)}
+                    className={`inline-flex min-h-10 items-center justify-center rounded-full border px-4 text-xs font-bold transition-all ${
+                      selectedArea === area
+                        ? "border-accent bg-accent text-on-accent"
+                        : "border-border/80 bg-background text-foreground hover:border-accent"
+                    }`}
+                  >
+                    {area}
+                  </button>
+                ))}
+              </div>
+            </section>
+          </div>
+        </BottomSheet>
+
+        {/* المحتوى الرئيسي: القائمة أو الحالة الفارغة */}
+        {filteredCraftsmen.length === 0 ? (
+          <EmptyState
+            title="لا يوجد صنايعية في هذه المنطقة حالياً"
+            description={
+              hasFilters
+                ? "جرّب اختيار منطقة أخرى أو مسح الفلاتر لعرض كافة فنيي التخصص."
+                : `لم ينضم أي صنايعي إلى تخصص ${category?.name ?? "هذا المجال"} بعد — ساهم معنا وكن أول المسجلين!`
+            }
+            action={
+              hasFilters ? (
+                <Button type="button" onClick={resetFilters}>
+                  عرض كل المناطق
+                </Button>
+              ) : (
+                <ButtonLink href="/join" variant="action" size="md">
+                  <span className="flex items-center gap-2">
+                    <IconUserPlus className="h-4 w-4" />
+                    <span>سجّل كأول صنايعي في هذا التخصص</span>
+                  </span>
+                </ButtonLink>
+              )
+            }
+          />
+        ) : (
+          <CraftsmanGrid
+            craftsmen={filteredCraftsmen}
+            categories={category ? [category] : []}
+            gridClassName="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4"
+            toolbar={
+              <div className="flex items-center justify-between text-xs sm:text-sm font-medium text-muted">
+                <p>
+                  عرض {toArabicDigits(filteredCraftsmen.length)}{" "}
+                  {filteredCraftsmen.length === 1 ? "صنايعي متاح" : "صنايعي متاحين"}
+                  {selectedArea !== "all" && ` في ${selectedArea}`}
+                </p>
+                {hasFilters && (
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    className="font-bold text-accent hover:underline"
+                  >
+                    إعادة ضبط الفلاتر
+                  </button>
+                )}
+              </div>
+            }
+          />
+        )}
       </div>
-
-      <BottomSheet
-        open={sheetOpen}
-        onClose={() => setSheetOpen(false)}
-        title="تعديل الفلاتر"
-        footer={
-          <Button
-            type="button"
-            onClick={() => setSheetOpen(false)}
-            className="w-full"
-          >
-            عرض الصنايعية
-          </Button>
-        }
-      >
-        <SheetFilters
-          areas={availableAreas}
-          area={area}
-          sort={sort}
-          onArea={setArea}
-          onSort={setSort}
-        />
-      </BottomSheet>
-
-      {filtered.length === 0 ? (
-        <EmptyState
-          title="لا يوجد صنايعية حالياً"
-          description={
-            hasFilters
-              ? "جرّب اختيار منطقة أخرى أو إزالة الفلاتر."
-              : `لم ينضم أي صنايعي إلى تخصص ${category?.name ?? "هذا المجال"} بعد — ساهم معنا وكن أول المسجلين!`
-          }
-          action={
-            hasFilters ? (
-              <Button type="button" onClick={() => setArea("all")}>
-                عرض كل المناطق
-              </Button>
-            ) : (
-              <ButtonLink href="/join" variant="action" size="md">
-                <span className="flex items-center gap-2">
-                  <IconUserPlus className="h-4 w-4" />
-                  <span>سجّل كأول صنايعي في هذا التخصص</span>
-                </span>
-              </ButtonLink>
-            )
-          }
-        />
-      ) : (
-        <CraftsmanGrid
-          craftsmen={filtered}
-          categories={category ? [category] : []}
-          toolbar={
-            <p className="text-base text-muted">
-              {toArabicDigits(filtered.length)}{" "}
-              {filtered.length === 1 ? "صنايعي متاح" : "صنايعية متاحين"}
-            </p>
-          }
-        />
-      )}
     </div>
   );
 }

@@ -24,8 +24,8 @@ export function VerifiedCraftsmen({
   if (items.length === 0) return null;
 
   return (
-    <section id="verified" className="border-t border-border bg-card/40 py-16">
-      <div className="mx-auto w-full max-w-5xl px-4">
+    <section id="verified" className="border-t border-border bg-card/40 py-12 sm:py-16 lg:border-0 lg:bg-transparent lg:py-0">
+      <div className="mx-auto w-full max-w-5xl px-4 lg:max-w-none lg:px-0">
         <Reveal>
           <SectionHeader
             icon={<IconShieldCheck className="h-4 w-4" />}
@@ -40,9 +40,12 @@ export function VerifiedCraftsmen({
           />
         </Reveal>
 
-        {/* Carousel على الموبايل — Grid 4 أعمدة على الديسكتوب */}
-        <div ref={scrollRef} className="-mx-4 overflow-x-auto px-4 pb-2 scrollbar-none [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0 md:pb-0">
-          <div className="flex snap-x snap-mandatory gap-3 md:grid md:grid-cols-2 md:gap-4 lg:grid-cols-4">
+        {/* Carousel على الموبايل — Grid 3 أعمدة على الديسكتوب بجوار السايدبار */}
+        <div
+          ref={scrollRef}
+          className="-mx-4 overflow-x-auto scroll-smooth scroll-px-4 px-4 pb-2 scrollbar-none [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0 md:pb-0"
+        >
+          <div className="flex snap-x snap-mandatory gap-3 md:grid md:grid-cols-2 md:gap-4 lg:grid-cols-3">
             {items.map((craftsman, index) => (
               <div
                 key={craftsman.id}

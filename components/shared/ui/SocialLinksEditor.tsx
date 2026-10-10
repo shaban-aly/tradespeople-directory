@@ -19,6 +19,13 @@ const PLATFORM_LABELS: Record<SocialPlatform, string> = {
   other: "رابط آخر",
 };
 
+const PLATFORM_PLACEHOLDERS: Record<SocialPlatform, string> = {
+  facebook: "https://facebook.com/اسم-الصفحة",
+  instagram: "https://instagram.com/اسم-الحساب",
+  tiktok: "https://tiktok.com/@اسم-الحساب",
+  other: "https://...",
+};
+
 export function SocialLinksEditor({
   links,
   onChange,
@@ -34,6 +41,13 @@ export function SocialLinksEditor({
     onChange(
       links.map((link, i) => (i === index ? { ...link, ...patch } : link)),
     );
+  }
+
+  function handleUrlBlur(index: number, rawUrl: string) {
+    const trimmed = rawUrl.trim();
+    if (trimmed && !/^https?:\/\//i.test(trimmed) && trimmed.includes(".")) {
+      updateLink(index, { url: `https://${trimmed}` });
+    }
   }
 
   function addLink() {
@@ -90,51 +104,61 @@ export function SocialLinksEditor({
             return (
               <div
                 key={index}
-                className="grid gap-2 sm:grid-cols-[11rem_1fr_auto] sm:items-center"
+                className="flex flex-col gap-2 sm:flex-row sm:items-center"
               >
-                <SelectField
-                  value={link.platform}
-                  aria-label={`منصة الرابط ${index + 1}`}
-                  onChange={(event) =>
-                    updateLink(index, {
-                      platform: event.target.value as SocialPlatform,
-                    })
-                  }
-                  className={inputClassName}
-                >
-                  {SOCIAL_PLATFORMS.map((platform) => (
-                    <option
-                      key={platform}
-                      value={platform}
-                      disabled={usedElsewhere.has(platform)}
-                    >
-                      {PLATFORM_LABELS[platform]}
-                    </option>
-                  ))}
-                </SelectField>
-                <TextField
-                  dir="ltr"
-                  type="url"
-                  inputMode="url"
-                  maxLength={SOCIAL_LINKS_LIMITS.urlMax}
-                  value={link.url}
-                  placeholder="https://..."
-                  aria-label={`رابط المنصة ${index + 1}`}
-                  className={
-                    inputClassName
-                      ? `${inputClassName} text-left`
-                      : "text-left"
-                  }
-                  onChange={(event) => updateLink(index, { url: event.target.value })}
-                />
-                <button
-                  type="button"
-                  aria-label={`حذف الرابط ${index + 1}`}
-                  onClick={() => removeLink(index)}
-                  className="rounded-xl border border-border p-3 text-muted transition-colors hover:border-danger hover:text-danger sm:self-start"
-                >
-                  <IconX className="h-5 w-5" />
-                </button>
+                <div className="shrink-0 sm:w-44">
+                  <SelectField
+                    value={link.platform}
+                    aria-label={`منصة الرابط ${index + 1}`}
+                    onChange={(event) =>
+                      updateLink(index, {
+                        platform: event.target.value as SocialPlatform,
+                      })
+                    }
+                    className={inputClassName}
+                  >
+                    {SOCIAL_PLATFORMS.map((platform) => (
+                      <option
+                        key={platform}
+                        value={platform}
+                        disabled={usedElsewhere.has(platform)}
+                      >
+                        {PLATFORM_LABELS[platform]}
+                      </option>
+                    ))}
+                  </SelectField>
+                </div>
+
+                <div className="flex flex-1 items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <TextField
+                      dir="ltr"
+                      type="url"
+                      inputMode="url"
+                      maxLength={SOCIAL_LINKS_LIMITS.urlMax}
+                      value={link.url}
+                      placeholder={PLATFORM_PLACEHOLDERS[link.platform]}
+                      aria-label={`رابط المنصة ${index + 1}`}
+                      className={
+                        inputClassName
+                          ? `${inputClassName} text-left`
+                          : "text-left"
+                      }
+                      onChange={(event) => updateLink(index, { url: event.target.value })}
+                      onBlur={(event) => handleUrlBlur(index, event.target.value)}
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    aria-label={`حذف الرابط ${index + 1}`}
+                    title="حذف هذا الرابط"
+                    onClick={() => removeLink(index)}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted transition-colors hover:border-danger hover:bg-danger/5 hover:text-danger active:scale-95"
+                  >
+                    <IconX className="h-4.5 w-4.5" />
+                  </button>
+                </div>
               </div>
             );
           })}

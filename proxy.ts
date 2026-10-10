@@ -46,6 +46,24 @@ const PROTECTED: {
     roles: ["client", "craftsman", "admin"],
     fallback: `${LOGIN}?reason=notifications`,
   },
+  {
+    // سجل النشاطات — أي مستخدم مسجّل
+    pattern: /^\/activity(\/.*)?$/,
+    roles: ["client", "craftsman", "admin"],
+    fallback: `${LOGIN}?reason=activity&next=/activity`,
+  },
+  {
+    // تقييماتي ومراجعاتي — أي مستخدم مسجّل
+    pattern: /^\/my-reviews(\/.*)?$/,
+    roles: ["client", "craftsman", "admin"],
+    fallback: `${LOGIN}?reason=reviews&next=/my-reviews`,
+  },
+  {
+    // طلباتي — أي مستخدم مسجّل
+    pattern: /^\/my-requests(\/.*)?$/,
+    roles: ["client", "craftsman", "admin"],
+    fallback: `${LOGIN}?reason=requests&next=/my-requests`,
+  },
 ];
 
 export async function proxy(request: NextRequest) {

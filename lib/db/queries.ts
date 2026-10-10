@@ -141,10 +141,10 @@ export const getCategories = unstable_cache(getCategoriesImpl, [
   DATA_CACHE_KEYS.categories,
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.categories, SEARCH_TAG] });
 
-async function getCategoriesListImpl(): Promise<{ id: string; name: string }[]> {
+async function getCategoriesListImpl(): Promise<{ id: string; name: string; slug?: string; icon?: string }[]> {
   const { data, error } = await createServerReadClient()
     .from("categories")
-    .select("id, name")
+    .select("id, name, slug, icon")
     .eq("is_active", true)
     .order("sort_order");
   assertSelectOk("التخصصات", error);
@@ -520,6 +520,7 @@ async function searchCraftsmenImpl(
   category: string,
   area: string,
   sort: CraftsmanSort,
+  limit = 16,
 ): Promise<Craftsman[]> {
   const { data, error } = await createServerReadClient()
     .rpc("search_craftsmen", {
@@ -527,7 +528,7 @@ async function searchCraftsmenImpl(
       p_category: category || "",
       p_area: area || "",
       p_sort: sort || "verified",
-      p_limit: 80,
+      p_limit: limit,
     });
 
   assertSelectOk("نتائج البحث", error);

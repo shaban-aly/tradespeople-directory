@@ -9,7 +9,7 @@
 --   3) cancel_lead: العميل يلغي من open|claimed مع إشعار الردّاء.
 --   4) renew_lead: العميل يجدد منتهياً ⇒ open بـ expires_at = now()+24h
 --      مع إعادة إشعار الصنايعية.
---   5) withdraw_lead_response: الصانع يسحب ردّه من open|claimed
+--   5) withdraw_lead_response: الصنايعي يسحب ردّه من open|claimed
 --      مع إشعار العميل وإعادة فتح المقعد.
 --   6) complete_lead يُشعِر الصنايعية الردّاء بالإنجاز.
 --   7) expire_stale_leads يُشعِر الصنايعية الردّاء بانتهاء الصلاحية.
@@ -210,7 +210,7 @@ $$;
 REVOKE ALL ON FUNCTION public.renew_lead(UUID) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.renew_lead(UUID) TO authenticated;
 
--- 5) سحب رد الصانع ------------------------------------------------------------------
+-- 5) سحب رد الصنايعي ------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.withdraw_lead_response(p_lead_id UUID)
 RETURNS BOOLEAN
 LANGUAGE plpgsql
