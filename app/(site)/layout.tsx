@@ -14,15 +14,15 @@ export default function SiteLayout({
 }>) {
   return (
     <ToastProvider>
-      <div className="flex min-h-screen flex-col pb-[calc(env(safe-area-inset-bottom)+56px)] sm:pb-0">
+      <div className="flex min-h-screen flex-col pb-[calc(env(safe-area-inset-bottom)+56px)] lg:pb-0">
         <Header />
-        <main className="flex-1 pb-16 sm:pb-0">
+        <main className="flex-1 pb-16 lg:pb-0">
           <PageTransition>{children}</PageTransition>
         </main>
         <Footer />
-        {/* فراغ موبايل يسمح بظهور آخر الفوتر فوق الشريط السفلي (بدل حشوة داخل الفوتر) */}
+        {/* فراغ موبايل وتابليت يسمح بظهور آخر الفوتر فوق الشريط السفلي (بدل حشوة داخل الفوتر) */}
         <div
-          className="h-[calc(env(safe-area-inset-bottom)+88px)] sm:hidden"
+          className="h-[calc(env(safe-area-inset-bottom)+88px)] lg:hidden"
           aria-hidden
         />
         <BottomNav />

@@ -20,20 +20,31 @@ export function UserMenu() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // إغلاق القائمة عند النقر خارجها
+  // إغلاق القائمة عند النقر خارجها أو الضغط على Escape
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
-    if (open) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [open]);
 
   if (loading) {
     return (
-      <div className="h-9 w-9 animate-pulse rounded-full bg-border" aria-hidden="true" />
+      <div className="h-9.5 w-9.5 sm:h-10 sm:w-10 animate-pulse rounded-full bg-border" aria-hidden="true" />
     );
   }
 
@@ -42,7 +53,7 @@ export function UserMenu() {
       <Link
         id="header-login-link"
         href="/login"
-        className="rounded-lg px-3 py-2 text-sm font-semibold text-accent transition-colors hover:bg-accent/10"
+        className="inline-flex h-9.5 sm:h-10 shrink-0 items-center justify-center rounded-xl border border-accent/30 bg-accent/10 px-3 sm:px-3.5 text-xs sm:text-sm font-bold text-accent transition-all hover:bg-accent hover:text-on-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent shadow-2xs"
       >
         دخول
       </Link>
@@ -69,26 +80,16 @@ export function UserMenu() {
   );
 
   const avatarClass =
-    "flex h-9 w-9 items-center justify-center rounded-full bg-accent text-sm font-bold text-on-accent shadow-sm transition-transform active:scale-95";
+    "flex h-9.5 w-9.5 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-on-accent ring-2 ring-background shadow-xs transition-all hover:ring-accent/40 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent overflow-hidden";
 
   return (
     <div className="relative" ref={menuRef}>
-      {/* ── موبايل: رابط ثابت مباشر إلى البروفايل ── */}
-      <Link
-        id="header-user-profile-link"
-        href="/profile"
-        className={`sm:hidden ${avatarClass}`}
-        aria-label="صفحة حسابي"
-      >
-        {avatarContent}
-      </Link>
-
-      {/* ── ديسكتوب: زر يفتح القائمة المنسدلة ── */}
+      {/* ── زر يفتح القائمة المنسدلة (موحد على الموبايل، التابليت، والديسكتوب) ── */}
       <button
         id="header-user-menu-btn"
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`hidden sm:flex ${avatarClass}`}
+        className={avatarClass}
         aria-label="قائمة المستخدم"
         aria-expanded={open}
         aria-haspopup="menu"
@@ -96,11 +97,11 @@ export function UserMenu() {
         {avatarContent}
       </button>
 
-      {/* ── القائمة المنسدلة (ديسكتوب فقط) ── */}
+      {/* ── القائمة المنسدلة ── */}
       {open && (
         <div
           role="menu"
-          className="absolute left-0 z-50 mt-2 w-60 origin-top-left rounded-2xl border border-border bg-card py-1.5 shadow-card overflow-hidden"
+          className="absolute left-0 z-50 mt-2 w-64 origin-top-left rounded-2xl border border-border bg-card py-1.5 shadow-card overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         >
           {/* كارت المستخدم — يودي إلى البروفايل */}
           <Link
@@ -128,7 +129,7 @@ export function UserMenu() {
                 {displayName}
               </p>
               <p className="truncate text-xs text-muted">{user?.email}</p>
-              <span className="flex items-center gap-1 text-[11px] text-accent font-medium mt-0.5">
+              <span className="flex items-center gap-1 text-xs text-accent font-semibold mt-0.5">
                 <span>عرض الحساب والإعدادات</span>
                 <IconChevronLeft className="h-3 w-3" />
               </span>

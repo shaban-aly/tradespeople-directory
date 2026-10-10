@@ -147,7 +147,7 @@ export function SearchModal() {
                 <IconX className="h-4 w-4" />
               </button>
             ) : (
-              <kbd className="pointer-events-none absolute left-3.5 top-1/2 hidden -translate-y-1/2 rounded border border-border/80 bg-muted/20 px-1.5 py-0.5 font-mono text-[10px] text-muted md:inline-block">
+              <kbd className="pointer-events-none absolute left-3.5 top-1/2 hidden -translate-y-1/2 rounded border border-border/80 bg-muted/20 px-1.5 py-0.5 font-mono text-xs text-muted md:inline-block">
                 ESC
               </kbd>
             )}
@@ -354,20 +354,20 @@ export function SearchModal() {
         <div className="hidden md:flex items-center justify-between border-t border-border/70 bg-card/50 px-4 py-2.5 text-xs text-muted select-none">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5">
-              <kbd className="inline-flex h-5 items-center justify-center rounded border border-border/80 bg-background px-1.5 font-mono text-[11px] font-semibold text-foreground shadow-2xs">↑</kbd>
-              <kbd className="inline-flex h-5 items-center justify-center rounded border border-border/80 bg-background px-1.5 font-mono text-[11px] font-semibold text-foreground shadow-2xs">↓</kbd>
-              <span className="text-[11px]">للتنقل</span>
+              <kbd className="inline-flex h-5 items-center justify-center rounded border border-border/80 bg-background px-1.5 font-mono text-xs font-semibold text-foreground shadow-2xs">↑</kbd>
+              <kbd className="inline-flex h-5 items-center justify-center rounded border border-border/80 bg-background px-1.5 font-mono text-xs font-semibold text-foreground shadow-2xs">↓</kbd>
+              <span>للتنقل</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <kbd className="inline-flex h-5 items-center justify-center rounded border border-border/80 bg-background px-1.5 font-mono text-[11px] font-semibold text-foreground shadow-2xs">↵</kbd>
-              <span className="text-[11px]">للاختيار</span>
+              <kbd className="inline-flex h-5 items-center justify-center rounded border border-border/80 bg-background px-1.5 font-mono text-xs font-semibold text-foreground shadow-2xs">↵</kbd>
+              <span>للاختيار</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <kbd className="inline-flex h-5 items-center justify-center rounded border border-border/80 bg-background px-1.5 font-mono text-[11px] font-semibold text-foreground shadow-2xs">ESC</kbd>
-              <span className="text-[11px]">للإغلاق</span>
+              <kbd className="inline-flex h-5 items-center justify-center rounded border border-border/80 bg-background px-1.5 font-mono text-xs font-semibold text-foreground shadow-2xs">ESC</kbd>
+              <span>للإغلاق</span>
             </span>
           </div>
-          <div className="text-[11px] text-muted font-medium">
+          <div className="text-xs text-muted font-medium">
             دليل صنايعية السويس
           </div>
         </div>

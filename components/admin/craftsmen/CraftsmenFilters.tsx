@@ -22,6 +22,7 @@ export function CraftsmenFilters({
       <AdminSelect
         value={filter.category}
         onChange={(event) => onChange({ category: event.target.value })}
+        aria-label="تصفية حسب التخصص"
       >
         <option value="all">كل التخصصات</option>
         {categories.map((category) => (
@@ -35,6 +36,7 @@ export function CraftsmenFilters({
         onChange={(event) =>
           onChange({ published: event.target.value as CraftsmanFilter["published"] })
         }
+        aria-label="تصفية حسب حالة النشر"
       >
         <option value="all">منشور / مخفي</option>
         <option value="published">منشور فقط</option>
@@ -45,6 +47,7 @@ export function CraftsmenFilters({
         onChange={(event) =>
           onChange({ verified: event.target.value as CraftsmanFilter["verified"] })
         }
+        aria-label="تصفية حسب حالة التوثيق"
       >
         <option value="all">موثّق / غير موثق</option>
         <option value="verified">موثّق فقط</option>

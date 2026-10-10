@@ -36,7 +36,7 @@ export function UserMobileCard({ user }: UserMobileCardProps) {
 
         <div className="shrink-0">
           {isAdmin ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-bold text-amber-600 dark:text-amber-400">
+            <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 border border-warning/20 px-2.5 py-1 text-xs font-bold text-warning">
               <IconShieldCheck className="h-3 w-3" />
               مشرف
             </span>

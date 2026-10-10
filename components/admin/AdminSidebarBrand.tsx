@@ -26,7 +26,7 @@ export function AdminSidebarBrand({
             <span className="block font-heading text-base font-extrabold text-foreground truncate leading-tight">
               دليل الصنايعية
             </span>
-            <span className="text-[11px] font-semibold text-muted">
+            <span className="text-xs font-semibold text-muted">
               لوحة التحكم
             </span>
           </div>

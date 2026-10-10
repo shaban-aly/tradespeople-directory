@@ -20,11 +20,11 @@ const variantClass: Record<StatusVariant, string> = {
   dismissed: "bg-muted/15 text-muted",
   active: "bg-action/15 text-action",
   inactive: "bg-muted/10 text-muted",
-  open: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-  claimed: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  completed: "bg-green-500/10 text-green-600 dark:text-green-400",
-  expired: "bg-gray-500/10 text-gray-600 dark:text-gray-400",
-  cancelled: "bg-red-500/10 text-red-600 dark:text-red-400",
+  open: "bg-accent/10 text-accent",
+  claimed: "bg-warning/15 text-warning",
+  completed: "bg-action/15 text-action",
+  expired: "bg-muted/15 text-muted",
+  cancelled: "bg-danger/10 text-danger",
 };
 
 export function StatusBadge({

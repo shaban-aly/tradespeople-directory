@@ -37,20 +37,29 @@ const ICON_LABELS: Record<(typeof CATEGORY_ICON_OPTIONS)[number], string> = {
 export function CategoryIconPicker({
   value,
   onChange,
+  ariaLabelledBy,
 }: {
   value: (typeof CATEGORY_ICON_OPTIONS)[number];
   onChange: (next: (typeof CATEGORY_ICON_OPTIONS)[number]) => void;
+  ariaLabelledBy?: string;
 }) {
   return (
-    <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+    <div
+      role="radiogroup"
+      aria-labelledby={ariaLabelledBy}
+      className="grid grid-cols-4 gap-2 sm:grid-cols-5"
+    >
       {CATEGORY_ICON_OPTIONS.map((icon) => (
         <button
           key={icon}
           type="button"
+          role="radio"
+          aria-checked={value === icon}
+          aria-label={`أيقونة ${ICON_LABELS[icon] ?? icon}`}
           onClick={() => onChange(icon)}
           className={`flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border p-2 text-base transition-colors ${
             value === icon
-              ? "border-accent bg-accent/10 text-accent"
+              ? "border-accent bg-accent/10 text-accent font-bold"
               : "border-border text-muted hover:border-accent/40 hover:text-foreground"
           }`}
         >

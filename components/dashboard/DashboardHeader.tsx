@@ -72,6 +72,25 @@ export function DashboardHeader({
           </div>
         )}
 
+        {/* عنوان كارت إدارة الصورة في وضع التعديل */}
+        {editable && (
+          <div className="mb-3.5 flex items-center justify-between">
+            <div>
+              <h2 className="font-heading text-base sm:text-lg font-black text-foreground">
+                صورة الملف المهني
+              </h2>
+              <p className="text-xs text-muted mt-0.5">
+                تظهر في كارت البحث وصفحتك الشخصية في الدليل
+              </p>
+            </div>
+            {currentAvatarUrl && (
+              <span className="rounded-full bg-accent/10 px-2.5 py-1 text-xs font-bold text-accent border border-accent/20">
+                نسبة 4:3
+              </span>
+            )}
+          </div>
+        )}
+
         {/* مدخل اختيار الملف المخفي لوضع التعديل */}
         {editable && (
           <input
@@ -125,7 +144,7 @@ export function DashboardHeader({
               </div>
 
               {/* الصورة الرئيسية بإطار 4:3 مطابق تماماً لنسبة الكروت والمحرر */}
-              <div className="relative flex h-full aspect-4/3 items-center justify-center overflow-hidden shadow-2xl">
+              <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
                 <Image
                   src={withImageAspect(currentAvatarUrl, IMAGE_ASPECT.CARD)}
                   alt={profile.name}
@@ -237,50 +256,58 @@ export function DashboardHeader({
           </div>
         )}
 
-        {/* 2. بيانات الفني وحالة النشر */}
-        <div className="mt-4 text-center">
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <h2 className="font-heading text-xl sm:text-2xl font-black text-foreground">
-              {profile.name}
-            </h2>
-            {profile.verified && <VerifiedBadge />}
+        {/* في وضع التعديل: إرشادات سريعة بدلاً من تكرار الهوية والأزرار المكررة */}
+        {editable ? (
+          <div className="mt-3.5 rounded-2xl bg-muted/10 p-3 text-center border border-border/40">
+            <p className="text-xs font-medium text-muted">
+              💡 <strong className="text-foreground font-bold">نصيحة:</strong> الصور الواضحة لأعمالك تزيد من ثقة العملاء وتواصلهم بنسبة 80%
+            </p>
           </div>
+        ) : (
+          /* في وضع العرض المستقل فقط (إن تم استدعاؤه بدون ترويسة رئيسية) */
+          <div className="mt-4 text-center">
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <h2 className="font-heading text-xl sm:text-2xl font-black text-foreground">
+                {profile.name}
+              </h2>
+              {profile.verified && <VerifiedBadge />}
+            </div>
 
-          <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs">
-            {profile.categoryName && (
-              <span className="rounded-full bg-accent/10 px-3 py-0.5 font-bold text-accent border border-accent/20">
-                {profile.categoryName}
-              </span>
-            )}
-            {profile.isPublished ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-0.5 font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                منشور للجمهور
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-0.5 font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                قيد المراجعة
-              </span>
-            )}
-          </div>
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs">
+              {profile.categoryName && (
+                <span className="rounded-full bg-accent/10 px-3 py-0.5 font-bold text-accent border border-accent/20">
+                  {profile.categoryName}
+                </span>
+              )}
+              {profile.isPublished ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-0.5 font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  منشور للجمهور
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-0.5 font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                  قيد المراجعة
+                </span>
+              )}
+            </div>
 
-          {/* 3. زر الإجراء الرئيسي العريض وزر المشاركة */}
-          <div className="mt-4 flex w-full max-w-xl mx-auto items-center gap-2">
-            <ButtonLink
-              href={craftsmanHref(profile.slug)}
-              variant="primary"
-              className="flex-1 h-11 justify-center gap-2 text-sm font-bold shadow-xs"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <IconExternalLink className="h-4 w-4" />
-              <span>معاينة صفحتي في الدليل</span>
-            </ButtonLink>
-            <div className="shrink-0">
-              <ShareProfileButton slug={profile.slug} name={profile.name} iconOnly />
+            <div className="mt-4 flex w-full max-w-xl mx-auto items-center gap-2">
+              <ButtonLink
+                href={craftsmanHref(profile.slug)}
+                variant="primary"
+                className="flex-1 h-11 justify-center gap-2 text-sm font-bold shadow-xs"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <IconExternalLink className="h-4 w-4" />
+                <span>معاينة صفحتي في الدليل</span>
+              </ButtonLink>
+              <div className="shrink-0">
+                <ShareProfileButton slug={profile.slug} name={profile.name} iconOnly />
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* 4. مودال تعديل وقص وتنسيق موضع الصورة المعتمد (Modal Component) */}

@@ -7,13 +7,14 @@ import {
 import { fetchAnalyticsOverview } from "@/lib/db/analytics";
 import { OverviewSection } from "./OverviewSection";
 import type { Timeframe } from "@/components/admin/ActivityFeed";
+import type { OverviewTab } from "@/components/admin/overview/OverviewTabs";
 
 export const dynamic = "force-dynamic";
 
 export default async function OverviewPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ timeframe?: string }>;
+  searchParams?: Promise<{ timeframe?: string; tab?: string }>;
 }) {
   const { supabase, user } = await getServerSession();
   if (!user) notFound();
@@ -22,6 +23,10 @@ export default async function OverviewPage({
   const rawTimeframe = params?.timeframe;
   const timeframe: Timeframe =
     rawTimeframe === "week" || rawTimeframe === "month" ? rawTimeframe : "today";
+
+  const rawTab = params?.tab;
+  const initialTab: OverviewTab =
+    rawTab === "analytics" || rawTab === "manage" ? rawTab : "summary";
 
   const [metrics, analytics, activityFeed] = await Promise.all([
     fetchAdminOverviewMetrics(supabase),
@@ -35,6 +40,7 @@ export default async function OverviewPage({
       initialAnalytics={analytics}
       activityFeed={activityFeed}
       timeframe={timeframe}
+      initialTab={initialTab}
     />
   );
 }

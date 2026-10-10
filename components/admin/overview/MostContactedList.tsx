@@ -36,11 +36,11 @@ export function MostContactedList({
                   <span
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl font-heading text-sm font-black ${
                       index === 0
-                        ? "border border-amber-500/30 bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                        ? "border border-warning/40 bg-warning/15 text-warning"
                         : index === 1
-                        ? "border border-slate-400/30 bg-slate-300/30 text-slate-700 dark:text-slate-300"
+                        ? "border border-border bg-muted/20 text-foreground"
                         : index === 2
-                        ? "border border-amber-700/30 bg-amber-700/15 text-amber-700 dark:text-amber-500"
+                        ? "border border-warning/25 bg-warning/10 text-warning/90"
                         : "bg-accent/10 text-accent"
                     }`}
                   >
@@ -78,7 +78,7 @@ export function MostContactedList({
                 </div>
 
                 <div className="flex items-center gap-2 text-xs sm:text-sm">
-                  <span className="flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2 py-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                  <span className="flex items-center gap-1 rounded-lg bg-action/15 px-2 py-1 font-semibold text-action">
                     <IconWhatsApp className="h-3.5 w-3.5" />
                     {toArabicDigits(whatsapp)}
                   </span>

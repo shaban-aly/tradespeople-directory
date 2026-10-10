@@ -16,6 +16,7 @@ import { IconPlus, IconUsers } from "@/components/shared/icons";
 import { type CraftsmanFilter } from "@/lib/db/admin-selectors";
 import { useAdminCraftsmen, type AdminCraftsmenData } from "@/hooks/admin/useAdminCraftsmen";
 import { useToast } from "@/hooks/ui/useToast";
+import { toArabicDigits } from "@/lib/utils/format";
 
 export function CraftsmenSection({
   initialData,
@@ -59,11 +60,17 @@ export function CraftsmenSection({
 
   if (loading) return <DashboardLoading />;
 
+  const hasActiveFilter =
+    filter.search.trim() !== "" ||
+    filter.category !== "all" ||
+    filter.published !== "all" ||
+    filter.verified !== "all";
+
   return (
     <div className="grid gap-6">
       <PageHeader
         title="الصنايعية"
-        description={`إدارة ${totalDisplayCount} صنايعي في الدليل.`}
+        description={`إدارة ${toArabicDigits(totalDisplayCount)} صنايعي في الدليل.`}
         actions={
           <>
             <RefreshButton onRefresh={refresh} />
@@ -93,7 +100,37 @@ export function CraftsmenSection({
           <EmptyState
             icon={<IconUsers className="h-8 w-8" />}
             title="لا توجد نتائج"
-            description="جرّب تغيير البحث أو الفلاتر، أو أضف صنايعي جديد."
+            description={
+              hasActiveFilter
+                ? "لم نجد أي صنايعي يطابق الفلاتر المحددة. جرّب تعديل البحث أو إعادة ضبط الفلاتر."
+                : "لا يوجد أي صنايعي مسجل في الدليل حالياً. أضف أول صنايعي الآن."
+            }
+            action={
+              hasActiveFilter ? (
+                <AdminButton
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    handleFilterChange({
+                      search: "",
+                      category: "all",
+                      published: "all",
+                      verified: "all",
+                    })
+                  }
+                >
+                  إعادة ضبط الفلاتر
+                </AdminButton>
+              ) : (
+                <AdminButton
+                  type="button"
+                  onClick={() => setFormTarget("new")}
+                >
+                  <IconPlus className="h-5 w-5" />
+                  إضافة صنايعي
+                </AdminButton>
+              )
+            }
           />
         ) : (
           <>

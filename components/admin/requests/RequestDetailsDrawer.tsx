@@ -2,11 +2,13 @@
 
 import { SafeImage as Image } from "@/components/shared/ui/SafeImage";
 import { ImageViewer } from "@/components/shared/ImageViewer";
+import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Drawer } from "@/components/admin/Drawer";
 import { DetailField } from "@/components/admin/ui/DetailField";
 import { IconUsers } from "@/components/shared/icons";
 import type { JoinRequestRow } from "@/lib/db/admin";
 import { toArabicDigits } from "@/lib/utils/format";
+import { formatRelativePast } from "@/lib/utils/time";
 import { IMAGE_ASPECT, withImageAspect } from "@/lib/utils/image-transform";
 import { useState } from "react";
 
@@ -21,6 +23,20 @@ export function RequestDetailsDrawer({
 }) {
   const [viewerSrc, setViewerSrc] = useState<string | null>(null);
 
+  const statusVariant =
+    request?.status === "pending"
+      ? ("pending" as const)
+      : request?.status === "approved"
+        ? ("approved" as const)
+        : ("rejected" as const);
+
+  const statusLabel =
+    request?.status === "pending"
+      ? "معلق"
+      : request?.status === "approved"
+        ? "مقبول"
+        : "مرفوض";
+
   return (
     <Drawer open={open} onClose={onClose} title="تفاصيل طلب التسجيل">
       <ImageViewer
@@ -32,14 +48,10 @@ export function RequestDetailsDrawer({
       {request && (
         <div className="grid gap-3 text-base text-muted">
           <DetailField label="الحالة">
-            {request.status === "pending"
-              ? "معلق"
-              : request.status === "approved"
-                ? "مقبول"
-                : "مرفوض"}
+            <StatusBadge variant={statusVariant}>{statusLabel}</StatusBadge>
           </DetailField>
           <DetailField label="التاريخ">
-            {toArabicDigits(request.created_at)}
+            {toArabicDigits(request.created_at.slice(0, 10))} ({formatRelativePast(request.created_at)})
           </DetailField>
           <DetailField label="الاسم">{request.name}</DetailField>
           <DetailField label="التخصص">{request.category?.name}</DetailField>

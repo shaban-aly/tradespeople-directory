@@ -9,6 +9,7 @@ import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { CategoriesTable } from "@/components/admin/categories/CategoriesTable";
 import { CategoryFormModal } from "@/components/admin/categories/CategoryFormModal";
 import { IconPlus, IconTags } from "@/components/shared/icons";
+import { toArabicDigits } from "@/lib/utils/format";
 import {
   useAdminCategories,
   type AdminCategoriesData,
@@ -36,11 +37,15 @@ export function CategoriesSection({
 
   if (loading) return <DashboardLoading />;
 
+  const deleteTargetCount = deleteTarget
+    ? (categoryCounts[deleteTarget.slug] ?? 0)
+    : 0;
+
   return (
     <div className="grid gap-6">
       <PageHeader
         title="التصنيفات"
-        description={`إدارة ${categories.length} تخصص معروض في الموقع.`}
+        description={`إدارة ${toArabicDigits(categories.length)} تخصص معروض في الموقع.`}
         actions={
           <>
             <RefreshButton onRefresh={() => void refresh()} />
@@ -61,6 +66,15 @@ export function CategoriesSection({
             icon={<IconTags className="h-8 w-8" />}
             title="لا توجد تصنيفات"
             description="أضف أول تخصص ليظهر في الصفحة الرئيسية."
+            action={
+              <AdminButton
+                type="button"
+                onClick={() => setFormTarget("new")}
+              >
+                <IconPlus className="h-5 w-5" />
+                إضافة تخصص
+              </AdminButton>
+            }
           />
         ) : (
           <CategoriesTable
@@ -87,11 +101,21 @@ export function CategoriesSection({
       <ConfirmDialog
         open={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={() => void handleDelete()}
-        title="حذف التخصص"
-        message={`هل أنت متأكد من حذف "${deleteTarget?.name}"؟`}
-        confirmLabel="حذف التخصص"
-        danger
+        onConfirm={() => {
+          if (deleteTargetCount > 0) {
+            setDeleteTarget(null);
+            return;
+          }
+          void handleDelete();
+        }}
+        title={deleteTargetCount > 0 ? "تعذر حذف التخصص" : "حذف التخصص"}
+        message={
+          deleteTargetCount > 0
+            ? `لا يمكن حذف تخصص "${deleteTarget?.name}" نظراً لوجود ${toArabicDigits(deleteTargetCount)} صنايعي مسجلين تحته. يرجى نقلهم أو تعديل تخصصاتهم أولاً.`
+            : `هل أنت متأكد من حذف تخصص "${deleteTarget?.name}"؟ سيتم إزالته من الموقع نهائياً.`
+        }
+        confirmLabel={deleteTargetCount > 0 ? "حسناً، فهمت" : "حذف التخصص"}
+        danger={deleteTargetCount === 0}
         busy={busyKey === `delete-category-${deleteTarget?.id}`}
       />
     </div>

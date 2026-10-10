@@ -5,32 +5,42 @@ import { fetchCategories } from "@/lib/db/admin";
 import { fetchAdminLeadsPageAction } from "@/app/actions/admin-leads";
 import { DashboardLoading } from "@/components/admin/DashboardLoading";
 import { LeadsSection } from "./LeadsSection";
-import type { LeadFilter } from "@/lib/db/admin-selectors";
+import { parseLeadFilterParams } from "@/lib/db/admin-selectors";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "عروض العملاء | لوحة التحكم",
 };
 
-const DEFAULT_FILTER: LeadFilter = {
-  search: "",
-  category: "all",
-  status: "all",
-  visibility: "all",
-  sort: "newest",
-};
-
-export default async function LeadsPage() {
+export default async function LeadsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { supabase, user } = await getServerSession();
   if (!user) notFound();
 
-  const [page, categories] = await Promise.all([
-    fetchAdminLeadsPageAction({ filter: DEFAULT_FILTER, page: 1 }),
+  const resolved = searchParams ? await searchParams : {};
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(resolved)) {
+    if (typeof value === "string") {
+      params.set(key, value);
+    } else if (Array.isArray(value) && value.length > 0) {
+      params.set(key, value[0]);
+    }
+  }
+  const { filter, page } = parseLeadFilterParams(params);
+
+  const [pageData, categories] = await Promise.all([
+    fetchAdminLeadsPageAction({ filter, page }),
     fetchCategories(supabase),
   ]);
 
   return (
     <Suspense fallback={<DashboardLoading />}>
-      <LeadsSection initialData={{ page, categories }} />
+      <LeadsSection initialData={{ page: pageData, categories }} />
     </Suspense>
   );
 }
+

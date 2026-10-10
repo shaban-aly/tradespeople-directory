@@ -42,6 +42,11 @@ export function useAdminReports(initialReports?: ReportRow[]) {
     [rawReports, statusFilter],
   );
 
+  const activeDetailsTarget = useMemo(() => {
+    if (!detailsTarget) return null;
+    return rawReports.find((r) => r.id === detailsTarget.id) ?? detailsTarget;
+  }, [detailsTarget, rawReports]);
+
   const reviewReport = (report: ReportRow) =>
     run(
       `report-review-${report.id}`,
@@ -74,6 +79,9 @@ export function useAdminReports(initialReports?: ReportRow[]) {
     const ok = await removeReport(deleteTarget.id);
     if (ok) {
       toast("success", "تم حذف البلاغ نهائياً");
+      if (detailsTarget?.id === deleteTarget.id) {
+        setDetailsTarget(null);
+      }
       setDeleteTarget(null);
     }
   };
@@ -88,7 +96,7 @@ export function useAdminReports(initialReports?: ReportRow[]) {
     setStatusFilter,
     deleteTarget,
     setDeleteTarget,
-    detailsTarget,
+    detailsTarget: activeDetailsTarget,
     setDetailsTarget,
     handleReview,
     handleDismiss,

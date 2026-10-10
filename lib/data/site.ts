@@ -15,6 +15,7 @@ export const siteDescription =
 export const siteNavLinks = [
   { href: "/", label: "الرئيسية" },
   { href: "/categories", label: "التصنيفات" },
+  { href: "/about", label: "عن الدليل" },
   { href: "/favorites", label: "محفوظاتي" },
   { href: "/#contact", label: "تواصل معنا" },
 ];

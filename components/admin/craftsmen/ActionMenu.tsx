@@ -138,7 +138,7 @@ export function ActionMenu({
           <div
             ref={menuRef}
             role="menu"
-            aria-label="إجراءات"
+            aria-label={`إجراءات ${craftsman.name}`}
             className="fixed z-[100] w-52 rounded-xl border border-border bg-popover p-1.5 shadow-card overflow-y-auto"
             style={{
               top: position.top,

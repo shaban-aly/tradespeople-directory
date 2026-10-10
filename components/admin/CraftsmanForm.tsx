@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { IconCamera, IconX } from "@/components/shared/icons";
+import { IconCamera } from "@/components/shared/icons";
 import { ToggleSwitch } from "@/components/admin/ToggleSwitch";
 import { AdminButton } from "@/components/admin/ui/AdminButton";
 import {
@@ -16,6 +16,7 @@ import { SocialLinksEditor } from "@/components/shared/ui/SocialLinksEditor";
 import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE_MB } from "@/lib/storage/images";
 import { Field, fieldErrorId } from "@/components/shared/form/Field";
 import { supabaseTransformUrl } from "@/lib/utils/image-transform";
+import { toArabicDigits } from "@/lib/utils/format";
 import { TextField } from "@/components/shared/form/TextField";
 import { TextArea } from "@/components/shared/form/TextArea";
 import { SelectField } from "@/components/shared/form/SelectField";
@@ -466,7 +467,7 @@ export function CraftsmanForm({
               <IconCamera className="h-8 w-8" />
               <span className="text-base font-bold">{isEdit ? "اضغط لرفع صورة" : "اضغط لرفع صورة رئيسية (مطلوب)"}</span>
               <span className="text-base">
-                JPG أو PNG — بنحوّلها لـ WebP أوتوماتيك لحد {MAX_IMAGE_SIZE_MB} ميجا
+                JPG أو PNG — بنحوّلها لـ WebP أوتوماتيك لحد {toArabicDigits(MAX_IMAGE_SIZE_MB)} ميجا
               </span>
             </label>
           </div>

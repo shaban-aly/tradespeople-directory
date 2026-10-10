@@ -39,6 +39,7 @@ export function CategoryFormModal({
   onClose: () => void;
   onSubmit: (payload: CategoryFormValues) => Promise<boolean>;
 }) {
+  const [prevTarget, setPrevTarget] = useState(target);
   const [slug, setSlug] = useState(
     target === "new" || !target ? "" : target.slug,
   );
@@ -54,6 +55,19 @@ export function CategoryFormModal({
     Partial<Record<"name" | "slug", boolean>>
   >({});
   const [errors, setErrors] = useState<CategoryFormErrors>({});
+
+  if (target !== prevTarget) {
+    setPrevTarget(target);
+    setSlug(target === "new" || !target ? "" : target.slug);
+    setName(target === "new" || !target ? "" : target.name);
+    setIcon(
+      target === "new" || !target
+        ? "plumbing"
+        : (target.icon as (typeof CATEGORY_ICON_OPTIONS)[number]),
+    );
+    setTouched({});
+    setErrors({});
+  }
 
   function getError(field: "name" | "slug"): string | undefined {
     return touched[field] ? errors[field] : undefined;
@@ -138,10 +152,19 @@ export function CategoryFormModal({
             />
           </Field>
         </div>
-        <label className="grid gap-1">
-          <span className="text-base font-bold text-foreground">الأيقونة</span>
-          <CategoryIconPicker value={icon} onChange={setIcon} />
-        </label>
+        <div className="grid gap-2">
+          <span
+            id="category-icon-picker-label"
+            className="text-base font-bold text-foreground"
+          >
+            الأيقونة
+          </span>
+          <CategoryIconPicker
+            value={icon}
+            onChange={setIcon}
+            ariaLabelledBy="category-icon-picker-label"
+          />
+        </div>
         <AdminButton type="submit" disabled={busy}>
           {busy ? "جاري الحفظ..." : target === "new" ? "إضافة التخصص" : "حفظ التعديلات"}
         </AdminButton>

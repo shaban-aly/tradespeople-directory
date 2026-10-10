@@ -131,7 +131,7 @@ function NavItemLink({
       <div className="relative shrink-0">
         <Icon className={`h-5 w-5 transition-transform duration-150 ${isActive ? "" : "group-hover:scale-105"}`} />
         {collapsed && showBadge && (
-          <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-extrabold text-white">
+          <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-xs font-extrabold leading-none text-on-accent">
             {count > 99 ? "99+" : toArabicDigits(count)}
           </span>
         )}

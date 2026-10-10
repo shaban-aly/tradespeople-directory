@@ -9,9 +9,8 @@ import {
   resolveActiveCraftsman,
 } from "@/lib/db/craftsman-dashboard";
 import { getAreasList } from "@/lib/db/craftsman-mutations";
+import { CraftsmanDashboardHeader } from "@/components/dashboard/CraftsmanDashboardHeader";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { DashboardSubnav } from "@/components/dashboard/DashboardSubnav";
-import { ProfileSwitcher } from "@/components/dashboard/ProfileSwitcher";
 import { ProfileCompletionCard } from "@/components/dashboard/ProfileCompletionCard";
 import { ProfileEditForm } from "@/components/dashboard/ProfileEditForm";
 
@@ -71,25 +70,24 @@ export default async function CraftsmanProfileEditPage({
 
   return (
     <div className="space-y-6">
-      {/* 1. شريط التبويبات الموحد لكافة صفحات لوحة تحكم الفني (DashboardSubnav) */}
-      <DashboardSubnav openLeadsCount={totalOpenLeads} />
+      {/* 1. ترويسة لوحة الفني الموحدة (الهوية، مبدل الملفات، إجراءات المعاينة، وشريط التبويبات) */}
+      <CraftsmanDashboardHeader
+        profile={data.profile}
+        craftsmen={briefs}
+        activeCraftsmanId={activeId}
+        counts={openCountsRecord}
+        openLeadsCount={totalOpenLeads}
+      />
 
       {/* 2. الهيكل التفاعلي المتجاوب بعرض max-w-7xl المريح (12 عمود على الديسكتوب) */}
       <div className="flex flex-col gap-6 lg:grid lg:grid-cols-12 lg:gap-8 items-start">
         {/* العمود الجانبي (4 أعمدة على الديسكتوب): كارت الصورة والمعاينة الحية وجاهزية الملف */}
         <div className="contents lg:flex lg:flex-col lg:gap-6 lg:col-span-4">
-          {/* كارت الصورة الشخصية والمعاينة الحية المدمج: على الموبايل order-1 في أعلى البيانات، وعلى الديسكتوب في قمة السايدبار lg:order-1 */}
+          {/* كارت الصورة الشخصية والمحرر المدمج */}
           <div className="order-1 lg:order-1 w-full">
             <DashboardHeader
               profile={data.profile}
               editable={true}
-              action={
-                <ProfileSwitcher
-                  craftsmen={briefs}
-                  activeCraftsmanId={activeId}
-                  counts={openCountsRecord}
-                />
-              }
             />
           </div>
 

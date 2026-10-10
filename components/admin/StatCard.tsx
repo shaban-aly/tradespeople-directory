@@ -9,7 +9,7 @@ export function StatCard({
   value: React.ReactNode;
   hint?: string;
 }) {
-  const displayValue = value === "٠" || value === 0 ? "0" : value;
+  const displayValue = value ?? "٠";
 
   return (
     <div className="grid gap-2 rounded-2xl border border-border bg-card p-3 shadow-card sm:gap-3 sm:p-4">

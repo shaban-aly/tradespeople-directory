@@ -8,6 +8,7 @@ import {
   Bookmark,
   Camera,
   Check,
+  CheckCircle,
   ChevronDown,
   ChevronLeft,
   Clock,
@@ -21,6 +22,7 @@ import {
   Heart,
   HeartHandshake,
   Home,
+  Hourglass,
   Inbox,
   LayoutDashboard,
   LayoutGrid,
@@ -38,18 +40,21 @@ import {
   Pencil,
   Phone,
   Plus,
+  Radio,
   RefreshCw,
   RotateCcw,
   Save,
   Search,
   Settings,
   Share,
+  ShieldAlert,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
   Star,
   Sun,
   Tags,
+  Timer,
   Trash2,
   TrendingUp,
   User,
@@ -387,6 +392,26 @@ export function IconChevronRight({ className, ...props }: LucideProps) {
 
 export function IconRotateCcw(props: LucideProps) {
   return <RotateCcw {...props} />;
+}
+
+export function IconHourglass(props: LucideProps) {
+  return <Hourglass {...props} />;
+}
+
+export function IconRadio(props: LucideProps) {
+  return <Radio {...props} />;
+}
+
+export function IconShieldAlert(props: LucideProps) {
+  return <ShieldAlert {...props} />;
+}
+
+export function IconTimer(props: LucideProps) {
+  return <Timer {...props} />;
+}
+
+export function IconCheckCircle(props: LucideProps) {
+  return <CheckCircle {...props} />;
 }
 
 

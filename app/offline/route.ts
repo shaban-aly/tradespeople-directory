@@ -44,7 +44,7 @@ const PAGE = `<!doctype html>
     align-items: center;
     justify-content: center;
     padding: 1.5rem;
-    font-family: "Segoe UI", Tahoma, "Noto Kufi Arabic", "Cairo", system-ui, sans-serif;
+    font-family: "Cairo", "Tajawal", system-ui, sans-serif;
     background: var(--bg);
     color: var(--fg);
     direction: rtl;
@@ -56,7 +56,7 @@ const PAGE = `<!doctype html>
     text-align: center;
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 1.5rem;
+    border-radius: 1rem;
     box-shadow: 0 8px 24px rgba(20, 20, 43, 0.12);
   }
   .icon {
@@ -66,7 +66,7 @@ const PAGE = `<!doctype html>
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 1.25rem;
+    border-radius: 1rem;
     background: color-mix(in srgb, var(--accent) 10%, transparent);
     color: var(--accent);
   }

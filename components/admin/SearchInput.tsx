@@ -17,9 +17,11 @@ export function SearchInput({
     <div className={`relative ${className ?? ""}`}>
       <IconSearch className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
       <input
+        type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
+        aria-label={placeholder ?? "بحث"}
         className="w-full rounded-xl border border-border-strong bg-card py-2.5 pl-4 pr-10 text-base text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
       />
     </div>

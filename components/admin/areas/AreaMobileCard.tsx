@@ -67,19 +67,19 @@ export function AreaMobileCard({
             type="button"
             variant="accentHover"
             size="icon"
-            aria-label={`تعديل ${area.name}`}
+            aria-label={`تعديل منطقة ${area.name}`}
             onClick={() => onEdit(area)}
           >
-            <IconEdit className="h-4 w-4" />
+            <IconEdit className="h-5 w-5" />
           </AdminButton>
           <AdminButton
             type="button"
             variant="dangerHover"
             size="icon"
-            aria-label={`حذف ${area.name}`}
+            aria-label={`حذف منطقة ${area.name}`}
             onClick={() => onDelete(area)}
           >
-            <IconTrash className="h-4 w-4 text-red-500" />
+            <IconTrash className="h-5 w-5" />
           </AdminButton>
         </div>
       </div>

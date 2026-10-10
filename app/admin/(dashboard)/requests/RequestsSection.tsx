@@ -5,6 +5,7 @@ import { DashboardLoading } from "@/components/admin/DashboardLoading";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { RefreshButton } from "@/components/admin/RefreshButton";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { ApproveRequestModal } from "@/components/admin/requests/ApproveRequestModal";
 import { RequestCard } from "@/components/admin/requests/RequestCard";
 import { RequestDetailsDrawer } from "@/components/admin/requests/RequestDetailsDrawer";
@@ -70,8 +71,33 @@ export function RequestsSection({
         {filteredRequests.length === 0 ? (
           <EmptyState
             icon={<IconInbox className="h-8 w-8" />}
-            title="لا توجد طلبات بهذا الفلتر"
-            description="جرّب تغيير الفلتر أو راجع لاحقاً."
+            title={
+              requests.length === 0
+                ? "لا توجد أي طلبات انضمام"
+                : statusFilter === "pending"
+                  ? "لا توجد طلبات معلقة"
+                  : statusFilter === "rejected"
+                    ? "لا توجد طلبات مرفوضة"
+                    : "لا توجد طلبات"
+            }
+            description={
+              requests.length === 0
+                ? "لم يتم تقديم أي طلبات انضمام جديدة للفنيين حتى الآن."
+                : statusFilter !== "all"
+                  ? "جرّب التبديل لعرض كل الطلبات أو اختيار تبويب آخر."
+                  : "ستظهر طلبات التسجيل الجديدة هنا فور تقديمها."
+            }
+            action={
+              statusFilter !== "all" ? (
+                <AdminButton
+                  type="button"
+                  variant="outline"
+                  onClick={() => setStatusFilter("all")}
+                >
+                  عرض كل الطلبات
+                </AdminButton>
+              ) : undefined
+            }
           />
         ) : (
           <div className="grid gap-4">
@@ -103,7 +129,7 @@ export function RequestsSection({
         onClose={() => setRejectTarget(null)}
         onConfirm={() => void handleReject()}
         title="رفض الطلب"
-        message="هل أنت متأكد من رفض هذا الطلب؟ لا يمكن التراجع عن هذا القرار."
+        message={`هل أنت متأكد من رفض طلب "${rejectTarget?.name}"؟ لا يمكن التراجع عن هذا القرار.`}
         confirmLabel="رفض الطلب"
         danger
         busy={busyKey === `reject-${rejectTarget?.id}`}
@@ -114,7 +140,7 @@ export function RequestsSection({
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => void handleDelete()}
         title="حذف الطلب"
-        message="هل أنت متأكد من حذف هذا الطلب نهائياً؟ لا يمكن التراجع عن هذا القرار."
+        message={`هل أنت متأكد من حذف طلب "${deleteTarget?.name}" نهائياً؟ لا يمكن التراجع عن هذا القرار.`}
         confirmLabel="حذف الطلب"
         danger
         busy={busyKey === `delete-request-${deleteTarget?.id}`}

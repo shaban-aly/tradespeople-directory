@@ -75,7 +75,7 @@ export function CategoriesTable({
                     type="button"
                     variant="accentHover"
                     size="icon"
-                    aria-label="تعديل"
+                    aria-label={`تعديل تخصص ${category.name}`}
                     onClick={() => onEdit(category)}
                   >
                     <IconEdit className="h-5 w-5" />
@@ -84,7 +84,7 @@ export function CategoriesTable({
                     type="button"
                     variant="dangerHover"
                     size="icon"
-                    aria-label="حذف"
+                    aria-label={`حذف تخصص ${category.name}`}
                     onClick={() => onDelete(category)}
                   >
                     <IconTrash className="h-5 w-5" />

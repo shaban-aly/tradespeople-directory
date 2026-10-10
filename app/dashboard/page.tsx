@@ -7,13 +7,11 @@ import {
   getMyCraftsmen,
   resolveActiveCraftsman,
 } from "@/lib/db/craftsman-dashboard";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { CraftsmanDashboardHeader } from "@/components/dashboard/CraftsmanDashboardHeader";
 import { ProfileCompletionCard } from "@/components/dashboard/ProfileCompletionCard";
-import { DashboardSubnav } from "@/components/dashboard/DashboardSubnav";
 import { CraftsmanStatsGrid } from "@/components/dashboard/CraftsmanStatsGrid";
 import { CraftsmanActivityFeed } from "@/components/dashboard/CraftsmanActivityFeed";
 import { ReviewsSection } from "@/components/dashboard/ReviewsSection";
-import { ProfileSwitcher } from "@/components/dashboard/ProfileSwitcher";
 import { DashboardErrorState } from "@/components/dashboard/DashboardErrorState";
 import { ButtonLink } from "@/components/shared/ui/Button";
 import { IconUser } from "@/components/shared/icons";
@@ -103,53 +101,37 @@ export default async function DashboardPage({
 
   return (
     <div className="space-y-6">
-      {/* 1. شريط التبويبات الموحد المتصل بعرض الناف بار max-w-7xl */}
-      <DashboardSubnav openLeadsCount={totalOpenLeads} />
+      {/* 1. ترويسة لوحة الفني الموحدة (الهوية، مبدل الملفات، إجراءات المعاينة، وشريط التبويبات) */}
+      <CraftsmanDashboardHeader
+        profile={data.profile}
+        craftsmen={allCraftsmen}
+        activeCraftsmanId={activeCraftsman.id}
+        counts={openCountsRecord}
+        openLeadsCount={totalOpenLeads}
+      />
 
       {/* 2. الهيكل التفاعلي المتجاوب بعرض max-w-7xl المريح (12 عمود على الديسكتوب) */}
       <div className="flex flex-col gap-6 lg:grid lg:grid-cols-12 lg:gap-8 items-start">
-        {/* العمود الجانبي (4 أعمدة على الديسكتوب): كارت الصورة والمعاينة وجاهزية الملف */}
-        <div className="contents lg:flex lg:flex-col lg:gap-6 lg:col-span-4">
-          {/* كارت الصورة الكبير وهوية الفني: على الموبايل order-3 بعد سجل التفاعلات، وعلى الديسكتوب في قمة السايدبار lg:order-1 */}
-          <div className="order-3 lg:order-1 w-full">
-            <DashboardHeader
-              profile={data.profile}
-              action={
-                <ProfileSwitcher
-                  craftsmen={allCraftsmen}
-                  activeCraftsmanId={activeCraftsman.id}
-                  counts={openCountsRecord}
-                />
-              }
-            />
-          </div>
+        {/* العمود الرئيسي (8 أعمدة على الديسكتوب): الإحصائيات وسجل التفاعلات */}
+        <div className="flex flex-col gap-6 lg:col-span-8 w-full">
+          {/* مصفوفة الإحصائيات الحيوية */}
+          <CraftsmanStatsGrid stats={data.stats} />
 
-          {/* كارت جاهزية واكتمال الملف المهني: على الموبايل order-4، وعلى الديسكتوب أسفل السايدبار lg:order-2 */}
-          <div className="order-4 lg:order-2 w-full">
-            <ProfileCompletionCard profile={data.profile} />
-          </div>
+          {/* سجل تفاعلات وتواصل العملاء المباشر مع التصفية الزمنية */}
+          <CraftsmanActivityFeed items={data.recentInteractions} />
         </div>
 
-        {/* العمود الرئيسي (8 أعمدة على الديسكتوب): الإحصائيات وسجل التفاعلات والمراجعات */}
-        <div className="contents lg:flex lg:flex-col lg:gap-6 lg:col-span-8">
-          {/* مصفوفة الإحصائيات: على الموبايل تأتي أولاً تحت التبويبات order-1 */}
-          <div className="order-1 lg:order-1 w-full">
-            <CraftsmanStatsGrid stats={data.stats} />
-          </div>
+        {/* العمود الجانبي (4 أعمدة على الديسكتوب): جاهزية الملف والتقييمات */}
+        <div className="flex flex-col gap-6 lg:col-span-4 w-full">
+          {/* كارت جاهزية واكتمال الملف المهني */}
+          <ProfileCompletionCard profile={data.profile} />
 
-          {/* سجل تفاعلات وتواصل العملاء: على الموبايل order-2 تحت الإحصائيات */}
-          <div className="order-2 lg:order-2 w-full">
-            <CraftsmanActivityFeed items={data.recentInteractions} />
-          </div>
-
-          {/* آراء وتقييمات العملاء: على الموبايل order-5 بعد كروت السايدبار، وعلى الديسكتوب lg:order-3 */}
-          <div className="order-5 lg:order-3 w-full">
-            <ReviewsSection
-              rating={data.stats.rating}
-              reviews={data.stats.reviews}
-              slug={data.profile.slug}
-            />
-          </div>
+          {/* آراء وتقييمات العملاء من أهالي السويس */}
+          <ReviewsSection
+            rating={data.stats.rating}
+            reviews={data.stats.reviews}
+            slug={data.profile.slug}
+          />
         </div>
       </div>
     </div>

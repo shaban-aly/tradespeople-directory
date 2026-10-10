@@ -40,6 +40,11 @@ export function useAdminMessages(initialMessages?: ContactMessageRow[]) {
     [rawMessages, readFilter],
   );
 
+  const activeDetailsTarget = useMemo(() => {
+    if (!detailsTarget) return null;
+    return rawMessages.find((item) => item.id === detailsTarget.id) ?? detailsTarget;
+  }, [detailsTarget, rawMessages]);
+
   const toggleRead = (message: ContactMessageRow) =>
     run(`message-${message.id}`, () => toggleMessageRead(message), refresh);
 
@@ -61,6 +66,9 @@ export function useAdminMessages(initialMessages?: ContactMessageRow[]) {
     const ok = await deleteMessage(deleteTarget.id);
     if (ok) {
       toast("success", "تم حذف الرسالة");
+      if (detailsTarget?.id === deleteTarget.id) {
+        setDetailsTarget(null);
+      }
       setDeleteTarget(null);
     }
   };
@@ -72,7 +80,7 @@ export function useAdminMessages(initialMessages?: ContactMessageRow[]) {
     allCount,
     readFilter,
     setReadFilter,
-    detailsTarget,
+    detailsTarget: activeDetailsTarget,
     setDetailsTarget,
     deleteTarget,
     setDeleteTarget,

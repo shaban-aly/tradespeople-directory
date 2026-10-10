@@ -46,7 +46,7 @@ export function CategoryChart({
                 </div>
 
                 <div className="mt-3">
-                  <div className="flex items-center justify-between text-[11px] text-muted mb-1">
+                  <div className="flex items-center justify-between text-xs text-muted mb-1">
                     <span>من الإجمالي</span>
                     <span className="font-semibold">{toArabicDigits(pctOfTotal)}%</span>
                   </div>

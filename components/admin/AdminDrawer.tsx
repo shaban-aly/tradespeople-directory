@@ -58,7 +58,7 @@ export function AdminDrawer({
               <span className="block font-heading text-sm font-extrabold text-foreground leading-tight">
                 دليل الصنايعية
               </span>
-              <span className="text-[10px] font-semibold text-muted">
+              <span className="text-xs font-semibold text-muted">
                 لوحة التحكم
               </span>
             </div>

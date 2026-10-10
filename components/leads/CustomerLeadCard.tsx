@@ -1,4 +1,15 @@
-import { CheckCircle, Clock, MapPin, Phone, Radio, RotateCcw, ShieldAlert, Star, Timer } from "lucide-react";
+import {
+  IconCheckCircle,
+  IconClock,
+  IconMapPin,
+  IconPhone,
+  IconRadio,
+  IconRotateCcw,
+  IconShieldAlert,
+  IconStar,
+  IconTimer,
+  IconWhatsApp,
+} from "@/components/shared/icons";
 import { MAX_LEAD_RESPONSES, type CustomerLead } from "@/lib/db/leads";
 import { LeadActions } from "@/components/leads/LeadActions";
 import { LeadCompleteButton } from "@/components/leads/LeadCompleteButton";
@@ -8,7 +19,6 @@ import { RelativeTime } from "@/components/leads/RelativeTime";
 import { LeadImageGallery } from "@/components/leads/LeadImageGallery";
 import { Badge } from "@/components/shared/ui/Badge";
 import { ButtonAnchor, ButtonLink } from "@/components/shared/ui/Button";
-import { IconWhatsApp } from "@/components/shared/icons";
 import { toArabicDigits } from "@/lib/utils/format";
 import { formatRelativePast, formatRemainingUntil, telHref } from "@/lib/utils/time";
 import { craftsmanHref, whatsappHref } from "@/lib/utils/url";
@@ -18,9 +28,9 @@ const STATUS_BADGES: Record<
   Exclude<CustomerLead["status"], "claimed">,
   { label: string; className: string }
 > = {
-  open: { label: "مفتوح (جاري البحث)", className: "border-amber-500/40 bg-amber-500/10 text-amber-500" },
+  open: { label: "مفتوح (جاري البحث)", className: "border-warning/40 bg-warning/10 text-warning" },
   cancelled: { label: "ملغى", className: "border-danger/40 bg-danger/10 text-danger" },
-  completed: { label: "تم إنجاز الشغل", className: "border-blue-500/40 bg-blue-500/10 text-blue-500" },
+  completed: { label: "تم إنجاز الشغل", className: "border-accent/40 bg-accent/10 text-accent" },
   expired: { label: "منتهي الصلاحية", className: "border-border bg-muted/15 text-muted" },
 };
 
@@ -35,7 +45,7 @@ export function CustomerLeadCard({ lead }: { lead: CustomerLead }) {
       ? {
           label: claimedLabel,
           className:
-            "border-emerald-500/40 bg-emerald-500/10 text-emerald-500",
+            "border-action/40 bg-action/10 text-action",
         }
       : STATUS_BADGES[lead.status];
   const accepting =
@@ -58,7 +68,7 @@ export function CustomerLeadCard({ lead }: { lead: CustomerLead }) {
                 className="gap-1.5 text-xs font-bold shrink-0"
                 title="إنشاء طلب صيانة جديد بنفس التخصص والمنطقة"
               >
-                <RotateCcw className="h-3.5 w-3.5 text-muted" />
+                <IconRotateCcw className="h-3.5 w-3.5 text-muted" />
                 <span>طلب مماثل</span>
               </ButtonLink>
             )}
@@ -80,11 +90,11 @@ export function CustomerLeadCard({ lead }: { lead: CustomerLead }) {
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted">
           <span className="inline-flex items-center gap-1.5">
-            <MapPin className="h-4 w-4" />
+            <IconMapPin className="h-4 w-4" />
             {lead.areaName}
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <Clock className="h-4 w-4" />
+            <IconClock className="h-4 w-4" />
             <RelativeTime
               value={lead.createdAt}
               mode="past"
@@ -92,8 +102,8 @@ export function CustomerLeadCard({ lead }: { lead: CustomerLead }) {
             />
           </span>
           {lead.status === "open" && (
-            <span className="inline-flex items-center gap-1.5 font-bold text-amber-600 dark:text-amber-400">
-              <Timer className="h-4 w-4" />
+            <span className="inline-flex items-center gap-1.5 font-bold text-warning">
+              <IconTimer className="h-4 w-4" />
               <RelativeTime
                 value={lead.expiresAt}
                 mode="remaining"
@@ -108,7 +118,7 @@ export function CustomerLeadCard({ lead }: { lead: CustomerLead }) {
       <div className="border-t border-border bg-background/50 p-4 sm:p-5">
         {lead.hidden ? (
           <div className="flex items-start gap-3 rounded-xl border border-danger/30 bg-danger/5 p-4">
-            <ShieldAlert className="h-5 w-5 shrink-0 text-danger" />
+            <IconShieldAlert className="h-5 w-5 shrink-0 text-danger" />
             <div className="space-y-1 text-sm leading-relaxed">
               <p className="font-bold text-foreground">
                 تم إيقاف هذا الطلب من الإدارة مؤقتاً ولن يصل لصنايعية جدد.
@@ -170,11 +180,11 @@ export function CustomerLeadCard({ lead }: { lead: CustomerLead }) {
                             res.craftsman.name
                           )}
                           {res.craftsman.verified && (
-                            <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />
+                            <IconCheckCircle className="h-4 w-4 shrink-0 text-action" />
                           )}
                         </p>
                         <p className="flex items-center gap-1 text-sm text-muted">
-                          <Star className="h-3.5 w-3.5 shrink-0 fill-current text-amber-500" />
+                          <IconStar className="h-3.5 w-3.5 shrink-0 fill-current text-warning" />
                           {res.craftsman.averageRating?.toFixed(1) ?? "0.0"}
                         </p>
                       </div>
@@ -188,7 +198,7 @@ export function CustomerLeadCard({ lead }: { lead: CustomerLead }) {
                         size="sm"
                         className="w-full shrink-0 sm:w-auto font-bold"
                       >
-                        <Phone className="h-4 w-4" />
+                        <IconPhone className="h-4 w-4" />
                         اتصل الآن
                       </ButtonAnchor>
                       <ButtonAnchor
@@ -215,7 +225,7 @@ export function CustomerLeadCard({ lead }: { lead: CustomerLead }) {
               <div className="mt-3 flex items-start gap-3 rounded-xl border border-accent/25 bg-accent/5 p-4 text-sm leading-relaxed">
                 <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent mt-0.5">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent/25 opacity-75" />
-                  <Radio className="relative h-4 w-4" />
+                  <IconRadio className="relative h-4 w-4" />
                 </div>
                 <div className="space-y-1">
                   <p className="font-bold text-foreground">

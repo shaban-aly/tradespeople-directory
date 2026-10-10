@@ -49,7 +49,7 @@ export function UsersSection({ initialUsers }: UsersSectionProps) {
               >
                 <span>{f.label}</span>
                 <span
-                  className={`rounded-md px-1.5 py-0.2 text-[11px] font-black ${
+                  className={`rounded-md px-1.5 py-0.5 text-xs font-black ${
                     active ? "bg-white/20 text-white" : "bg-muted/15 text-muted"
                   }`}
                 >

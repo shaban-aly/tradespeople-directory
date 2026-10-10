@@ -13,6 +13,8 @@ import { toArabicDigits } from "@/lib/utils/format";
 export interface DashboardSubnavProps {
   /** عدد العروض المفتوحة لإظهار شارة تنبيه على تبويب العروض */
   openLeadsCount?: number;
+  /** وضع مدمج داخل كارت الترويسة الموحدة دون إطار مكرر */
+  embedded?: boolean;
   className?: string;
 }
 
@@ -28,35 +30,39 @@ const TABS: NavTab[] = [
   {
     href: "/dashboard",
     desktopLabel: "نظرة عامة والإحصائيات",
-    mobileLabel: "نظرة عامة",
+    mobileLabel: "الرئيسية",
     icon: IconChart,
   },
   {
     href: "/dashboard/leads",
     desktopLabel: "عروض العملاء والطلبات",
-    mobileLabel: "عروض العملاء",
+    mobileLabel: "الطلبات",
     icon: IconBell,
     isLeads: true,
   },
   {
     href: "/dashboard/profile",
     desktopLabel: "تعديل الملف المهني",
-    mobileLabel: "الملف المهني",
+    mobileLabel: "الملف",
     icon: IconSettings,
   },
 ];
 
-function SubnavInner({ openLeadsCount, className = "" }: DashboardSubnavProps) {
+function SubnavInner({ openLeadsCount, embedded = false, className = "" }: DashboardSubnavProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const craftsman = searchParams.get("craftsman");
 
+  const containerClass = embedded
+    ? `w-full rounded-2xl bg-muted/15 p-1 sm:p-1.5 ${className}`
+    : `w-full rounded-2xl border border-border/80 bg-card p-1 sm:p-1.5 shadow-xs ${className}`;
+
   return (
     <nav
       aria-label="أقسام لوحة التحكم الرئيسية"
-      className={`w-full rounded-2xl border border-border/80 bg-card p-1.5 shadow-xs ${className}`}
+      className={containerClass}
     >
-      <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+      <div className="grid grid-cols-3 gap-1 sm:gap-2">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const active = pathname === tab.href;
@@ -69,7 +75,7 @@ function SubnavInner({ openLeadsCount, className = "" }: DashboardSubnavProps) {
               key={tab.href}
               href={href}
               aria-current={active ? "page" : undefined}
-              className={`group relative flex min-h-12 items-center justify-center gap-2 rounded-xl px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-bold transition-all select-none ${
+              className={`group relative flex min-h-11 sm:min-h-12 items-center justify-center gap-1.5 sm:gap-2 rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold transition-all select-none ${
                 active
                   ? "bg-accent text-on-accent shadow-xs"
                   : "text-muted hover:text-foreground hover:bg-muted/15"
@@ -81,11 +87,11 @@ function SubnavInner({ openLeadsCount, className = "" }: DashboardSubnavProps) {
                 }`}
               />
               <span className="truncate hidden sm:inline">{tab.desktopLabel}</span>
-              <span className="truncate sm:hidden">{tab.mobileLabel}</span>
+              <span className="whitespace-nowrap sm:hidden">{tab.mobileLabel}</span>
 
               {tab.isLeads && typeof openLeadsCount === "number" && openLeadsCount > 0 && (
                 <span
-                  className={`inline-flex shrink-0 items-center justify-center rounded-full px-2 py-0.5 text-xs font-black transition-colors ${
+                  className={`inline-flex shrink-0 items-center justify-center rounded-full px-1.5 py-0.5 text-xs font-black transition-colors ${
                     active
                       ? "bg-on-accent/20 text-on-accent"
                       : "bg-accent/15 text-accent"
@@ -109,7 +115,9 @@ export function DashboardSubnav(props: DashboardSubnavProps) {
       fallback={
         <nav
           aria-label="أقسام لوحة التحكم"
-          className="w-full h-14 rounded-2xl border border-border/80 bg-card/60 animate-pulse"
+          className={`w-full h-14 rounded-2xl animate-pulse ${
+            props.embedded ? "bg-muted/15" : "border border-border/80 bg-card/60"
+          }`}
         />
       }
     >

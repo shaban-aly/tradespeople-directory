@@ -21,8 +21,7 @@ export function CraftsmanAvatar({
       aria-label={name}
     >
       <span
-        className={`font-heading font-bold text-white ${textClassName}`}
-        style={{ textShadow: "0 1px 2px rgba(0,0,0,0.25)" }}
+        className={`font-heading font-bold text-white drop-shadow-xs ${textClassName}`}
         dir="auto"
       >
         {craftInitials(name)}

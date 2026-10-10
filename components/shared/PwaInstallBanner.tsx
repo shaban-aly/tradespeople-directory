@@ -99,8 +99,8 @@ export function PwaInstallBanner() {
             </div>
             <ol className="space-y-2 text-muted">
               <li className="flex items-center gap-2">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/10 font-bold text-accent text-[11px]">
-                  1
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/10 font-bold text-accent text-xs">
+                  ١
                 </span>
                 <span>
                   اضغط على زر المشاركة{" "}
@@ -109,8 +109,8 @@ export function PwaInstallBanner() {
                 </span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/10 font-bold text-accent text-[11px]">
-                  2
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/10 font-bold text-accent text-xs">
+                  ٢
                 </span>
                 <span>
                   مرر القائمة لأسفل واختر{" "}
@@ -121,8 +121,8 @@ export function PwaInstallBanner() {
                 </span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/10 font-bold text-accent text-[11px]">
-                  3
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/10 font-bold text-accent text-xs">
+                  ٣
                 </span>
                 <span>
                   اضغط على كلمة <strong className="text-foreground">«إضافة» (Add)</strong> في أعلى الزاوية.

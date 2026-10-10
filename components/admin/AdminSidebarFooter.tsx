@@ -14,15 +14,17 @@ export function AdminSidebarFooter({
   return (
     <div className="mt-auto border-t border-border/70 pt-2.5">
       {collapsed ? (
-        <button
+        <AdminButton
           type="button"
+          variant="dangerHover"
+          size="icon"
           title="تسجيل الخروج"
           aria-label="تسجيل الخروج"
           onClick={onSignOut}
-          className="mx-auto flex h-9 w-9 items-center justify-center rounded-xl text-red-500 hover:bg-red-500/10 transition-colors"
+          className="mx-auto h-9 w-9"
         >
           <IconLogOut className="h-4 w-4" />
-        </button>
+        </AdminButton>
       ) : (
         <div className="flex items-center gap-2">
           <div className="min-w-0 flex-1 px-1">
@@ -30,7 +32,7 @@ export function AdminSidebarFooter({
               المشرف
             </p>
             {email && (
-              <p className="truncate text-[11px] font-medium text-muted" dir="ltr">
+              <p className="truncate text-xs font-medium text-muted" dir="ltr">
                 {email}
               </p>
             )}

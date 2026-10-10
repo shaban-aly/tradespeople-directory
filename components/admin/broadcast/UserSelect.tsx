@@ -4,13 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import { useAdminUsers } from "@/hooks/admin/useAdminUsers";
 import { IconSearch, IconUser, IconX, IconCheck } from "@/components/shared/icons";
 
+interface UserSelectProps {
+  value: string;
+  onChange: (userId: string) => void;
+  onUserNameChange?: (name: string) => void;
+}
+
 export function UserSelect({
   value,
   onChange,
-}: {
-  value: string;
-  onChange: (userId: string) => void;
-}) {
+  onUserNameChange,
+}: UserSelectProps) {
   const { filteredUsers, search, setSearch, loading } = useAdminUsers();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -28,15 +32,22 @@ export function UserSelect({
 
   const selectedUser = value ? filteredUsers.find((u) => u.id === value) : null;
 
+  // Sync user display name if user is found
+  useEffect(() => {
+    if (selectedUser && onUserNameChange) {
+      onUserNameChange(selectedUser.craftsmanName || selectedUser.displayName || selectedUser.email || "");
+    }
+  }, [selectedUser, onUserNameChange]);
+
   // Display badge based on role
   const getRoleBadge = (role: string) => {
     switch (role) {
       case "client":
-        return <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-500">عميل</span>;
+        return <span className="rounded-full bg-muted/15 px-2 py-0.5 text-xs font-bold text-muted">عميل</span>;
       case "craftsman":
-        return <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-bold text-accent">فني</span>;
+        return <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs font-bold text-accent">فني</span>;
       case "admin":
-        return <span className="rounded-full bg-danger/10 px-2 py-0.5 text-[10px] font-bold text-danger">مشرف</span>;
+        return <span className="rounded-full bg-warning/15 px-2 py-0.5 text-xs font-bold text-warning">مشرف</span>;
       default:
         return null;
     }
@@ -46,54 +57,61 @@ export function UserSelect({
     <div className="relative" ref={containerRef}>
       {selectedUser ? (
         // Selected State
-        <div className="flex items-center justify-between w-full rounded-xl border border-border bg-background px-4 py-2.5">
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="truncate text-sm font-bold text-foreground">
-                {selectedUser.craftsmanName || selectedUser.displayName}
-              </span>
-              {getRoleBadge(selectedUser.role)}
+        <div className="flex items-center justify-between w-full rounded-xl border border-accent/40 bg-accent/5 px-4 py-2.5 transition-all">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/15 text-accent font-heading font-black text-xs">
+              <IconUser className="h-4 w-4" />
             </div>
-            {selectedUser.email && (
-              <span className="truncate text-[11px] text-muted">{selectedUser.email}</span>
-            )}
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="truncate text-sm font-bold text-foreground">
+                  {selectedUser.craftsmanName || selectedUser.displayName || "مستخدم"}
+                </span>
+                {getRoleBadge(selectedUser.role)}
+              </div>
+              {selectedUser.email && (
+                <span className="truncate text-xs text-muted" dir="ltr">{selectedUser.email}</span>
+              )}
+            </div>
           </div>
           <button
             type="button"
             onClick={() => {
               onChange("");
+              if (onUserNameChange) onUserNameChange("");
               setSearch("");
               setIsOpen(true);
             }}
-            className="shrink-0 p-1 text-muted hover:text-danger transition-colors"
+            aria-label="إلغاء اختيار المستخدم"
+            className="shrink-0 p-1.5 rounded-lg text-muted hover:text-danger hover:bg-danger/10 transition-colors"
           >
-            <IconX className="h-5 w-5" />
+            <IconX className="h-4 w-4" />
           </button>
         </div>
       ) : (
         // Search State
         <div>
           <div className="relative">
-            <IconSearch className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+            <IconSearch className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
             <input
               type="text"
-              placeholder="ابحث بالاسم، الإيميل، أو اسم الفني..."
+              placeholder="ابحث بالاسم، البريد الإلكتروني، أو اسم الفني..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setIsOpen(true);
               }}
               onFocus={() => setIsOpen(true)}
-              className="w-full rounded-xl border border-border bg-background py-2.5 pl-4 pr-10 text-sm outline-none transition-colors focus:border-accent"
+              className="w-full rounded-xl border border-border bg-background py-2.5 pl-4 pr-10 text-sm outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/20"
             />
           </div>
 
           {isOpen && (
             <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-60 overflow-y-auto rounded-xl border border-border bg-card p-1 shadow-card custom-scrollbar">
               {loading ? (
-                <div className="p-4 text-center text-sm text-muted">جاري التحميل...</div>
+                <div className="p-4 text-center text-xs text-muted">جاري البحث...</div>
               ) : filteredUsers.length === 0 ? (
-                <div className="p-4 text-center text-sm text-muted">لم يتم العثور على مستخدمين</div>
+                <div className="p-4 text-center text-xs text-muted">لم يتم العثور على أي مستخدمين</div>
               ) : (
                 <ul className="space-y-1">
                   {filteredUsers.slice(0, 50).map((user) => (
@@ -102,20 +120,28 @@ export function UserSelect({
                         type="button"
                         onClick={() => {
                           onChange(user.id);
+                          if (onUserNameChange) {
+                            onUserNameChange(user.craftsmanName || user.displayName || user.email || "");
+                          }
                           setIsOpen(false);
                         }}
-                        className="flex w-full items-start justify-between rounded-lg px-3 py-2 text-right transition-colors hover:bg-accent/10 focus:bg-accent/10 focus:outline-none"
+                        className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-right transition-colors hover:bg-accent/10 focus:bg-accent/10 focus:outline-none"
                       >
-                        <div className="flex min-w-0 flex-col">
-                          <div className="flex items-center gap-2">
-                            <span className="truncate text-sm font-semibold text-foreground">
-                              {user.craftsmanName || user.displayName}
-                            </span>
-                            {getRoleBadge(user.role)}
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted/15 text-muted">
+                            <IconUser className="h-3.5 w-3.5" />
                           </div>
-                          {user.email && (
-                            <span className="truncate text-[11px] text-muted">{user.email}</span>
-                          )}
+                          <div className="flex min-w-0 flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="truncate text-sm font-semibold text-foreground">
+                                {user.craftsmanName || user.displayName || "مستخدم"}
+                              </span>
+                              {getRoleBadge(user.role)}
+                            </div>
+                            {user.email && (
+                              <span className="truncate text-xs text-muted" dir="ltr">{user.email}</span>
+                            )}
+                          </div>
                         </div>
                       </button>
                     </li>

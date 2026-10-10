@@ -11,9 +11,9 @@ export function JoinSection() {
     <section className="py-10 sm:py-16">
       <div className="relative mx-auto w-full max-w-4xl px-4">
         {/* الكارت: overflow-hidden لقطع الخلفية فقط */}
-        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-linear-to-l from-[#a7f3d0] via-[#bbf7d0] to-[#86efac] shadow-md hover:shadow-lg transition-shadow text-start">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-linear-to-l from-[#a7f3d0] via-[#bbf7d0] to-[#86efac] dark:from-action/20 dark:via-action/10 dark:to-card dark:border dark:border-action/30 shadow-md hover:shadow-lg transition-shadow text-start">
           {/* علامة مائية */}
-          <div className="pointer-events-none absolute -left-2 -bottom-2 text-emerald-700/15">
+          <div className="pointer-events-none absolute -left-2 -bottom-2 text-action/20">
             <IconUserPlus className="h-28 w-28 sm:h-40 sm:w-40" />
           </div>
 
@@ -21,19 +21,19 @@ export function JoinSection() {
           <div className="relative z-9 grid grid-cols-[1fr_38%] sm:grid-cols-[1fr_30%] md:grid-cols-[1fr_250px] items-center min-h-27.5 sm:min-h-36.25 pr-4 sm:pr-8 py-4 sm:py-6">
             {/* النصوص — العمود الأيمن في RTL */}
             <div>
-              <h2 className="font-heading text-lg sm:text-2xl font-extrabold text-[#0f172a] leading-tight">
+              <h2 className="font-heading text-lg sm:text-2xl font-extrabold text-foreground leading-tight">
                أنت صنايعي؟
               </h2>
-              <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base text-[#1e293b] leading-snug font-medium max-w-lg">
+              <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base text-foreground/80 dark:text-muted leading-snug font-medium max-w-lg">
                انضم إلى دليل الصنايعية وإوصل لعملاء أكثر في السويس
               </p>
 
               {/* ميزات سريعة تظهر على الشاشات الكبيرة */}
-              <div className="hidden sm:flex items-center gap-2.5 mt-2.5 text-xs font-bold text-emerald-950">
-                <span className="inline-flex items-center gap-1 bg-white/65 px-3 py-1 rounded-full border border-emerald-600/20 shadow-2xs">
+              <div className="hidden sm:flex items-center gap-2.5 mt-2.5 text-xs font-bold text-foreground">
+                <span className="inline-flex items-center gap-1 bg-white/70 dark:bg-card/80 px-3 py-1 rounded-full border border-action/30 shadow-2xs">
                   ✓ تسجيل مجاني 100%
                 </span>
-                <span className="inline-flex items-center gap-1 bg-white/65 px-3 py-1 rounded-full border border-emerald-600/20 shadow-2xs">
+                <span className="inline-flex items-center gap-1 bg-white/70 dark:bg-card/80 px-3 py-1 rounded-full border border-action/30 shadow-2xs">
                   ✓ تواصل مباشر مع الزبائن
                 </span>
               </div>
@@ -41,7 +41,7 @@ export function JoinSection() {
               <div className="mt-3 sm:mt-4">
                 <Link
                   href="/join"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[#0f172a] px-4 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm font-bold text-white shadow-md transition-all hover:bg-[#1e293b] hover:shadow-lg hover:scale-105 active:scale-95"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-foreground text-background dark:bg-action dark:text-on-action px-4 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm font-bold shadow-md transition-all hover:bg-foreground/90 dark:hover:bg-action/90 hover:shadow-lg hover:scale-105 active:scale-95"
                 >
                   <span>سجل كصنايعي الآن</span>
                   <IconChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />

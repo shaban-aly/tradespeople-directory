@@ -2,22 +2,30 @@ import Link from "next/link";
 import { siteContact, siteNavLinks } from "@/lib/data/site";
 import { toArabicDigits } from "@/lib/utils/format";
 import { mailtoHref, telHref, whatsappHref } from "@/lib/utils/url";
-import { IconMail, IconPhone, IconWhatsApp } from "@/components/shared/icons";
+import {
+  IconFacebook,
+  IconMail,
+  IconPhone,
+  IconShieldCheck,
+  IconWhatsApp,
+} from "@/components/shared/icons";
 import { PwaInstallTrigger } from "@/components/shared/PwaInstallTrigger";
 
-export async function Footer() {
-  const year = toArabicDigits(new Date().getFullYear());
+export function Footer() {
+  const currentYear = new Date().getFullYear();
+  const year = toArabicDigits(currentYear);
 
   return (
-    <footer className="border-t border-border bg-card/40">
-      <div
-        className="h-1 w-full bg-linear-to-l from-accent via-action to-accent"
-        aria-hidden
-      />
-      <div className="mx-auto w-full max-w-7xl px-4 py-10">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <Link href="/" className="flex w-fit items-center gap-2">
+    <footer className="border-t border-border/80 bg-card/60 backdrop-blur-xs transition-colors">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
+          {/* العمود الأول: الهوية والرسالة */}
+          <div className="flex flex-col gap-3">
+            <Link
+              href="/"
+              className="group flex w-fit items-center gap-2.5 transition-transform active:scale-[0.98]"
+              aria-label="دليل الصنايعية — الصفحة الرئيسية"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/favicon-96x96.png"
@@ -26,27 +34,34 @@ export async function Footer() {
                 height={96}
                 loading="lazy"
                 decoding="async"
-                className="h-10 w-10 shrink-0 object-contain"
+                className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 object-contain transition-transform group-hover:scale-105"
               />
-              <span className="font-heading text-xl font-extrabold text-foreground">
+              <span className="font-heading text-xl sm:text-2xl font-black text-foreground tracking-tight">
                 دليل الصنايعية
               </span>
             </Link>
-            <p className="mt-3 text-base leading-relaxed text-muted">
-              تم تطويره لأهل السويس، وراجعنا أرقام كل صنايعي قبل النشر.
+
+            <p className="text-sm leading-relaxed text-muted">
+              منصة مجانية ومفتوحة لأهل السويس، نهدف لتسهيل الوصول المباشر لأفضل الفنيين وأصحاب المهن مع التحقق الدوري من أرقام الاتصال.
             </p>
+
+            <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-accent/90">
+              <IconShieldCheck className="h-4 w-4 shrink-0 text-accent" />
+              <span>مراجعة وتحديث يدوي للبيانات</span>
+            </div>
           </div>
 
-          <nav aria-label="روابط سريعة">
-            <h3 className="font-heading text-base font-bold text-foreground">
+          {/* العمود الثاني: روابط سريعة */}
+          <nav aria-label="روابط سريعة" className="flex flex-col gap-3">
+            <h3 className="font-heading text-sm font-bold tracking-wide text-foreground">
               روابط سريعة
             </h3>
-            <ul className="mt-3 space-y-2">
+            <ul className="space-y-2.5 text-sm">
               {siteNavLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-base text-muted transition-colors hover:text-accent"
+                    className="inline-flex text-muted transition-colors hover:text-accent"
                   >
                     {link.label}
                   </Link>
@@ -55,24 +70,41 @@ export async function Footer() {
               <li>
                 <Link
                   href="/join"
-                  className="text-base text-muted transition-colors hover:text-accent"
+                  className="inline-flex text-muted transition-colors hover:text-accent font-semibold"
                 >
-                  أضف صنايعي
+                  انضم كصنايعي
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/request/new"
+                  className="inline-flex text-accent font-bold transition-colors hover:text-accent/80"
+                >
+                  اطلب صنايعي الآن
                 </Link>
               </li>
               <PwaInstallTrigger />
             </ul>
           </nav>
 
-          <nav aria-label="روابط قانونية">
-            <h3 className="font-heading text-base font-bold text-foreground">
-              قانوني
+          {/* العمود الثالث: قانوني ومعلومات */}
+          <nav aria-label="روابط قانونية" className="flex flex-col gap-3">
+            <h3 className="font-heading text-sm font-bold tracking-wide text-foreground">
+              قانوني ومعلومات
             </h3>
-            <ul className="mt-3 space-y-2">
+            <ul className="space-y-2.5 text-sm">
+              <li>
+                <Link
+                  href="/about"
+                  className="inline-flex text-muted transition-colors hover:text-accent"
+                >
+                  عن دليل الصنايعية
+                </Link>
+              </li>
               <li>
                 <Link
                   href="/privacy"
-                  className="text-base text-muted transition-colors hover:text-accent"
+                  className="inline-flex text-muted transition-colors hover:text-accent"
                 >
                   سياسة الخصوصية
                 </Link>
@@ -80,26 +112,36 @@ export async function Footer() {
               <li>
                 <Link
                   href="/terms"
-                  className="text-base text-muted transition-colors hover:text-accent"
+                  className="inline-flex text-muted transition-colors hover:text-accent"
                 >
                   الشروط والأحكام
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/#contact"
+                  className="inline-flex text-muted transition-colors hover:text-accent"
+                >
+                  تواصل معنا
                 </Link>
               </li>
             </ul>
           </nav>
 
-          <div>
-            <h3 className="font-heading text-base font-bold text-foreground">
+          {/* العمود الرابع: تواصل مباشر وقنوات الدعم */}
+          <div className="flex flex-col gap-3">
+            <h3 className="font-heading text-sm font-bold tracking-wide text-foreground">
               تواصل معنا
             </h3>
-            <ul className="mt-3 space-y-3">
+            <ul className="space-y-3 text-sm">
               <li>
                 <a
                   href={telHref(siteContact.phone)}
-                  className="flex items-center gap-2 text-base text-muted transition-colors hover:text-accent"
+                  className="flex items-center gap-2.5 text-muted transition-colors hover:text-accent"
+                  title="اتصال هاتفي مباشر"
                 >
-                  <IconPhone className="h-5 w-5 shrink-0" />
-                  <bdi dir="ltr">+20101 997 9315</bdi>
+                  <IconPhone className="h-4.5 w-4.5 shrink-0 text-accent" />
+                  <bdi dir="ltr" className="font-medium">0101 997 9315</bdi>
                 </a>
               </li>
               <li>
@@ -107,32 +149,50 @@ export async function Footer() {
                   href={whatsappHref(siteContact.whatsapp)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-base text-muted transition-colors hover:text-accent"
+                  className="flex items-center gap-2.5 text-muted transition-colors hover:text-action"
+                  title="مراسلة عبر واتساب"
                 >
-                  <IconWhatsApp className="h-5 w-5 shrink-0" />
-                  واتساب
+                  <IconWhatsApp className="h-4.5 w-4.5 shrink-0 text-action" />
+                  <span className="font-medium">واتساب مباشر</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href={siteContact.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 text-muted transition-colors hover:text-accent"
+                  title="صفحة فيسبوك الرسمية"
+                >
+                  <IconFacebook className="h-4.5 w-4.5 shrink-0 text-accent" />
+                  <span className="font-medium">صفحة فيسبوك</span>
                 </a>
               </li>
               <li>
                 <a
                   href={mailtoHref(siteContact.email)}
-                  className="flex items-center gap-2 text-base text-muted transition-colors hover:text-accent"
+                  className="flex items-center gap-2.5 text-muted transition-colors hover:text-accent"
+                  title="مراسلة عبر البريد الإلكتروني"
                 >
-                  <IconMail className="h-5 w-5 shrink-0" />
-                  <bdi dir="ltr">shabanaly@gmail.com</bdi>
+                  <IconMail className="h-4.5 w-4.5 shrink-0 text-accent" />
+                  <bdi dir="ltr" className="font-medium">{siteContact.email}</bdi>
                 </a>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-8 border-t border-border pt-4 pb-4">
-          <p className="text-center text-sm text-muted">
-            دليل الصنايعية — كل الأرقام تُراجع يدوياً قبل النشر ودورياً . ©{" "}
-            {year} تم التطوير بواسطة{" "}
+        {/* سطر حقوق النشر والتطوير */}
+        <div className="mt-10 border-t border-border/80 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-start text-xs text-muted">
+          <p>
+            دليل الصنايعية — منصة خدمية غير هادفة للربح لخدمة محافظة السويس. جميع الحقوق محفوظة © {year}.
+          </p>
+          <p>
+            تم التطوير بواسطة{" "}
             <a
-              className="font-semibold text-accent hover:underline"
+              className="font-bold text-accent transition-colors hover:underline"
               target="_blank"
+              rel="noopener noreferrer"
               href="https://shabanaly.vercel.app/"
             >
               Shaban Aly

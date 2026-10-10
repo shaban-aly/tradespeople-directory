@@ -29,8 +29,8 @@ export function SiteNavLinks({
 
   const className =
     variant === "mobile"
-      ? "rounded-lg px-3 py-3 text-base font-bold transition-colors"
-      : "rounded-lg px-3 py-2 text-base font-bold transition-colors";
+      ? "rounded-xl px-3 py-2.5 text-base font-bold transition-colors whitespace-nowrap"
+      : "rounded-xl px-2 xl:px-2.5 2xl:px-3 py-1.5 xl:py-2 text-xs xl:text-sm 2xl:text-base font-bold transition-all whitespace-nowrap shrink-0";
 
   return (
     <>
@@ -44,8 +44,8 @@ export function SiteNavLinks({
             aria-current={active ? "page" : undefined}
             className={`${className} ${
               active
-                ? "bg-card text-accent"
-                : "text-muted hover:bg-card hover:text-foreground"
+                ? "bg-accent/10 text-accent font-bold shadow-2xs"
+                : "text-muted hover:bg-muted/10 hover:text-foreground"
             }`}
           >
             {link.label}

@@ -58,7 +58,7 @@ export function StatsTrendChart({ points }: { points: DailyPoint[] }) {
               x={xCenter}
               y={VIEW_H - 8}
               textAnchor="middle"
-              className="fill-chart-label text-[11px]"
+              className="fill-chart-label text-xs"
             >
               {toArabicDigits(Number(dayNum))}
             </text>

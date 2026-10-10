@@ -114,15 +114,15 @@ export function NotificationsBell() {
         id="header-notifications-btn"
         type="button"
         onClick={handleToggle}
-        className="relative flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-accent/10"
+        className="relative flex h-9.5 w-9.5 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full border border-border/80 bg-card/70 backdrop-blur-xs text-foreground transition-all hover:border-accent hover:text-accent hover:bg-card active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent shadow-2xs"
         aria-label="الإشعارات"
         aria-expanded={open}
         aria-haspopup="dialog"
       >
-        <IconBell className="h-5 w-5" />
+        <IconBell className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
         {unreadCount > 0 && (
           <span
-            className="absolute -top-0.5 -left-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-on-accent"
+            className="absolute -top-1 -left-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-accent px-1 text-xs font-bold text-on-accent ring-2 ring-background shadow-xs"
             aria-label={`${unreadCount} إشعارات غير مقروءة`}
           >
             {unreadCount > 99 ? "99+" : unreadCount}
@@ -207,7 +207,7 @@ export function NotificationsBell() {
                           <p className="text-sm font-semibold text-foreground">
                             {n.title}
                           </p>
-                          <span className="shrink-0 text-[11px] text-muted">
+                          <span className="shrink-0 text-xs text-muted">
                             {formatRelativeTime(n.created_at)}
                           </span>
                         </div>

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { claimLeadAction } from "@/app/actions/leads";
 import { Button } from "@/components/shared/ui/Button";
+import { IconCheck } from "@/components/shared/icons";
 import { useToast } from "@/hooks/ui/useToast";
 import { ConfirmDialog } from "@/components/shared/ui/ConfirmDialog";
 
@@ -45,11 +46,12 @@ export function LeadsClaimButton({ leadId, craftsmanId }: LeadsClaimButtonProps)
       <Button
         type="button"
         variant="primary"
-        className="w-full"
+        className="w-full min-h-11 font-bold gap-2"
         disabled={isPending}
         onClick={() => setConfirming(true)}
       >
-        {isPending ? "جاري التسجيل..." : "أنا متاح - أريد هذا العمل"}
+        <IconCheck className="h-4 w-4" />
+        <span>{isPending ? "جاري التسجيل..." : "أنا متاح — استلام الطلب والتواصل"}</span>
       </Button>
       {error && <p className="text-danger text-sm font-bold">{error}</p>}
 

@@ -125,16 +125,15 @@ export function LeadsSection({ initialData }: { initialData: AdminLeadsData }) {
               </AdminButton>
               <AdminButton
                 type="button"
-                variant="outline"
+                variant="outlineWarning"
                 size="sm"
-                className="text-amber-600 hover:text-amber-700"
                 onClick={() => setBulkAction("hide")}
               >
                 إخفاء المحدد
               </AdminButton>
               <AdminButton
                 type="button"
-                variant="outline"
+                variant="outlineAction"
                 size="sm"
                 onClick={() => setBulkAction("unhide")}
               >
@@ -239,7 +238,11 @@ export function LeadsSection({ initialData }: { initialData: AdminLeadsData }) {
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => void handleDelete()}
         title="حذف الطلب"
-        message="هل أنت متأكد من حذف هذا الطلب نهائياً؟ سيتم إرسال إشعار للعميل بذلك. لا يمكن التراجع عن هذا القرار."
+        message={
+          deleteTarget
+            ? `هل أنت متأكد من حذف طلب "${deleteTarget.category?.name || "العميل"}" (${deleteTarget.customer_phone}) نهائياً؟ سيتم إرسال إشعار للعميل بذلك. لا يمكن التراجع عن هذا القرار.`
+            : "هل أنت متأكد من حذف هذا الطلب نهائياً؟ سيتم إرسال إشعار للعميل بذلك. لا يمكن التراجع عن هذا القرار."
+        }
         confirmLabel="حذف الطلب"
         danger
         busy={busyKey === `delete-lead-${deleteTarget?.id}`}
@@ -253,7 +256,11 @@ export function LeadsSection({ initialData }: { initialData: AdminLeadsData }) {
         }}
         onConfirm={() => void handleHide()}
         title="إخفاء الطلب"
-        message="هل أنت متأكد من إخفاء هذا الطلب؟ لن يظهر في لوحات تحكم الفنيين بعد الآن."
+        message={
+          hideTarget
+            ? `هل أنت متأكد من إخفاء طلب "${hideTarget.category?.name || "العميل"}"؟ لن يظهر في لوحات تحكم الفنيين بعد الآن.`
+            : "هل أنت متأكد من إخفاء هذا الطلب؟ لن يظهر في لوحات تحكم الفنيين بعد الآن."
+        }
         confirmLabel="إخفاء الطلب"
         busy={busyKey === `hide-lead-${hideTarget?.id}`}
         note={{

@@ -62,19 +62,19 @@ export function CategoryMobileCard({
             type="button"
             variant="accentHover"
             size="icon"
-            aria-label={`تعديل ${category.name}`}
+            aria-label={`تعديل تخصص ${category.name}`}
             onClick={() => onEdit(category)}
           >
-            <IconEdit className="h-4 w-4" />
+            <IconEdit className="h-5 w-5" />
           </AdminButton>
           <AdminButton
             type="button"
             variant="dangerHover"
             size="icon"
-            aria-label={`حذف ${category.name}`}
+            aria-label={`حذف تخصص ${category.name}`}
             onClick={() => onDelete(category)}
           >
-            <IconTrash className="h-4 w-4 text-red-500" />
+            <IconTrash className="h-5 w-5" />
           </AdminButton>
         </div>
       </div>

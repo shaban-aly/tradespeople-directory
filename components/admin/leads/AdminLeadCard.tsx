@@ -9,11 +9,16 @@ import { RelativeTime } from "@/components/leads/RelativeTime";
 import {
   IconEye,
   IconEyeOff,
+  IconMapPin,
+  IconPhone,
   IconTrash,
+  IconWhatsApp,
 } from "@/components/shared/icons";
 import type { AdminLeadRow } from "@/lib/db/admin";
 import { leadStatusInfo } from "./leadStatus";
 import { toArabicDigits } from "@/lib/utils/format";
+import { formatRelativePast, telHref } from "@/lib/utils/time";
+import { whatsappHref } from "@/lib/utils/url";
 
 type Props = {
   lead: AdminLeadRow;
@@ -44,13 +49,16 @@ export function AdminLeadCard({
 
   return (
     <div
-      className={`transition-opacity ${isBusy ? "pointer-events-none opacity-50" : ""} ${lead.hidden ? "opacity-70 grayscale-[30%]" : ""} ${selected ? "ring-2 ring-accent" : ""} rounded-xl`}
+      className={`transition-opacity ${isBusy ? "pointer-events-none opacity-50" : ""} ${lead.hidden ? "opacity-75 grayscale-[25%]" : ""} ${selected ? "ring-2 ring-accent" : ""} rounded-xl`}
     >
       <RecordCard
         onOpen={() => onDetails(lead)}
         badge={
-          <div className="flex gap-2">
-            <label className="flex cursor-pointer items-center" onClick={(event) => event.stopPropagation()}>
+          <div className="flex flex-wrap items-center gap-2">
+            <label
+              className="flex cursor-pointer items-center"
+              onClick={(event) => event.stopPropagation()}
+            >
               <input
                 type="checkbox"
                 checked={selected}
@@ -61,36 +69,70 @@ export function AdminLeadCard({
             </label>
             <StatusBadge variant={statusInfo.variant}>{statusInfo.label}</StatusBadge>
             {lead.hidden && <StatusBadge variant="rejected">مخفي</StatusBadge>}
-            <Badge variant="accent" size="sm">
+            <Badge variant={lead.responseCount > 0 ? "accent" : "neutral"} size="sm">
               {lead.responseCount > 0
-                ? `ردود (${toArabicDigits(lead.responseCount)})`
+                ? `${toArabicDigits(lead.responseCount)}/٣ ردود`
                 : "بلا ردود"}
             </Badge>
           </div>
         }
-        title={lead.category?.name || "تخصص غير معروف"}
+        title={
+          <span className="font-heading text-base sm:text-lg font-bold text-foreground">
+            {lead.category?.name || "تخصص غير معروف"}
+          </span>
+        }
         meta={
           <RelativeTime
             value={lead.created_at}
             mode="past"
-            initial={toArabicDigits(lead.created_at.slice(0, 10))}
+            initial={formatRelativePast(lead.created_at)}
           />
         }
         body={
           <DetailFieldList className="sm:grid-cols-2">
-            <DetailField label="المنطقة">{lead.area?.name}</DetailField>
-            <DetailField label="هاتف العميل" dir="ltr" className="text-right">
-              <span className="inline-flex items-center gap-1">
-                {lead.customer_phone}
-                <CopyPhoneButton phone={lead.customer_phone} label="نسخ رقم العميل" />
+            <DetailField label="المنطقة">
+              <span className="inline-flex items-center gap-1.5 font-semibold text-foreground">
+                <IconMapPin className="h-4 w-4 text-accent" />
+                {lead.area?.name || "السويس"}
               </span>
             </DetailField>
-            <div className="col-span-full mt-2 break-words rounded-lg bg-accent/5 p-3 text-sm leading-relaxed text-foreground/80">
-              <span className="font-bold text-foreground">الوصف: </span>
+
+            <DetailField label="هاتف العميل" dir="ltr" className="text-right">
+              <div
+                className="inline-flex items-center gap-2"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <a
+                  href={telHref(lead.customer_phone)}
+                  className="font-mono text-sm font-bold text-foreground hover:text-accent hover:underline"
+                  dir="ltr"
+                >
+                  {lead.customer_phone}
+                </a>
+                <CopyPhoneButton phone={lead.customer_phone} label="نسخ رقم العميل" />
+                <a
+                  href={whatsappHref(
+                    lead.customer_phone,
+                    `السلام عليكم بخصوص طلبك على دليل الصنايعية: ${lead.description?.slice(0, 100) || ""}`,
+                  )}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-action/15 text-action hover:bg-action/25 transition-colors"
+                  aria-label="مراسلة العميل عبر واتساب"
+                  title="مراسلة عبر واتساب"
+                >
+                  <IconWhatsApp className="h-4 w-4" />
+                </a>
+              </div>
+            </DetailField>
+
+            <div className="col-span-full mt-1.5 break-words rounded-xl border border-border/60 bg-accent/5 p-3.5 text-sm leading-relaxed text-foreground/90">
+              <span className="font-bold text-foreground">تفاصيل المشكلة: </span>
               {lead.description || "-"}
             </div>
+
             {lead.image_urls.length > 0 && (
-              <div className="col-span-full">
+              <div className="col-span-full pt-1" onClick={(e) => e.stopPropagation()}>
                 <LeadImageGallery images={lead.image_urls} alt="صور مشكلة الطلب" />
               </div>
             )}
@@ -99,28 +141,26 @@ export function AdminLeadCard({
         actions={
           <>
             <AdminButton type="button" variant="outline" onClick={() => onDetails(lead)}>
-              التفاصيل
+              عرض التفاصيل الكاملة
             </AdminButton>
             {lead.hidden ? (
               <AdminButton
                 type="button"
-                variant="outline"
-                className="text-emerald-600 hover:text-emerald-700"
+                variant="outlineAction"
                 disabled={isBusy}
                 onClick={() => onUnhide(lead)}
               >
-                <IconEye className="h-5 w-5 ml-1" />
+                <IconEye className="h-5 w-5 me-1" />
                 إظهار
               </AdminButton>
             ) : (
               <AdminButton
                 type="button"
-                variant="outline"
-                className="text-amber-600 hover:text-amber-700"
+                variant="outlineWarning"
                 disabled={isBusy}
                 onClick={() => onHide(lead)}
               >
-                <IconEyeOff className="h-5 w-5 ml-1" />
+                <IconEyeOff className="h-5 w-5 me-1" />
                 إخفاء
               </AdminButton>
             )}
@@ -128,7 +168,7 @@ export function AdminLeadCard({
               type="button"
               variant="dangerHover"
               size="icon"
-              aria-label="حذف الطلب"
+              aria-label={`حذف طلب ${lead.category?.name || "العميل"}`}
               disabled={isBusy}
               onClick={() => onDelete(lead)}
             >

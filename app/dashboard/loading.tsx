@@ -1,5 +1,5 @@
-import { SegmentLoading } from "@/components/shared/ui/SegmentLoading";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 
 export default function Loading() {
-  return <SegmentLoading />;
+  return <DashboardSkeleton variant="overview" />;
 }

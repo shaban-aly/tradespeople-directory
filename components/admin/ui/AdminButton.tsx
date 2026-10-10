@@ -16,6 +16,8 @@ export type AdminButtonVariant =
   | "action" // تعبئة action — موافقة/مراجعة/نشر
   | "danger" // تعبئة danger — حذف مؤكد
   | "outline" // حواف عادية — تفاصيل/إلغاء/تبديل حالة
+  | "outlineAction" // حواف + نص action — إظهار/تأكيد
+  | "outlineWarning" // حواف + نص warning — إخفاء/تنبيه
   | "outlineDanger" // حواف + نص danger — رفض/إغلاق
   | "accentHover" // حواف + hover accent — تحديث/تعديل
   | "dangerHover" // حواف + hover danger — خروج/حذف
@@ -32,6 +34,10 @@ const variantClasses: Record<AdminButtonVariant, string> = {
   action: "bg-action text-on-action hover:bg-action/90",
   danger: "bg-danger text-on-accent hover:bg-danger/90",
   outline: "border border-border text-muted hover:text-foreground",
+  outlineAction:
+    "border border-action/40 text-action hover:border-action hover:bg-action/10",
+  outlineWarning:
+    "border border-warning/40 text-warning hover:border-warning hover:bg-warning/10",
   outlineDanger:
     "border border-danger/40 text-danger hover:border-danger hover:bg-danger/10",
   accentHover: "border border-border text-foreground hover:border-accent hover:text-accent",

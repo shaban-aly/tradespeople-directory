@@ -94,7 +94,7 @@ export function MessagesSection({
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => void handleDelete()}
         title="حذف الرسالة"
-        message="هل أنت متأكد من حذف هذه الرسالة نهائياً؟ لا يمكن التراجع عن هذا القرار."
+        message={`هل أنت متأكد من حذف رسالة "${deleteTarget?.name}" نهائياً؟ لا يمكن التراجع عن هذا القرار.`}
         confirmLabel="حذف الرسالة"
         danger
         busy={busyKey === `delete-message-${deleteTarget?.id}`}

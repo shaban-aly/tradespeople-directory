@@ -1,8 +1,15 @@
-import { Clock, Hourglass, MapPin, Users } from "lucide-react";
+import {
+  IconClock,
+  IconHourglass,
+  IconMapPin,
+  IconUsers,
+  IconSparkles,
+} from "@/components/shared/icons";
 import { LeadsClaimButton } from "@/components/dashboard/LeadsClaimButton";
 import { NewLeadBadge, RelativeTime } from "@/components/leads/RelativeTime";
 import { LeadImageGallery } from "@/components/leads/LeadImageGallery";
 import { MAX_LEAD_RESPONSES } from "@/lib/db/leads";
+import { toArabicDigits } from "@/lib/utils/format";
 import {
   formatRelativePast,
   formatRemainingUntil,
@@ -28,69 +35,106 @@ interface OpenLeadCardProps {
 }
 
 export function OpenLeadCard({ lead, highlight = false }: OpenLeadCardProps) {
+  const isNew = isNewWithinMinutes(lead.createdAt);
+  const remainingSlots = Math.max(0, MAX_LEAD_RESPONSES - lead.responseCount);
+
+  // Response badge configuration
+  const getSlotBadge = () => {
+    if (lead.responseCount === 0) {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full border border-action/30 bg-action/15 px-2.5 py-0.5 text-xs font-bold text-action">
+          <IconSparkles className="h-3 w-3" />
+          <span>فرصة جديدة — كن أول المستجيبين!</span>
+        </span>
+      );
+    }
+    if (remainingSlots === 1) {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full border border-warning/30 bg-warning/15 px-2.5 py-0.5 text-xs font-bold text-warning">
+          <IconUsers className="h-3 w-3" />
+          <span>متبقي مقعد أخير ({toArabicDigits(lead.responseCount)}/{toArabicDigits(MAX_LEAD_RESPONSES)})</span>
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-2.5 py-0.5 text-xs font-bold text-accent">
+        <IconUsers className="h-3 w-3" />
+        <span>
+          {toArabicDigits(lead.responseCount)}/{toArabicDigits(MAX_LEAD_RESPONSES)} فنيين ردّوا
+        </span>
+      </span>
+    );
+  };
+
   return (
-    <div
-      className={`rounded-2xl border border-border/80 bg-card p-4 sm:p-5 space-y-4 shadow-xs relative overflow-hidden transition-all hover:border-accent/40${
-        highlight ? " ring-2 ring-accent shadow-md" : ""
+    <article
+      className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-card transition-all duration-200 hover:border-accent/40 hover:shadow-md ${
+        highlight ? "ring-2 ring-accent shadow-md animate-pulse" : ""
       }`}
     >
-      <div className="flex justify-between items-start gap-2">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="bg-accent/10 text-accent border border-accent/20 px-2.5 py-0.5 rounded-full text-xs font-bold">
-              {lead.categoryName}
+      <div className="space-y-3.5">
+        {/* Top Badges & Time Row */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {lead.categoryName && (
+              <span className="rounded-full border border-accent/20 bg-accent/10 px-2.5 py-0.5 text-xs font-bold text-accent">
+                {lead.categoryName}
+              </span>
+            )}
+            <NewLeadBadge value={lead.createdAt} initial={isNew} />
+            {getSlotBadge()}
+          </div>
+
+          {/* Time & Remaining Badges */}
+          <div className="flex items-center gap-2 text-xs text-muted">
+            <span className="inline-flex items-center gap-1 rounded-lg bg-muted/15 px-2 py-0.5 font-medium">
+              <IconClock className="h-3 w-3 text-muted" />
+              <RelativeTime
+                value={lead.createdAt}
+                mode="past"
+                initial={formatRelativePast(lead.createdAt)}
+              />
             </span>
-            <NewLeadBadge
-              value={lead.createdAt}
-              initial={isNewWithinMinutes(lead.createdAt)}
-            />
-            <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 border ${
-                lead.responseCount >= MAX_LEAD_RESPONSES
-                  ? "bg-muted/10 text-muted border-border/60"
-                  : "bg-accent/10 text-accent border-accent/20"
-              }`}
-            >
-              <Users className="w-3.5 h-3.5" />
-              {lead.responseCount}/{MAX_LEAD_RESPONSES} صنايعي
+            <span className="inline-flex items-center gap-1 rounded-lg bg-muted/15 px-2 py-0.5 font-medium">
+              <IconHourglass className="h-3 w-3 text-muted" />
+              <RelativeTime
+                value={lead.expiresAt}
+                mode="remaining"
+                initial={formatRemainingUntil(lead.expiresAt)}
+              />
             </span>
           </div>
-          <h3 className="font-heading font-bold text-base sm:text-lg mt-2.5 break-words line-clamp-3 text-foreground leading-snug">
-            {lead.description}
-          </h3>
         </div>
-        <div className="text-muted text-xs flex flex-col items-end gap-1.5 shrink-0">
-          <span className="flex items-center gap-1 bg-muted/15 px-2 py-1 rounded-lg font-medium">
-            <Clock className="w-3.5 h-3.5" />
-            <RelativeTime
-              value={lead.createdAt}
-              mode="past"
-              initial={formatRelativePast(lead.createdAt)}
+
+        {/* Location chip */}
+        {lead.areaName && (
+          <div className="flex items-center gap-1.5 text-xs font-bold text-muted">
+            <IconMapPin className="h-3.5 w-3.5 text-accent" />
+            <span className="text-foreground">{lead.areaName}</span>
+            <span className="text-muted/60">• السويس</span>
+          </div>
+        )}
+
+        {/* Lead Problem Description */}
+        <h3 className="font-heading text-base sm:text-lg font-bold text-foreground leading-snug break-words">
+          {lead.description}
+        </h3>
+
+        {/* Attached Photos */}
+        {lead.imageUrls.length > 0 && (
+          <div className="pt-1">
+            <LeadImageGallery
+              images={lead.imageUrls}
+              alt={`صور مشكلة ${lead.categoryName ?? "الصيانة"}`}
             />
-          </span>
-          <span className="flex items-center gap-1 bg-muted/15 px-2 py-1 rounded-lg font-medium">
-            <Hourglass className="w-3.5 h-3.5" />
-            <RelativeTime
-              value={lead.expiresAt}
-              mode="remaining"
-              initial={formatRemainingUntil(lead.expiresAt)}
-            />
-          </span>
-        </div>
+          </div>
+        )}
       </div>
 
-      <div className="flex gap-4 text-sm text-foreground/80">
-        <div className="flex items-center gap-1">
-          <MapPin className="w-4 h-4 text-muted" />
-          {lead.areaName}
-        </div>
+      {/* Claim Action Strip */}
+      <div className="mt-4 pt-3.5 border-t border-border">
+        <LeadsClaimButton leadId={lead.id} craftsmanId={lead.craftsmanId} />
       </div>
-
-      {lead.imageUrls.length > 0 && (
-        <LeadImageGallery images={lead.imageUrls} alt={`صور طلب ${lead.categoryName ?? "الصيانة"}`} />
-      )}
-
-      <LeadsClaimButton leadId={lead.id} craftsmanId={lead.craftsmanId} />
-    </div>
+    </article>
   );
 }

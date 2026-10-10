@@ -16,6 +16,7 @@ import { JoinBenefits } from "@/components/join/JoinBenefits";
 import { JoinLivePreview } from "@/components/join/JoinLivePreview";
 import { JoinSuccessState } from "@/components/join/JoinSuccessState";
 import { IconCheck, IconShieldCheck } from "@/components/shared/icons";
+import { toArabicDigits } from "@/lib/utils/format";
 
 export function JoinForm({
   categories,
@@ -83,7 +84,7 @@ export function JoinForm({
           <fieldset className="space-y-4">
             <legend className="flex items-center gap-2 font-heading text-sm font-bold text-foreground">
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-2xs font-bold text-on-accent shadow-2xs">
-                1
+                ١
               </span>
               <span>البيانات الأساسية والتخصص</span>
             </legend>
@@ -168,7 +169,7 @@ export function JoinForm({
           <fieldset className="space-y-4">
             <legend className="flex items-center gap-2 font-heading text-sm font-bold text-foreground">
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-2xs font-bold text-on-accent shadow-2xs">
-                2
+                ٢
               </span>
               <span>أرقام التواصل والصفحات</span>
             </legend>
@@ -257,7 +258,7 @@ export function JoinForm({
           <fieldset className="space-y-4">
             <legend className="flex items-center gap-2 font-heading text-sm font-bold text-foreground">
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-2xs font-bold text-on-accent shadow-2xs">
-                3
+                ٣
               </span>
               <span>الصورة ونبذة عن خبرتك</span>
             </legend>
@@ -273,7 +274,7 @@ export function JoinForm({
             <Field
               label="نبذة عن خبرتك وخدماتك"
               htmlFor="description"
-              hint={`(${register.description.length}/${FIELD_LIMITS.descriptionMax})`}
+              hint={`(${toArabicDigits(register.description.length)}/${toArabicDigits(FIELD_LIMITS.descriptionMax)})`}
               error={getRegisterError("description")}
             >
               <TextArea

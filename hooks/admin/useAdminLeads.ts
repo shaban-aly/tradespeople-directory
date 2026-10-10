@@ -98,14 +98,20 @@ export function useAdminLeads(initialData?: AdminLeadsData) {
   }, [filter.search]);
 
   // عكس الحالة على الـ URL (replace بلا تكديس history، والبحث بعد الـ debounce)
-  // — روابط قابلة للمشاركة وزر الرجوع يحافظ على السياق.
+  // لا يُستدعى router.replace إلا إذا تغيّر الـ query string فعلياً عن العنوان الحالي.
   useEffect(() => {
     const qs = serializeLeadFilterParams(
       { ...filter, search: debouncedSearch },
       page,
     );
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [router, pathname, filter, debouncedSearch, page]);
+    const target = qs ? `${pathname}?${qs}` : pathname;
+    const current = searchParams.toString()
+      ? `${pathname}?${searchParams.toString()}`
+      : pathname;
+    if (target !== current) {
+      router.replace(target, { scroll: false });
+    }
+  }, [router, pathname, searchParams, filter, debouncedSearch, page]);
 
   // الصفحة المطلوبة للسيرفر — تُقَصّ على عدد الصفحات المعروف (بعد حذف
   // عناصر قد يتجاوز `page` المتاح، فيُعاد الجلب تلقائياً بالصفحة الآمنة
@@ -140,25 +146,30 @@ export function useAdminLeads(initialData?: AdminLeadsData) {
     ],
   );
 
-  // الصفحة الأولى بالفلتر الافتراضي تأتي من السيرفر مع initialData — لا إعادة جلب لها.
-  const initialKey = useMemo(
-    () => JSON.stringify(["", "all", "all", "all", "newest", 1, 0]),
-    [],
-  );
-  const skipInitialFetch = useRef(initialData !== undefined && queryKey === initialKey);
+  // تتبع الاستعلام المحمّل بالفعل لمنع إعادة الجلب الزائدة عند التحميل الأولي أو في React Strict Mode.
+  // إذا كانت initialData متوفرة، نعتبر الاستعلام الأولي محمّلاً بالفعل.
+  const lastFetchedKey = useRef<string | null>(initialData ? queryKey : null);
   // حارس السباق: الأحدث فقط هو من يكتب النتيجة (تجاهل الردود القديمة).
   const latestRequest = useRef<unknown>(null);
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const refresh = useCallback(() => {
     setRefreshToken((token) => token + 1);
   }, []);
 
   useEffect(() => {
-    if (skipInitialFetch.current) {
-      skipInitialFetch.current = false;
-      if (initialData?.categories.length) return;
+    // إذا كانت البيانات محملة بالفعل لنفس الاستعلام (مثلاً من initialData) ولا يوجد refresh جديد
+    if (lastFetchedKey.current === queryKey) {
+      return;
     }
-    let cancelled = false;
+    lastFetchedKey.current = queryKey;
     const requestId = Symbol("leads-page");
     latestRequest.current = requestId;
     setFetching(true);
@@ -174,21 +185,24 @@ export function useAdminLeads(initialData?: AdminLeadsData) {
     ];
     void Promise.all(tasks)
       .then(([nextPage, nextCategories]) => {
-        if (cancelled || latestRequest.current !== requestId) return;
+        if (latestRequest.current !== requestId) return;
         setPageData(nextPage);
         if (nextCategories) setCategories(nextCategories);
       })
-      .catch(() => {
-        if (cancelled || latestRequest.current !== requestId) return;
+      .catch((err) => {
+        if (latestRequest.current !== requestId) return;
+        console.error("useAdminLeads fetch error:", err);
         setLoadError("مقدرناش نحمّل عروض العملاء");
       })
       .finally(() => {
-        if (cancelled || latestRequest.current !== requestId) return;
-        setFetching(false);
+        // نضمن إيقاف مؤشر التحميل دائماً ما دام هذا هو الطلب الأخير النشط،
+        // حتى لو حصل إلغاء/تحديث وسيط فلا يظل التحميل معلقاً للأبد.
+        if (latestRequest.current === requestId) {
+          if (isMounted.current) {
+            setFetching(false);
+          }
+        }
       });
-    return () => {
-      cancelled = true;
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryKey]);
 

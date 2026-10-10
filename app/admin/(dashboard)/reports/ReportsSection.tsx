@@ -92,7 +92,7 @@ export function ReportsSection({
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => void handleDelete()}
         title="حذف البلاغ"
-        message="هل أنت متأكد من حذف هذا البلاغ نهائياً؟ لا يمكن التراجع عن هذا القرار."
+        message={`هل أنت متأكد من حذف بلاغ "${deleteTarget?.craftsman_name}" نهائياً؟ لا يمكن التراجع عن هذا القرار.`}
         confirmLabel="حذف البلاغ"
         danger
         busy={busyKey === `report-delete-${deleteTarget?.id}`}
@@ -101,7 +101,11 @@ export function ReportsSection({
       <ReportDetailsDrawer
         report={detailsTarget}
         open={detailsTarget !== null}
+        busyKey={busyKey}
         onClose={() => setDetailsTarget(null)}
+        onReview={handleReview}
+        onDismiss={handleDismiss}
+        onDelete={setDeleteTarget}
       />
     </div>
   );
