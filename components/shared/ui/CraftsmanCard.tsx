@@ -39,7 +39,6 @@ function CraftsmanImage({
           transform: zoom > 1 ? `scale(${zoom})` : undefined,
           transformOrigin: `${posX}% ${posY}%`,
         }}
-        loading={priority ? "eager" : "lazy"}
         priority={priority}
       />
     );

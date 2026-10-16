@@ -56,7 +56,6 @@ export function VerifiedCraftsmen({
                   craftsman={craftsman}
                   category={categoryBySlug.get(craftsman.category)}
                   recent={craftsman.id === mostRecentId}
-                  priority={index === 0}
                   imageSizes={IMAGE_SIZES.CARD_CAROUSEL}
                 />
               </div>
