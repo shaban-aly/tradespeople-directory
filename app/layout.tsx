@@ -163,6 +163,7 @@ export default function RootLayout({
         ) : null}
       </head>
       <body
+        suppressHydrationWarning
         className={`${cairo.variable} ${tajawal.variable} bg-background font-body text-foreground antialiased`}
       >
         <SessionProvider>
