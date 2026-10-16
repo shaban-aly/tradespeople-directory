@@ -140,7 +140,10 @@ export async function adminHideLeadAction(
   revalidatePath("/admin/leads");
 }
 
-/** حذف/إخفاء/إظهار جماعي — RPC لكل عنصر على حدة (تتوقف عند أول فشل). */
+/** حجم الدفعة الواحدة في العمليات الجماعية — موازاة محكومة بدل التسلسلية البطيئة */
+const BULK_BATCH_SIZE = 5;
+
+/** حذف/إخفاء/إظهار جماعي — دفعات متوازية محكومة لمنع Timeout */
 export async function adminBulkLeadsAction(
   leadIds: string[],
   operation: "delete" | "hide" | "unhide",
@@ -153,29 +156,44 @@ export async function adminBulkLeadsAction(
     throw new Error("قائمة الطلبات تحتوي معرفات غير صالحة");
   }
   const sessionClient = await requireAdmin();
+  const errors: string[] = [];
 
-  for (const [index, leadId] of leadIds.entries()) {
-    const { error } =
-      operation === "delete"
-        ? await sessionClient.rpc("admin_delete_lead", {
-            p_lead_id: leadId,
-            p_reason: "حذف إداري جماعي من لوحة التحكم",
-          })
-        : await sessionClient.rpc("admin_hide_lead", {
-            p_lead_id: leadId,
-            p_hidden: operation === "hide",
-          });
-    if (error) {
-      console.error(`adminBulkLeadsAction (${operation}) ${leadId}:`, error);
-      throw new Error(`فشلت العملية الجماعية عند العنصر رقم ${index + 1}`);
+  // دفعات متوازية محكومة (BULK_BATCH_SIZE عنصر/دفعة)
+  for (let i = 0; i < leadIds.length; i += BULK_BATCH_SIZE) {
+    const batch = leadIds.slice(i, i + BULK_BATCH_SIZE);
+    const results = await Promise.allSettled(
+      batch.map((leadId) =>
+        operation === "delete"
+          ? sessionClient.rpc("admin_delete_lead", {
+              p_lead_id: leadId,
+              p_reason: "حذف إداري جماعي من لوحة التحكم",
+            })
+          : sessionClient.rpc("admin_hide_lead", {
+              p_lead_id: leadId,
+              p_hidden: operation === "hide",
+            }),
+      ),
+    );
+    for (const [j, result] of results.entries()) {
+      if (result.status === "rejected") {
+        errors.push(`فشل العنصر رقم ${i + j + 1}: ${String(result.reason)}`);
+      } else if (result.value.error) {
+        console.error(`adminBulkLeadsAction (${operation}) batch[${i + j}]:`, result.value.error);
+        errors.push(`فشل العنصر رقم ${i + j + 1}`);
+      }
     }
+    // إيقاف فوري عند أول خطأ لتجنب تدمير أكثر من اللازم
+    if (errors.length > 0) break;
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`فشلت العملية الجماعية: ${errors[0]}`);
   }
 
   revalidatePath("/admin/leads");
 }
 
-/** حذف جماعي للطلبات المنتهية (سقف BULK_LEADS_LIMIT للدفعة) — عبر
- *  admin_delete_lead لكل عنصر للحفاظ على إشعار العميل. لتنظيف التراكم. */
+/** حذف جماعي للطلبات المنتهية — دفعات متوازية محكومة مع الحفاظ على حذف الصور */
 export async function adminDeleteExpiredLeadsAction(): Promise<void> {
   const sessionClient = await requireAdmin();
   const admin = createServerAdminClient();
@@ -191,27 +209,58 @@ export async function adminDeleteExpiredLeadsAction(): Promise<void> {
     throw new Error("حدث خطأ أثناء جلب الطلبات المنتهية، حاول مرة أخرى.");
   }
 
-  for (const [index, row] of (rows ?? []).entries()) {
-    // إعادة قراءة الحالة والصور لحظة الحذف: طلب تجدّد open بعد السرد
-    // لا يُحذف (كان يُحذف وهو حي)، وصوره تُنظَّف معه.
-    const { data: fresh } = await admin
-      .from("leads")
-      .select("status, image_urls")
-      .eq("id", row.id)
-      .maybeSingle();
-    if (!fresh || fresh.status !== "expired") continue;
-    const { error } = await sessionClient.rpc("admin_delete_lead", {
-      p_lead_id: row.id,
-      p_reason: "حذف جماعي للطلبات المنتهية من لوحة التحكم",
-    });
-    if (error) {
-      console.error("adminDeleteExpiredLeadsAction delete error:", error);
-      throw new Error(`فشلت العملية الجماعية عند العنصر رقم ${index + 1}`);
+  const allRows = rows ?? [];
+  const errors: string[] = [];
+
+  for (let i = 0; i < allRows.length; i += BULK_BATCH_SIZE) {
+    const batch = allRows.slice(i, i + BULK_BATCH_SIZE);
+
+    // جلب الحالة الحالية والصور لكل عنصر في الدفعة (best-effort: تجاهل ما لم يُنقل)
+    const freshBatch = await Promise.all(
+      batch.map((row) =>
+        admin.from("leads").select("status, image_urls").eq("id", row.id).maybeSingle(),
+      ),
+    );
+
+    // حذف الطلبات المنتهية فعلاً في دفعة واحدة متوازية
+    const deleteResults = await Promise.allSettled(
+      batch
+        .map((row, j) => ({ row, fresh: freshBatch[j].data }))
+        .filter(({ fresh }) => fresh && fresh.status === "expired")
+        .map(({ row }) =>
+          sessionClient.rpc("admin_delete_lead", {
+            p_lead_id: row.id,
+            p_reason: "حذف جماعي للطلبات المنتهية من لوحة التحكم",
+          }),
+        ),
+    );
+
+    // حذف الصور بعد نجاح الحذف (best-effort: لا تُوقف العملية)
+    for (const [j, result] of deleteResults.entries()) {
+      if (result.status === "rejected" || result.value?.error) {
+        const errMsg = result.status === "rejected" ? String(result.reason) : result.value.error?.message;
+        console.error(`adminDeleteExpiredLeadsAction delete[${i + j}]:`, errMsg);
+        errors.push(`فشل عند العنصر ${i + j + 1}`);
+        continue;
+      }
+      const fresh = freshBatch[j]?.data;
+      if (fresh) {
+        const urls = Array.isArray(fresh.image_urls)
+          ? fresh.image_urls.filter((u): u is string => typeof u === "string")
+          : [];
+        if (urls.length > 0) {
+          await deleteLeadImages(urls).catch((e) =>
+            console.error("adminDeleteExpiredLeadsAction images:", e),
+          );
+        }
+      }
     }
-    const urls = Array.isArray(fresh.image_urls)
-      ? fresh.image_urls.filter((u): u is string => typeof u === "string")
-      : [];
-    if (urls.length > 0) await deleteLeadImages(urls);
+
+    if (errors.length > 0) break;
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`فشلت عملية الحذف الجماعي: ${errors[0]}`);
   }
 
   revalidatePath("/admin/leads");

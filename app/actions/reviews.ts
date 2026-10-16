@@ -13,7 +13,6 @@ export async function upsertReviewAction(params: {
 }): Promise<{ success: boolean; error?: string }> {
   const { userId, craftsmanId, rating, comment } = params;
 
-  if (!userId) return { success: false, error: "يجب تسجيل الدخول أولاً" };
   if (!rating || rating < 1 || rating > 5) {
     return { success: false, error: "التقييم يجب أن يكون بين 1 و 5" };
   }
@@ -31,13 +30,27 @@ export async function upsertReviewAction(params: {
     return { success: false, error: "التعليق يجب ألا يتجاوز 500 حرف" };
   }
 
-  const { supabase } = await getServerSessionOrSupabase();
+  // ── الأمان: استخرج هوية المستخدم من الجلسة على السيرفر فقط ──────────────
+  // لا تثق بـ userId القادم من العميل — يُستخدم فقط للتحقق الأولي
+  const { supabase, user } = await getServerSessionOrSupabase();
+
+  if (!user) {
+    return { success: false, error: "يجب تسجيل الدخول أولاً" };
+  }
+
+  // منع تزوير الهوية: userId المُمرَّر يجب أن يطابق جلسة السيرفر
+  if (user.id !== userId) {
+    return { success: false, error: "طلب غير صالح" };
+  }
+
+  // الـ authenticatedUserId الموثوق من الجلسة يُستخدم في كل الاستعلامات التالية
+  const authenticatedUserId = user.id;
 
   // فحص منع التقييم الذاتي
   const { count } = await supabase
     .from("craftsmen")
     .select("id", { count: "exact", head: true })
-    .eq("owner_user_id", userId)
+    .eq("owner_user_id", authenticatedUserId)
     .eq("id", craftsmanId);
 
   if (count && count > 0) {
@@ -46,7 +59,7 @@ export async function upsertReviewAction(params: {
 
   const { error } = await supabase.from("reviews").upsert(
     {
-      user_id: userId,
+      user_id: authenticatedUserId,
       craftsman_id: craftsmanId,
       rating,
       comment: cleanedComment || null,
@@ -71,10 +84,18 @@ export async function deleteReviewAction(
   craftsmanId?: string
 ): Promise<boolean> {
   const { supabase, user } = await getServerSessionOrSupabase();
-  if (user?.id !== userId) return false;
 
-  let query = supabase.from("reviews").delete().eq("user_id", userId);
-  
+  // الجلسة مطلوبة — لا تنفيذ بدون مستخدم مسجّل
+  if (!user) return false;
+
+  // منع تزوير الهوية: userId المُمرَّر يجب أن يطابق جلسة السيرفر
+  if (user.id !== userId) return false;
+
+  // الـ authenticatedUserId الموثوق من الجلسة يُستخدم في كل الاستعلامات
+  const authenticatedUserId = user.id;
+
+  let query = supabase.from("reviews").delete().eq("user_id", authenticatedUserId);
+
   if (craftsmanId) {
     query = query.eq("craftsman_id", craftsmanId);
   } else {

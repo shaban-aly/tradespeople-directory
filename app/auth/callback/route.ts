@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { isSafeInternalLink } from "@/lib/utils/internalLink";
 
 // GET /auth/callback?code=...&next=/
 // Supabase بيعيد التوجيه لهنا بعد OAuth — نبادل الكود بجلسة ونحوّل للصفحة المطلوبة
@@ -30,7 +31,8 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       // تحقق من الصفحة المطلوبة (لمنع Open Redirect)
-      const redirectTo = next.startsWith("/") ? next : "/";
+      // isSafeInternalLink تمنع "//evil.com" و "javascript:..." وكل روابط خارجية
+      const redirectTo = isSafeInternalLink(next) ? next : "/";
       return NextResponse.redirect(`${origin}${redirectTo}`);
     }
   }

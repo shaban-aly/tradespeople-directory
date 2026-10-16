@@ -114,7 +114,17 @@ export async function proxy(request: NextRequest) {
     return buildRedirect(matched.fallback);
   }
 
-  // جلب الدور
+  // تحسين الأداء: إذا كان المسار يقبل جميع الأدوار الثلاثة (client/craftsman/admin)
+  // فلا حاجة لاستعلام profiles — المستخدم المسجل مسموح له تلقائياً
+  const ALL_ROLES = ["client", "craftsman", "admin"];
+  const requiresRoleCheck = !ALL_ROLES.every((r) => matched.roles.includes(r));
+
+  if (!requiresRoleCheck) {
+    // المسار عام لكل المستخدمين المسجلين (favorites, join, notifications, activity, my-reviews, my-requests)
+    return response;
+  }
+
+  // جلب الدور — فقط لمسارات /admin و /dashboard التي تتطلب دوراً محدداً
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
@@ -137,6 +147,9 @@ export const config = {
     "/favorites/:path*",
     "/join",
     "/notifications/:path*",
+    "/activity/:path*",
+    "/my-reviews/:path*",
+    "/my-requests/:path*",
   ],
 };
 

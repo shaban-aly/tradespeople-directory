@@ -285,7 +285,14 @@ export async function updateLeadAction(
     }
     const moved = await moveTempLeadImages(temps, leadId);
     if (moved.length < temps.length) {
-      await deleteLeadImages(moved);
+      // حذف المنقول + الصور الفاشلة (غير المنقولة) من temps لمنع تراكم اليتامى في requests/
+      // moveTempLeadImages تحذف الـ failed paths داخلياً، لكن temps هنا URLs عامة
+      // نستخرج مسارات الـ temps غير المنقولة ونحذفها صراحة
+      const unmovedUrls = temps.filter((u) => !moved.some((m) => m.includes(extractImagePathFromUrl(u) ?? "\x00")));
+      await Promise.all([
+        deleteLeadImages(moved),
+        ...(unmovedUrls.length > 0 ? [deleteLeadImages(unmovedUrls)] : []),
+      ]);
       return { success: false, error: "تعذر رفع بعض الصور — حاول مرة أخرى" };
     }
     finalImages = [...kept, ...moved];

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
+import { timingSafeEqual } from "node:crypto";
 import { CACHE_TAGS } from "@/lib/db/cache";
 
 export const runtime = "nodejs";
@@ -8,6 +9,18 @@ export const dynamic = "force-dynamic";
 
 /** قيمة من بيئة الخادم — يجب ضبطها في Vercel Environment Variables */
 const WEBHOOK_SECRET = process.env.SUPABASE_WEBHOOK_SECRET ?? "";
+
+/**
+ * مقارنة آمنة من هجمات التوقيت (Timing Attack) — تُعيد false فوراً
+ * إذا اختلف الطول لمنع رمي استثناء timingSafeEqual، وتُقارن Buffers
+ * بوقت ثابت عند تطابق الطول.
+ */
+function safeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  return timingSafeEqual(bufA, bufB);
+}
 
 type WebhookEvent = {
   type: "INSERT" | "UPDATE" | "DELETE";
@@ -27,7 +40,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const incoming = request.headers.get("x-webhook-secret");
-  if (!incoming || incoming !== WEBHOOK_SECRET) {
+  // safeCompare تستخدم timingSafeEqual لمنع Timing Attack — المقارنة النصية مرفوضة
+  if (!incoming || !safeCompare(incoming, WEBHOOK_SECRET)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
