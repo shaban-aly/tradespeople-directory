@@ -1,11 +1,13 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { SafeImage as Image } from "@/components/shared/ui/SafeImage";
 import type { Category, Craftsman } from "@/lib/data/craftsmen";
 import type { RatingSummary } from "@/lib/db/reviews";
 import { CategoryBadge } from "@/components/shared/ui/CategoryBadge";
 import { VerifiedBadge } from "@/components/shared/ui/VerifiedBadge";
 import { RatingBadge } from "@/components/shared/ui/RatingBadge";
 import { ButtonLink } from "@/components/shared/ui/Button";
+import { CraftsmanAvatar } from "@/components/shared/ui/CraftsmanAvatar";
 import { SectionTitle } from "@/components/shared/ui/SectionTitle";
 import { IconAlert, IconPin, IconUser } from "@/components/shared/icons";
 import { SocialLinks } from "@/components/craftsman/SocialLinks";
@@ -16,6 +18,12 @@ import { CraftsmanReviewsSection } from "@/components/craftsman/CraftsmanReviews
 import { CraftsmanHeroImage } from "@/components/craftsman/CraftsmanHeroImage";
 import { categoryHref } from "@/lib/utils/url";
 import { ViewsCounter } from "@/components/craftsman/ViewsCounter";
+import {
+  IMAGE_ASPECT,
+  IMAGE_SIZES,
+  supabaseBlurUrl,
+  withImageAspect,
+} from "@/lib/utils/image-transform";
 
 export function CraftsmanDetail({
   craftsman,
@@ -60,11 +68,47 @@ export function CraftsmanDetail({
         className="overflow-hidden rounded-3xl border border-border bg-card shadow-card flex flex-col"
       >
         {/* [1] صورة الصنايعي في المنتصف */}
-        <CraftsmanHeroImage
-          image={craftsman.image}
-          name={craftsman.name}
-          avatarPosition={craftsman.avatarPosition}
-        />
+        <Suspense
+          fallback={
+            craftsman.image ? (
+              <div className="relative flex h-64 sm:h-72 md:h-80 w-full items-center justify-center overflow-hidden bg-neutral-900/90">
+                <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={supabaseBlurUrl(craftsman.image) ?? craftsman.image}
+                    alt=""
+                    className="absolute inset-0 h-full w-full scale-125 object-cover opacity-40 blur-2xl filter"
+                  />
+                  <div className="absolute inset-0 bg-black/25 backdrop-blur-xs" />
+                </div>
+                <div className="relative flex h-full aspect-4/3 items-center justify-center overflow-hidden shadow-2xl">
+                  <Image
+                    src={withImageAspect(craftsman.image, IMAGE_ASPECT.CARD)}
+                    alt={craftsman.name}
+                    fill
+                    priority
+                    sizes={IMAGE_SIZES.HERO}
+                    className="object-cover"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex h-44 w-full items-center justify-center bg-linear-to-br from-accent/10 via-card to-accent/10 sm:h-52 md:h-64">
+                <CraftsmanAvatar
+                  name={craftsman.name}
+                  className="h-24 w-24 rounded-2xl shadow-card sm:h-28 sm:w-28"
+                  textClassName="text-4xl sm:text-5xl"
+                />
+              </div>
+            )
+          }
+        >
+          <CraftsmanHeroImage
+            image={craftsman.image}
+            name={craftsman.name}
+            avatarPosition={craftsman.avatarPosition}
+          />
+        </Suspense>
 
         {/* [2] اسم الصنايعي وشارة التوثيق في المنتصف أسفل الصورة */}
         <div className="flex flex-col items-center justify-center px-6 pt-5 pb-4 text-center">

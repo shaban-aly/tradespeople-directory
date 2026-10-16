@@ -119,9 +119,8 @@ export function DashboardHeader({
               handleOpenViewer();
             }
           }}
-          className={`group relative flex aspect-4/3 w-full max-w-xl mx-auto items-center justify-center overflow-hidden rounded-2xl bg-neutral-900/90 border border-border/80 shadow-xs focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent isolate ${
-            currentAvatarUrl && !editable ? "cursor-pointer" : "cursor-default"
-          }`}
+          className={`group relative flex aspect-4/3 w-full max-w-xl mx-auto items-center justify-center overflow-hidden rounded-2xl bg-neutral-900/90 border border-border/80 shadow-xs focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent isolate ${currentAvatarUrl && !editable ? "cursor-pointer" : "cursor-default"
+            }`}
           aria-label={
             currentAvatarUrl
               ? `معاينة وتكبير صورة ${profile.name}`
@@ -132,11 +131,13 @@ export function DashboardHeader({
             <>
               {/* خلفية ضبابية سينمائية عبر Supabase Transformations مطابقة للدليل */}
               <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-                <div
-                  className="absolute inset-0 h-full w-full scale-125 bg-cover bg-center opacity-40 blur-2xl filter"
-                  style={{
-                    backgroundImage: `url("${supabaseBlurUrl(currentAvatarUrl) ?? currentAvatarUrl}")`,
-                  }}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={supabaseBlurUrl(currentAvatarUrl) ?? currentAvatarUrl}
+                  alt=""
+                  className="absolute inset-0 h-full w-full scale-125 object-cover opacity-40 blur-2xl filter"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute inset-0 bg-black/25 backdrop-blur-xs" />
               </div>

@@ -62,11 +62,13 @@ export function CraftsmanHeroImage({
             حتى لا ننزّل الصورة الأصلية لمجرد طمسها، مع رابط احتياطي لروابط
             غير Supabase (blob أو روابط خارجية). */}
         <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-          <div
-            className="absolute inset-0 h-full w-full scale-125 bg-cover bg-center opacity-40 blur-2xl filter"
-            style={{
-              backgroundImage: `url("${supabaseBlurUrl(image) ?? image}")`,
-            }}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={supabaseBlurUrl(image) ?? image}
+            alt=""
+            className="absolute inset-0 h-full w-full scale-125 object-cover opacity-40 blur-2xl filter"
+            loading="lazy"
+            decoding="async"
           />
           <div className="absolute inset-0 bg-black/25 backdrop-blur-xs" />
         </div>
