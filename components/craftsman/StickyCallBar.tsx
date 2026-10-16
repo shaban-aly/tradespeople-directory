@@ -4,6 +4,7 @@ import { IconPhone, IconPlus, IconWhatsApp } from "@/components/shared/icons";
 import { ButtonAnchor, ButtonLink } from "@/components/shared/ui/Button";
 import { useContactTracker } from "@/hooks/analytics/useContactTracker";
 import {
+  adminCraftsmanWhatsappMessage,
   craftsmanWhatsappMessage,
   telHref,
   whatsappHref,
@@ -12,6 +13,8 @@ import {
 export function StickyCallBar({
   phone,
   whatsapp,
+  routeToAdmin,
+  directWhatsappMessage,
   craftsmanId,
   craftsmanSlug,
   craftsmanName,
@@ -21,6 +24,8 @@ export function StickyCallBar({
 }: {
   phone: string;
   whatsapp: string;
+  routeToAdmin?: { phone: string; whatsapp: string; customMessage?: string } | null;
+  directWhatsappMessage?: string | null;
   craftsmanId?: string;
   craftsmanSlug?: string;
   craftsmanName?: string;
@@ -36,17 +41,32 @@ export function StickyCallBar({
     categorySlug,
   });
 
-  const hasWhatsapp = Boolean(whatsapp && whatsapp.trim().length > 0);
-  const waUrl = hasWhatsapp
-    ? whatsappHref(
-        whatsapp,
-        craftsmanName
-          ? craftsmanWhatsappMessage(craftsmanName, categoryName)
-          : undefined,
-      )
-    : "";
-  const phoneLabel = craftsmanName ? `اتصال هاتفي بـ ${craftsmanName}` : "اتصال هاتفي";
-  const waLabel = craftsmanName ? `مراسلة واتساب لـ ${craftsmanName}` : "مراسلة واتساب";
+  const isRouted = Boolean(routeToAdmin);
+  const effectivePhone = routeToAdmin?.phone || phone;
+  const effectiveWhatsapp = routeToAdmin?.whatsapp || whatsapp;
+
+  const hasWhatsapp = Boolean(effectiveWhatsapp && effectiveWhatsapp.trim().length > 0);
+  const waMessage = isRouted
+    ? routeToAdmin?.customMessage ||
+      (craftsmanName ? adminCraftsmanWhatsappMessage(craftsmanName, categoryName) : undefined)
+    : directWhatsappMessage ||
+      (craftsmanName ? craftsmanWhatsappMessage(craftsmanName, categoryName) : undefined);
+
+  const waUrl = hasWhatsapp ? whatsappHref(effectiveWhatsapp, waMessage) : "";
+  const phoneLabel = isRouted
+    ? craftsmanName
+      ? `اتصال بإدارة المنصة بخصوص ${craftsmanName}`
+      : "اتصال بإدارة المنصة"
+    : craftsmanName
+      ? `اتصال هاتفي بـ ${craftsmanName}`
+      : "اتصال هاتفي";
+  const waLabel = isRouted
+    ? craftsmanName
+      ? `مراسلة إدارة المنصة بخصوص ${craftsmanName}`
+      : "مراسلة إدارة المنصة"
+    : craftsmanName
+      ? `مراسلة واتساب لـ ${craftsmanName}`
+      : "مراسلة واتساب";
 
   const requestLeadParams = new URLSearchParams();
   if (categorySlug) requestLeadParams.set("category", categorySlug);
@@ -63,7 +83,7 @@ export function StickyCallBar({
           className={`grid gap-1.5 ${hasWhatsapp ? "grid-cols-3" : "grid-cols-2"}`}
         >
           <ButtonAnchor
-            href={telHref(phone)}
+            href={telHref(effectivePhone)}
             onClick={() => handleContact("phone")}
             aria-label={phoneLabel}
             title={phoneLabel}

@@ -4,6 +4,7 @@ import { IconPhone, IconWhatsApp } from "@/components/shared/icons";
 import { ButtonAnchor } from "@/components/shared/ui/Button";
 import { useContactTracker } from "@/hooks/analytics/useContactTracker";
 import {
+  adminCraftsmanWhatsappMessage,
   craftsmanWhatsappMessage,
   telHref,
   whatsappHref,
@@ -12,6 +13,8 @@ import {
 export function ActionButtons({
   phone,
   whatsapp,
+  routeToAdmin,
+  directWhatsappMessage,
   size = "md",
   craftsmanId,
   craftsmanSlug,
@@ -21,6 +24,8 @@ export function ActionButtons({
 }: {
   phone: string;
   whatsapp: string;
+  routeToAdmin?: { phone: string; whatsapp: string; customMessage?: string } | null;
+  directWhatsappMessage?: string | null;
   size?: "sm" | "md" | "lg";
   craftsmanId?: string;
   craftsmanSlug?: string;
@@ -36,21 +41,36 @@ export function ActionButtons({
     categorySlug,
   });
 
-  const hasWhatsapp = Boolean(whatsapp && whatsapp.trim().length > 0);
-  const waUrl = hasWhatsapp
-    ? whatsappHref(
-        whatsapp,
-        craftsmanName
-          ? craftsmanWhatsappMessage(craftsmanName, categoryName)
-          : undefined,
-      )
-    : "";
+  const isRouted = Boolean(routeToAdmin);
+  const effectivePhone = routeToAdmin?.phone || phone;
+  const effectiveWhatsapp = routeToAdmin?.whatsapp || whatsapp;
+
+  const hasWhatsapp = Boolean(effectiveWhatsapp && effectiveWhatsapp.trim().length > 0);
+  const waMessage = isRouted
+    ? routeToAdmin?.customMessage ||
+      (craftsmanName ? adminCraftsmanWhatsappMessage(craftsmanName, categoryName) : undefined)
+    : directWhatsappMessage ||
+      (craftsmanName ? craftsmanWhatsappMessage(craftsmanName, categoryName) : undefined);
+
+  const waUrl = hasWhatsapp ? whatsappHref(effectiveWhatsapp, waMessage) : "";
   const isLarge = size === "lg";
   const isSmall = size === "sm";
 
   const buttonSize = isLarge ? "lg" : isSmall ? "sm" : "md";
-  const phoneLabel = craftsmanName ? `اتصال هاتفي بـ ${craftsmanName}` : "اتصال هاتفي";
-  const waLabel = craftsmanName ? `مراسلة واتساب لـ ${craftsmanName}` : "مراسلة واتساب";
+  const phoneLabel = isRouted
+    ? craftsmanName
+      ? `اتصال بإدارة المنصة (${effectivePhone}) بخصوص ${craftsmanName}`
+      : `اتصال بإدارة المنصة (${effectivePhone})`
+    : craftsmanName
+      ? `اتصال هاتفي بـ ${craftsmanName} (${effectivePhone})`
+      : `اتصال هاتفي (${effectivePhone})`;
+  const waLabel = isRouted
+    ? craftsmanName
+      ? `مراسلة إدارة المنصة (${effectiveWhatsapp}) بخصوص ${craftsmanName}`
+      : `مراسلة إدارة المنصة (${effectiveWhatsapp})`
+    : craftsmanName
+      ? `مراسلة واتساب لـ ${craftsmanName}`
+      : "مراسلة واتساب";
 
   return (
     <div
@@ -61,7 +81,7 @@ export function ActionButtons({
       }
     >
       <ButtonAnchor
-        href={telHref(phone)}
+        href={telHref(effectivePhone)}
         onClick={() => handleContact("phone")}
         aria-label={phoneLabel}
         title={phoneLabel}

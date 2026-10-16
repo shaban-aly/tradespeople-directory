@@ -26,6 +26,9 @@ export function CraftsmanContactCard({
   if (craftsman.area) requestLeadParams.set("area", craftsman.area);
   const requestLeadHref = `/request/new${requestLeadParams.toString() ? `?${requestLeadParams.toString()}` : ""}`;
 
+  const isRouted = Boolean(craftsman.routeToAdmin);
+  const displayedPhone = craftsman.routeToAdmin?.phone || craftsman.phone;
+
   return (
     <div
       className={`flex flex-col gap-4 rounded-3xl border border-border bg-card p-5 shadow-card xl:p-6 ${className}`}
@@ -50,16 +53,16 @@ export function CraftsmanContactCard({
       {/* رقم الهاتف والنسخ السريع */}
       <div className="rounded-2xl border border-border/70 bg-background/60 p-3.5 text-center">
         <span className="block text-xs font-medium text-muted mb-1">
-          رقم الهاتف المباشر
+          {isRouted ? "رقم التواصل (خدمة العملاء)" : "رقم الهاتف المباشر"}
         </span>
         <div className="flex items-center justify-center gap-2">
           <bdi
             className="font-heading text-xl font-extrabold tracking-wide text-foreground"
             dir="ltr"
           >
-            {craftsman.phone}
+            {displayedPhone}
           </bdi>
-          <CopyPhoneButton phone={craftsman.phone} iconOnly size="sm" />
+          <CopyPhoneButton phone={displayedPhone} iconOnly size="sm" />
         </div>
       </div>
 
@@ -75,6 +78,7 @@ export function CraftsmanContactCard({
       <ActionButtons
         phone={craftsman.phone}
         whatsapp={craftsman.whatsapp}
+        routeToAdmin={craftsman.routeToAdmin}
         size="lg"
         craftsmanId={craftsman.id}
         craftsmanSlug={craftsman.slug}
@@ -97,7 +101,9 @@ export function CraftsmanContactCard({
       {/* رسالة طمأنينة وأزرار المشاركة */}
       <div className="border-t border-border/70 pt-3 flex flex-col gap-2.5">
         <p className="text-center text-xs text-muted leading-tight">
-          اتصال وتواصل مجاني 100% — بدون وسيط أو عمولة
+          {isRouted
+            ? "تواصل مباشر مع فريق المنصة لتنسيق الخدمة وحجز الفني"
+            : "اتصال وتواصل مجاني 100% — بدون وسيط أو عمولة"}
         </p>
         <div className="flex justify-center">
           <ShareButtons slug={craftsman.slug} name={craftsman.name} size="sm" />

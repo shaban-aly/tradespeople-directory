@@ -12,6 +12,7 @@ import {
   IconLayoutDashboard,
   IconMail,
   IconPin,
+  IconSettings,
   IconTags,
   IconUser,
   IconUsers,
@@ -66,6 +67,7 @@ export const ADMIN_NAV_GROUPS: NavGroup[] = [
     id: "tools",
     label: "أدوات",
     items: [
+      { href: "/admin/settings", label: "إعدادات الموقع", icon: IconSettings },
       { href: "/admin/broadcast", label: "إشعار جماعي", icon: IconAlert },
       { href: "/admin/diagnostics", label: "تشخيص الإشعارات", icon: IconBell },
     ],

@@ -39,6 +39,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_contact_numbers: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          label: string
+          phone: string
+          setting_id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          label?: string
+          phone: string
+          setting_id?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          label?: string
+          phone?: string
+          setting_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_contact_numbers_setting_id_fkey"
+            columns: ["setting_id"]
+            isOneToOne: false
+            referencedRelation: "site_settings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_settings: {
+        Row: {
+          id: number
+          is_routing_enabled: boolean
+          updated_at: string
+          whatsapp_admin_template: string
+          whatsapp_direct_template: string
+        }
+        Insert: {
+          id?: number
+          is_routing_enabled?: boolean
+          updated_at?: string
+          whatsapp_admin_template?: string
+          whatsapp_direct_template?: string
+        }
+        Update: {
+          id?: number
+          is_routing_enabled?: boolean
+          updated_at?: string
+          whatsapp_admin_template?: string
+          whatsapp_direct_template?: string
+        }
+        Relationships: []
+      }
       anonymous_push_outbox: {
         Row: {
           attempts: number

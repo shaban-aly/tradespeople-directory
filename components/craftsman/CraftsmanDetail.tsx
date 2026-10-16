@@ -78,6 +78,8 @@ export function CraftsmanDetail({
                     src={supabaseBlurUrl(craftsman.image) ?? craftsman.image}
                     alt=""
                     className="absolute inset-0 h-full w-full scale-125 object-cover opacity-40 blur-2xl filter"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute inset-0 bg-black/25 backdrop-blur-xs" />
                 </div>
@@ -216,6 +218,8 @@ export function CraftsmanDetail({
       <StickyCallBar
         phone={craftsman.phone}
         whatsapp={craftsman.whatsapp}
+        routeToAdmin={craftsman.routeToAdmin}
+        directWhatsappMessage={craftsman.directWhatsappMessage}
         craftsmanId={craftsman.id}
         craftsmanSlug={craftsman.slug}
         craftsmanName={craftsman.name}

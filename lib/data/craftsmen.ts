@@ -31,6 +31,8 @@ export type Craftsman = {
   updatedAt?: string; // تاريخ آخر تحديث بصيغة ISO
   ownerUserId?: string | null;
   socialLinks?: SocialLink[]; // روابط سوشيال اختيارية
+  routeToAdmin?: { phone: string; whatsapp: string; customMessage?: string } | null;
+  directWhatsappMessage?: string | null;
 };
 
 export type Category = {

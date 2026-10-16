@@ -24,6 +24,7 @@ import {
   Home,
   Hourglass,
   Inbox,
+  Info,
   LayoutDashboard,
   LayoutGrid,
   Link,
@@ -413,5 +414,11 @@ export function IconTimer(props: LucideProps) {
 export function IconCheckCircle(props: LucideProps) {
   return <CheckCircle {...props} />;
 }
+
+export function IconInfo(props: LucideProps) {
+  return <Info {...props} />;
+}
+
+
 
 

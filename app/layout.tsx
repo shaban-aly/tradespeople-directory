@@ -91,6 +91,11 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "دليل الصنايعية",
   },
+  verification: {
+    other: {
+      "facebook-domain-verification": "7ptdm9r753b8bmjymcnyr2rhkvblcm",
+    },
+  },
   other: {
     "mobile-web-app-capable": "yes",
   },

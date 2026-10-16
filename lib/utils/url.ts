@@ -45,6 +45,14 @@ export function craftsmanWhatsappMessage(
   return `السلام عليكم ${name}، شفت رقمك على دليل الصنايعية بالسويس ومحتاج مساعدة في شغل${trade}.`;
 }
 
+export function adminCraftsmanWhatsappMessage(
+  craftsmanName: string,
+  categoryName?: string,
+): string {
+  const trade = categoryName && categoryName.trim() ? ` (${categoryName.trim()})` : "";
+  return `السلام عليكم، بتواصل بخصوص الفني "${craftsmanName}"${trade} المعروض على دليل الصنايعية بالسويس ومحتاج مساعدة في شغل.`;
+}
+
 export function whatsappHref(number: string, message?: string): string {
   let digits = number.replace(/\D/g, "");
   digits = normalizeEgyptianNumber(digits);

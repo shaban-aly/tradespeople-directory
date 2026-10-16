@@ -11,6 +11,13 @@ import type {
 } from "../data/craftsmen";
 import { CACHE_TAGS, DATA_CACHE_KEYS, SEARCH_CACHE_KEYS, SEARCH_CACHE_REVALIDATE, SEARCH_TAG, makeKeyedCache } from "./cache";
 import { matchScore, matchesQuery, normalizeArabic, type SearchData } from "../search";
+import {
+  getContactRoutingSettings,
+  renderWhatsappTemplate,
+  resolveAdminContactForCraftsman,
+  SETTINGS_CACHE_TAG,
+  type ContactRoutingSettings,
+} from "./settings";
 
 const CRAFTSMAN_SELECT =
   "id, slug, name, image_url, avatar_position, phone, whatsapp, description, verified, added_at, updated_at, social_links, owner_user_id, category:categories(slug, name, singular_name, plural_name, icon), area:areas(name)";
@@ -123,6 +130,51 @@ async function attachRatings<T extends Craftsman>(craftsmen: T[]): Promise<T[]> 
   }));
 }
 
+function applyContactRouting<T extends Craftsman>(
+  craftsman: T,
+  routing: ContactRoutingSettings,
+): T {
+  const directMsg = renderWhatsappTemplate(routing.whatsapp_direct_template, {
+    craftsmanName: craftsman.name,
+    categoryName: craftsman.category,
+  });
+
+  if (!routing.enabled) {
+    return {
+      ...craftsman,
+      routeToAdmin: null,
+      directWhatsappMessage: directMsg,
+    };
+  }
+
+  const assigned = resolveAdminContactForCraftsman(
+    craftsman.id || craftsman.slug,
+    routing,
+  );
+
+  const adminMsg = renderWhatsappTemplate(routing.whatsapp_admin_template, {
+    craftsmanName: craftsman.name,
+    categoryName: craftsman.category,
+  });
+
+  return {
+    ...craftsman,
+    routeToAdmin: {
+      phone: assigned.phone,
+      whatsapp: assigned.whatsapp,
+      customMessage: adminMsg,
+    },
+    directWhatsappMessage: directMsg,
+  };
+}
+
+function applyContactRoutingList<T extends Craftsman>(
+  list: T[],
+  routing: ContactRoutingSettings,
+): T[] {
+  return list.map((c) => applyContactRouting(c, routing));
+}
+
 function mapCategory(row: CategoryRow): Category {
   return { slug: row.slug, name: row.name, singular_name: row.singular_name, plural_name: row.plural_name, icon: row.icon };
 }
@@ -175,7 +227,7 @@ export const getCategoryBySlug = unstable_cache(getCategoryBySlugImpl, [
   "data-category-by-slug",
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.categories, SEARCH_TAG] });
 
-async function getCraftsmenImpl(): Promise<Craftsman[]> {
+async function getBaseCraftsmenImpl(): Promise<Craftsman[]> {
   const { data, error } = await createServerReadClient()
     .from("craftsmen")
     .select(CRAFTSMAN_SELECT)
@@ -185,11 +237,19 @@ async function getCraftsmenImpl(): Promise<Craftsman[]> {
   return attachRatings((data ?? []).map(mapCraftsman));
 }
 
-export const getCraftsmen = unstable_cache(getCraftsmenImpl, [
+const getBaseCraftsmen = unstable_cache(getBaseCraftsmenImpl, [
   DATA_CACHE_KEYS.craftsmen,
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.allCraftsmen, SEARCH_TAG] });
 
-async function getCraftsmanBySlugImpl(slug: string): Promise<Craftsman | undefined> {
+export async function getCraftsmen(): Promise<Craftsman[]> {
+  const [craftsmen, routing] = await Promise.all([
+    getBaseCraftsmen(),
+    getContactRoutingSettings(),
+  ]);
+  return applyContactRoutingList(craftsmen, routing);
+}
+
+async function getBaseCraftsmanBySlugImpl(slug: string): Promise<Craftsman | undefined> {
   let normalizedSlug = slug;
   try {
     normalizedSlug = decodeURIComponent(slug);
@@ -207,13 +267,22 @@ async function getCraftsmanBySlugImpl(slug: string): Promise<Craftsman | undefin
   return mapCraftsman(data);
 }
 
-export const getCraftsmanBySlug = makeKeyedCache(
-  getCraftsmanBySlugImpl,
+const getBaseCraftsmanBySlug = makeKeyedCache(
+  getBaseCraftsmanBySlugImpl,
   "data-craftsman-by-slug",
   (slug) => CACHE_TAGS.craftsmanSlug(slug),
 );
 
-async function getCraftsmenByCategoryImpl(slug: string): Promise<CraftsmanWithStats[]> {
+export async function getCraftsmanBySlug(slug: string): Promise<Craftsman | undefined> {
+  const [craftsman, routing] = await Promise.all([
+    getBaseCraftsmanBySlug(slug),
+    getContactRoutingSettings(),
+  ]);
+  if (!craftsman) return undefined;
+  return applyContactRouting(craftsman, routing);
+}
+
+async function getBaseCraftsmenByCategoryImpl(slug: string): Promise<CraftsmanWithStats[]> {
   const { data, error } = await createServerReadClient()
     .from("craftsmen")
     .select(CRAFTSMAN_BY_CATEGORY_SELECT)
@@ -228,17 +297,20 @@ async function getCraftsmenByCategoryImpl(slug: string): Promise<CraftsmanWithSt
   return attachRatings(craftsmen);
 }
 
-/**
- * جلب الصنايعية حسب التخصص مع الإحصائيات.
- * ملاحظة: تقوم unstable_cache بتضمين وسيط التخصص (slug) تلقائياً في مفتاح الكاش،
- * بينما وسوم الكاش (tags) تُستخدم للإبطال الشامل عند تحديث أي صنايعي أو تصنيف.
- */
-export const getCraftsmenByCategory = makeKeyedCache(
-  getCraftsmenByCategoryImpl,
+const getBaseCraftsmenByCategory = makeKeyedCache(
+  getBaseCraftsmenByCategoryImpl,
   "data-craftsmen-by-category",
   (slug) => CACHE_TAGS.categoryList(slug),
   [CACHE_TAGS.categories, SEARCH_TAG]
 );
+
+export async function getCraftsmenByCategory(slug: string): Promise<CraftsmanWithStats[]> {
+  const [craftsmen, routing] = await Promise.all([
+    getBaseCraftsmenByCategory(slug),
+    getContactRoutingSettings(),
+  ]);
+  return applyContactRoutingList(craftsmen, routing);
+}
 
 type CategoryCountRow = { slug: string; craftsman_count: number };
 
@@ -417,9 +489,17 @@ async function getFeaturedCraftsmenImpl(
   return pickDiverse(ranked, count).map((item) => item.craftsman);
 }
 
-export const getFeaturedCraftsmen = unstable_cache(getFeaturedCraftsmenImpl, [
+const getBaseFeaturedCraftsmen = unstable_cache(getFeaturedCraftsmenImpl, [
   "featured-craftsmen",
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.allCraftsmen] });
+
+export async function getFeaturedCraftsmen(count: number, seed?: number): Promise<Craftsman[]> {
+  const [craftsmen, routing] = await Promise.all([
+    getBaseFeaturedCraftsmen(count, seed),
+    getContactRoutingSettings(),
+  ]);
+  return applyContactRoutingList(craftsmen, routing);
+}
 
 async function getVerifiedCraftsmenImpl(
   count: number = 10,
@@ -455,9 +535,17 @@ async function getVerifiedCraftsmenImpl(
   return pickDiverse(ranked, count).map((item) => item.craftsman);
 }
 
-export const getVerifiedCraftsmen = unstable_cache(getVerifiedCraftsmenImpl, [
+const getBaseVerifiedCraftsmen = unstable_cache(getVerifiedCraftsmenImpl, [
   "verified-craftsmen",
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.homeVerified, CACHE_TAGS.allCraftsmen] });
+
+export async function getVerifiedCraftsmen(count: number = 10, seed?: number): Promise<Craftsman[]> {
+  const [craftsmen, routing] = await Promise.all([
+    getBaseVerifiedCraftsmen(count, seed),
+    getContactRoutingSettings(),
+  ]);
+  return applyContactRoutingList(craftsmen, routing);
+}
 
 /** صنايعي مع إحصائياته الحقيقية — مجموعة اقتراحات «مقترحات لك». */
 export type CraftsmanWithStats = Craftsman & {
@@ -482,9 +570,17 @@ async function getRecommendationPoolImpl(
   return attachRatings(craftsmen);
 }
 
-export const getRecommendationPool = unstable_cache(getRecommendationPoolImpl, [
+const getBaseRecommendationPool = unstable_cache(getRecommendationPoolImpl, [
   "recommendation-pool",
 ], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.allCraftsmen] });
+
+export async function getRecommendationPool(limit = 40): Promise<CraftsmanWithStats[]> {
+  const [craftsmen, routing] = await Promise.all([
+    getBaseRecommendationPool(limit),
+    getContactRoutingSettings(),
+  ]);
+  return applyContactRoutingList(craftsmen, routing);
+}
 
 async function getSearchDataImpl(): Promise<SearchData> {
   const [categories, areas, craftsmen] = await Promise.all([
@@ -535,9 +631,13 @@ async function searchCraftsmenImpl(
 
   const rows = (data ?? []) as unknown as CraftsmanRow[];
   const craftsmen = rows.map(mapCraftsman);
-  return attachRatings(craftsmen);
+  const [rated, routing] = await Promise.all([
+    attachRatings(craftsmen),
+    getContactRoutingSettings(),
+  ]);
+  return applyContactRoutingList(rated, routing);
 }
 
 export const searchCraftsmen = unstable_cache(searchCraftsmenImpl, [
   SEARCH_CACHE_KEYS.craftsmen,
-], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.allCraftsmen, SEARCH_TAG] });
+], { revalidate: SEARCH_CACHE_REVALIDATE, tags: [CACHE_TAGS.allCraftsmen, SEARCH_TAG, SETTINGS_CACHE_TAG] });

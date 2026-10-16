@@ -1,6 +1,8 @@
+const defaultAdminPhone = "+201019979315";
+
 export const siteContact = {
-  phone: "+201019979315",
-  whatsapp: "201019979315",
+  phone: defaultAdminPhone,
+  whatsapp: defaultAdminPhone.replace(/^\+/, ""),
   email: "shabanaly1997@gmail.com",
   facebook: "https://www.facebook.com/sanay.suze/",
 };

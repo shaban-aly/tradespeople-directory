@@ -116,6 +116,8 @@ export function CraftsmanCard({
           craftsmanId={craftsman.id}
           phone={craftsman.phone}
           whatsapp={craftsman.whatsapp}
+          routeToAdmin={craftsman.routeToAdmin}
+          directWhatsappMessage={craftsman.directWhatsappMessage}
           craftsmanSlug={craftsman.slug}
           craftsmanName={craftsman.name}
           categoryName={category?.name}
