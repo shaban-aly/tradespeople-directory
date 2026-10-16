@@ -189,10 +189,13 @@ export function ImageViewer({
     }
   };
 
+  // مرجع لمنطقة العرض للتعامل مع عجلة الفأرة
+  const mainRef = useRef<HTMLElement | null>(null);
+
   // حركة اللمس (تعديل الـ Scale أو الـ Position)
   const handleTouchMove = (e: ReactTouchEvent<HTMLDivElement>) => {
     if (e.touches.length === 2 && pinchStartDistRef.current !== null) {
-      e.preventDefault();
+      if (e.cancelable) e.preventDefault();
       const currentDist = getDistance(e.touches[0], e.touches[1]);
       const factor = currentDist / pinchStartDistRef.current;
       const newScale = Math.min(
@@ -251,19 +254,29 @@ export function ImageViewer({
     }
   };
 
-  // دعم التكبير بعجلة الفأرة على أجهزة الكمبيوتر
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    if (e.deltaY < 0) {
-      setScale((prev) => Math.min(prev + 0.25, MAX_SCALE));
-    } else {
-      setScale((prev) => {
-        const next = Math.max(prev - 0.25, MIN_SCALE);
-        if (next === MIN_SCALE) setPosition({ x: 0, y: 0 });
-        return next;
-      });
-    }
-  };
+  // دعم التكبير بعجلة الفأرة على أجهزة الكمبيوتر (غير passive للسماح بـ preventDefault)
+  useEffect(() => {
+    const mainEl = mainRef.current;
+    if (!mainEl || !open) return;
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        setScale((prev) => Math.min(prev + 0.25, MAX_SCALE));
+      } else {
+        setScale((prev) => {
+          const next = Math.max(prev - 0.25, MIN_SCALE);
+          if (next === MIN_SCALE) setPosition({ x: 0, y: 0 });
+          return next;
+        });
+      }
+    };
+
+    mainEl.addEventListener("wheel", onWheel, { passive: false });
+    return () => {
+      mainEl.removeEventListener("wheel", onWheel);
+    };
+  }, [open]);
 
   // دعم سحب الماوس على أجهزة الكمبيوتر عند التكبير
   const handleMouseDown = (e: ReactMouseEvent) => {
@@ -374,11 +387,11 @@ export function ImageViewer({
 
       {/* منطقة عرض الصورة المركزية */}
       <main
+        ref={mainRef}
         className="relative flex flex-1 items-center justify-center overflow-hidden p-2 sm:p-6 cursor-grab active:cursor-grabbing"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
