@@ -132,13 +132,11 @@ export function DashboardHeader({
             <>
               {/* خلفية ضبابية سينمائية عبر Supabase Transformations مطابقة للدليل */}
               <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={supabaseBlurUrl(currentAvatarUrl) ?? currentAvatarUrl}
-                  alt=""
-                  className="absolute inset-0 h-full w-full scale-125 object-cover opacity-40 blur-2xl filter"
-                  loading="lazy"
-                  decoding="async"
+                <div
+                  className="absolute inset-0 h-full w-full scale-125 bg-cover bg-center opacity-40 blur-2xl filter"
+                  style={{
+                    backgroundImage: `url("${supabaseBlurUrl(currentAvatarUrl) ?? currentAvatarUrl}")`,
+                  }}
                 />
                 <div className="absolute inset-0 bg-black/25 backdrop-blur-xs" />
               </div>
