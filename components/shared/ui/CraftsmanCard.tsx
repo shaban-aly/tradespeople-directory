@@ -120,8 +120,8 @@ export function CraftsmanCard({
           directWhatsappMessage={craftsman.directWhatsappMessage}
           craftsmanSlug={craftsman.slug}
           craftsmanName={craftsman.name}
-          categoryName={category?.name}
-          categorySlug={category?.slug}
+          categoryName={category?.name || craftsman.categoryName}
+          categorySlug={category?.slug || craftsman.category}
         />
       </div>
       <div className="absolute left-2 top-2 z-10 flex flex-col gap-1.5">

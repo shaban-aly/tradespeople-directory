@@ -36,7 +36,7 @@ export function CraftsmanDetail({
 }) {
   return (
     <div className="flex flex-col gap-6">
-      <ViewTracker slug={craftsman.slug} categorySlug={category?.slug} area={craftsman.area} />
+      <ViewTracker slug={craftsman.slug} categorySlug={category?.slug || craftsman.category} area={craftsman.area} />
       <nav
         aria-label="مسار التنقل"
         className="flex flex-wrap items-center gap-1.5 text-xs sm:text-sm text-muted"
@@ -223,7 +223,7 @@ export function CraftsmanDetail({
         craftsmanId={craftsman.id}
         craftsmanSlug={craftsman.slug}
         craftsmanName={craftsman.name}
-        categoryName={category?.name}
+        categoryName={category?.name || craftsman.categoryName}
         categorySlug={category?.slug}
         area={craftsman.area}
       />

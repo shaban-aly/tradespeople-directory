@@ -83,8 +83,8 @@ export function CraftsmanContactCard({
         craftsmanId={craftsman.id}
         craftsmanSlug={craftsman.slug}
         craftsmanName={craftsman.name}
-        categoryName={category?.name}
-        categorySlug={category?.slug}
+        categoryName={category?.name || craftsman.categoryName}
+        categorySlug={category?.slug || craftsman.category}
       />
 
       {/* خيار طلب صنايعي بالتخصص والمنطقة عبر المنصة */}

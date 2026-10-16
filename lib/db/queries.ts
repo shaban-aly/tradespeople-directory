@@ -77,6 +77,7 @@ function mapCraftsman(row: CraftsmanRow): Craftsman {
     slug: row.slug ?? "",
     name: row.name,
     category: row.category?.slug ?? "",
+    categoryName: row.category?.name ?? "",
     image: row.image_url ?? "",
     avatarPosition,
     phone: row.phone,
@@ -134,9 +135,11 @@ function applyContactRouting<T extends Craftsman>(
   craftsman: T,
   routing: ContactRoutingSettings,
 ): T {
+  const catName = craftsman.categoryName || craftsman.category;
+
   const directMsg = renderWhatsappTemplate(routing.whatsapp_direct_template, {
     craftsmanName: craftsman.name,
-    categoryName: craftsman.category,
+    categoryName: catName,
   });
 
   if (!routing.enabled) {
@@ -154,7 +157,7 @@ function applyContactRouting<T extends Craftsman>(
 
   const adminMsg = renderWhatsappTemplate(routing.whatsapp_admin_template, {
     craftsmanName: craftsman.name,
-    categoryName: craftsman.category,
+    categoryName: catName,
   });
 
   return {

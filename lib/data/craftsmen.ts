@@ -16,6 +16,7 @@ export type Craftsman = {
   slug: string;
   name: string;
   category: string; // slug زي 'plumbing'
+  categoryName?: string; // الاسم بالعربي زي 'سباكة' أو 'دهانات'
   image: string; // رابط الصورة (في Supabase Storage أو خارجي)
   avatarPosition?: AvatarPosition | null; // موضع وبؤرة الصورة
   phone: string; // بصيغة +20...
