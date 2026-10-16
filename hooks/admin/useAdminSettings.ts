@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateContactRoutingAction } from "@/app/actions/admin-settings";
+import { updateContactRoutingAction, toggleAdminNumberAction } from "@/app/actions/admin-settings";
 import { useToast } from "@/hooks/ui/useToast";
 import {
   resolveAdminContactForCraftsman,
@@ -70,13 +70,61 @@ export function useAdminSettings(initialSettings: ContactRoutingSettings) {
     );
   };
 
-  // تبديل حالة نشاط رقم
-  const toggleActive = (id: string) => {
-    setAdminNumbers((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, active: !item.active } : item,
-      ),
+  // تبديل حالة نشاط رقم مع الحفظ الفوري المباشر في Supabase
+  const toggleActive = async (id: string) => {
+    const target = adminNumbers.find((item) => item.id === id);
+    if (!target) return;
+
+    const nextActive = !target.active;
+
+    // حماية: منع تعطيل الخط الأخير إذا كان التوجيه مفعلاً
+    if (!nextActive && enabled) {
+      const otherActiveCount = adminNumbers.filter(
+        (n) => n.id !== id && n.active && n.phone.trim().length > 0,
+      ).length;
+      if (otherActiveCount === 0) {
+        toast("error", "لا يمكن تعطيل هذا الخط لأن التحويل مفعل ويجب وجود خط نشط واحد على الأقل");
+        return;
+      }
+    }
+
+    const previousNumbers = adminNumbers;
+    const updatedNumbers = adminNumbers.map((item) =>
+      item.id === id ? { ...item, active: nextActive } : item,
     );
+    setAdminNumbers(updatedNumbers);
+
+    // إذا كان الرقم محفوظاً مسبقاً بقاعدة البيانات (له UUID)، نحفظ حالته مباشرة
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (isUuid) {
+      setBusy(true);
+      try {
+        const res = await toggleAdminNumberAction(id, nextActive);
+        if (res.success) {
+          toast(
+            "success",
+            nextActive
+              ? `تم تفعيل ${target.label || "الخط"} وحفظ التغيير بنجاح`
+              : `تم إيقاف ${target.label || "الخط"} وحفظ التغيير بنجاح`,
+          );
+          setBaseline((prev) => ({
+            ...prev,
+            admin_numbers: (prev.admin_numbers || []).map((item) =>
+              item.id === id ? { ...item, active: nextActive } : item,
+            ),
+          }));
+          router.refresh();
+        } else {
+          setAdminNumbers(previousNumbers);
+          toast("error", res.error || "فشل حفظ حالة الخط");
+        }
+      } catch {
+        setAdminNumbers(previousNumbers);
+        toast("error", "حدث خطأ غير متوقع أثناء الحفظ");
+      } finally {
+        setBusy(false);
+      }
+    }
   };
 
   // كشف وجود تعديلات غير محفوظة بمقارنتها بالحالة المرجعية المحفوظة

@@ -61,6 +61,7 @@ export function ContactRoutingSettingsCard({
           onRemove={removeNumber}
           onUpdate={updateNumber}
           onToggleActive={toggleActive}
+          disabled={busy}
         />
       </div>
 

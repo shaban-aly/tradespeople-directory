@@ -16,6 +16,7 @@ interface AdminNumbersListProps {
   onRemove: (id: string) => void;
   onUpdate: (id: string, updates: Partial<AdminPhoneNumber>) => void;
   onToggleActive: (id: string) => void;
+  disabled?: boolean;
 }
 
 export function AdminNumbersList({
@@ -24,6 +25,7 @@ export function AdminNumbersList({
   onRemove,
   onUpdate,
   onToggleActive,
+  disabled = false,
 }: AdminNumbersListProps) {
   const activeCount = numbers.filter((n) => n.active && n.phone.trim()).length;
   const activeSharePercent =
@@ -87,6 +89,7 @@ export function AdminNumbersList({
                 <div className="flex items-center gap-2 shrink-0">
                   <ToggleSwitch
                     checked={item.active}
+                    disabled={disabled}
                     onChange={() => onToggleActive(item.id)}
                     label={`تفعيل أو تعطيل ${item.label || `الخط ${idx + 1}`}`}
                   />

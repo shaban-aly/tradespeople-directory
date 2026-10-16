@@ -109,24 +109,27 @@ export async function updateContactRoutingAction(payload: {
       };
     });
 
-    // حذف الأرقام القديمة وإعادة إدراج القائمة المحدثة بالترتيب الجديد
-    const { error: deleteError } = await adminClient
-      .from("admin_contact_numbers")
-      .delete()
-      .neq("id", "00000000-0000-0000-0000-000000000000");
+    // حذف الأرقام التي أزالها المشرف تماماً من القائمة
+    const currentUuids = cleanedNumbers
+      .map((n) => n.id)
+      .filter((id) =>
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id),
+      );
 
-    if (deleteError) {
-      console.error("[settings] Clear admin_contact_numbers error:", deleteError);
-      return { success: false, error: "فشل تحديث أرقام الإدارة القديمة" };
+    if (currentUuids.length > 0) {
+      await adminClient
+        .from("admin_contact_numbers")
+        .delete()
+        .not("id", "in", `(${currentUuids.join(",")})`);
     }
 
-    const { error: insertError } = await adminClient
+    const { error: upsertError } = await adminClient
       .from("admin_contact_numbers")
-      .insert(rowsToInsert);
+      .upsert(rowsToInsert);
 
-    if (insertError) {
-      console.error("[settings] Insert admin_contact_numbers error:", insertError);
-      return { success: false, error: "فشل إدراج أرقام الإدارة الجديدة" };
+    if (upsertError) {
+      console.error("[settings] Upsert admin_contact_numbers error:", upsertError);
+      return { success: false, error: "فشل حفظ أرقام الإدارة في قاعدة البيانات" };
     }
 
     // 3. إبطال كاش إعدادات التوجيه فقط دون إبطال كاش الصنايعية
@@ -140,6 +143,81 @@ export async function updateContactRoutingAction(payload: {
     return {
       success: false,
       error: err instanceof Error ? err.message : "حدث خطأ غير متوقع أثناء الحفظ",
+    };
+  }
+}
+
+export async function toggleAdminNumberAction(
+  id: string,
+  active: boolean,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { user, supabase } = await getServerSession();
+    if (!user) {
+      return { success: false, error: "يجب تسجيل الدخول كمسؤول أولاً" };
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.role !== "admin") {
+      return { success: false, error: "ليس لديك صلاحية تعديل الإعدادات" };
+    }
+
+    const adminClient = createServerAdminClient();
+
+    // فحص أمني: لو التوجيه مفعل، نمنع تعطيل آخر خط نشط متبقي
+    if (!active) {
+      const [settingsRes, numbersRes] = await Promise.all([
+        adminClient
+          .from("site_settings")
+          .select("is_routing_enabled")
+          .eq("id", 1)
+          .maybeSingle(),
+        adminClient
+          .from("admin_contact_numbers")
+          .select("id, is_active")
+          .eq("is_active", true),
+      ]);
+
+      const isRoutingEnabled = settingsRes.data?.is_routing_enabled ?? false;
+      const activeNumbers = numbersRes.data ?? [];
+      const remainingActive = activeNumbers.filter((n) => n.id !== id);
+
+      if (isRoutingEnabled && remainingActive.length === 0) {
+        return {
+          success: false,
+          error: "لا يمكن تعطيل هذا الخط لأن التحويل مفعل ويجب وجود خط نشط واحد على الأقل",
+        };
+      }
+    }
+
+    const { error } = await adminClient
+      .from("admin_contact_numbers")
+      .update({
+        is_active: active,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (error) {
+      console.error("[settings] toggleAdminNumber error:", error);
+      return { success: false, error: "فشل حفظ حالة الخط في قاعدة البيانات" };
+    }
+
+    // إبطال كاش الإعدادات فقط
+    revalidateTag(SETTINGS_CACHE_TAG, {});
+    revalidatePath("/admin/settings");
+
+    return { success: true };
+  } catch (err: unknown) {
+    console.error("[settings] toggleAdminNumber unexpected error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "حدث خطأ غير متوقع",
     };
   }
 }
